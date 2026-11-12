@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · Recharge pending</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 980px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> We're confirming your ₹500 payment</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> Please don't pay again. Credits are added automatically once it clears.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> payment still pending after [10] minutes · transactional</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="Payment update" hint-size="600px,80px"></dc-import>
+    <div style="padding: 36px 40px 40px; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px">Your payment is being confirmed</h1>
+        <span style="font-size: 15px; line-height: 1.6; color: {{t.text2}}">Your bank or UPI app is taking a little longer than usual. This normally sorts itself out.</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+        <sc-for list="{{route}}" as="r" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center">
+            <span style="width: 28px; height: 28px; flex: none; box-sizing: border-box; border-radius: 999px; background: {{r.bg}}; border: 2px solid {{r.ring}}; color: {{r.fg}}; display: flex; align-items: center; justify-content: center; font: 600 12px 'JetBrains Mono', monospace">{{r.n}}</span>
+            <span style="flex: 1; border-top: 2px {{r.style}} {{r.line}}; margin: 0 6px"></span>
+          </div>
+          <span style="font-size: 13px; font-weight: {{r.weight}}; color: {{r.color}}">{{r.label}}</span>
+        </div>
+        </sc-for>
+      </div>
+      <div role="alert" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}; font-size: 14px; line-height: 1.55">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true" style="flex: none"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+        <span><strong>Please don't pay again.</strong> As soon as this payment clears we'll add 10,000 credits, exactly once, and email you.</span>
+      </div>
+      <div style="border: 1px solid {{t.border}}; border-radius: 10px; overflow: hidden">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid {{r.line}}; font-size: 14px"><span style="color: {{t.text2}}">{{r.k}}</span><span style="font-family: 'JetBrains Mono', monospace; text-align: right">{{r.v}}</span></div>
+        </sc-for>
+      </div>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: {{t.text2}}">If it isn't confirmed within [TIME LIMIT], the payment is cancelled and any money taken is returned to you automatically.</p>
+      <a href="#" style="align-self: flex-start; text-decoration: none; padding: 13px 22px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px">Check payment status</a>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ false }}" hint-size="600px,200px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',borderStrong:'#4A5F78',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',borderStrong:'#9AA8B8',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98'};
+    const labels = ['You paid', 'Bank confirming', 'Credits added'];
+    const route = labels.map((label, i) => ({
+      n: String(i + 1), label,
+      bg: i === 0 ? t.link : (i === 1 ? t.accent : t.card), fg: i === 0 ? '#FFFFFF' : (i === 1 ? t.onAccent : t.text2), ring: i === 0 ? t.link : (i === 1 ? t.accent : t.borderStrong),
+      style: i === 0 ? 'solid' : 'dashed', line: i === 2 ? 'transparent' : (i === 0 ? t.link : t.borderStrong),
+      weight: i === 1 ? 600 : 500, color: i < 2 ? t.text : t.text2
+    }));
+    const rows = [['Amount', '₹500.00'], ['Method', 'UPI'], ['Payment ID', 'pay_PU55cTr4']].map(([k, v], i) => ({ k, v, line: i === 0 ? 'transparent' : t.border }));
+    return { dark, t, route, rows };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Site nav</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<header style="background: {{bar}}; border-bottom: 1px solid {{barLine}}; font-family: Inter, system-ui, sans-serif; color: #F2F5F9">
+  <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px; min-height: 72px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px">
+    <a href="Landing.dc.html" aria-label="Resume Pilot home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #F2F5F9">
+      <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em">Resume<span style="color: #FF9900">Pilot</span></span>
+    </a>
+    <nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 auto">
+      <sc-for list="{{links}}" as="l" hint-placeholder-count="5">
+      <a href="{{l.href}}" style="font-size: 15px; font-weight: 500; text-decoration: none; padding: 10px 12px; border-radius: 6px; color: {{l.color}}; background: {{l.bg}}">{{l.label}}</a>
+      </sc-for>
+    </nav>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <a href="SignIn.dc.html" style="font-size: 15px; font-weight: 600; text-decoration: none; padding: 10px 14px; border-radius: 6px; color: #F2F5F9">Sign in</a>
+      <a href="SignUp.dc.html" style="font-size: 15px; font-weight: 600; text-decoration: none; height: 40px; padding: 0 18px; border-radius: 6px; background: #FF9900; color: #0F1B2A; display: flex; align-items: center">Get started free</a>
+    </div>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"active":{"editor":"enum","options":["none","how","pricing","about","faq","contact"],"default":"none"},"$preview":{"width":1440,"height":72}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const active = this.props.active ?? 'none';
+    const items = [
+      ['how', 'How it works', 'HowItWorks.dc.html'],
+      ['pricing', 'Pricing', 'Pricing.dc.html'],
+      ['about', 'About', 'About.dc.html'],
+      ['faq', 'FAQ', 'FAQ.dc.html'],
+      ['contact', 'Contact', 'Contact.dc.html']
+    ];
+    return {
+      bar: dark ? '#060B12' : '#0F1B2A',
+      barLine: dark ? '#1A2636' : '#22344A',
+      links: items.map(([id, label, href]) => ({
+        label, href,
+        color: id === active ? '#FFFFFF' : '#C3CFDC',
+        bg: id === active ? (dark ? '#16222F' : '#1E3047') : 'transparent'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

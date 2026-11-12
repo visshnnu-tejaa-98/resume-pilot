@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Preview and download · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1400px; background: {{t.canvas}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="background: {{t.surface}}; border-bottom: 1px solid {{t.border}}; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center">
+    <a href="Editor.dc.html" style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: {{t.link}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Back to editor</a>
+    <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Acme Corp · Frontend Engineer</strong>
+    <label style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 14px; color: {{t.text2}}">Template
+      <select style="font: 500 14px Inter, sans-serif; height: 38px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>Modern</option><option>Classic</option><option>Minimal</option><option>Professional</option><option>Technical</option></select>
+    </label>
+    <button type="button" onClick="{{download}}" style="font: 700 14px Inter, sans-serif; height: 38px; padding: 0 16px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; display: flex; align-items: center; gap: 8px; cursor: pointer">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"></path></svg>Download PDF
+    </button>
+  </div>
+
+  <div style="flex: 1; padding: 32px 20px 48px; display: flex; flex-direction: column; align-items: center; gap: 16px">
+    <sc-if value="{{ready}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: #0F1B2A; color: #F2F5F9; box-shadow: 0 12px 30px rgba(0,0,0,0.3); font-size: 14px">
+        <span style="width: 8px; height: 8px; border-radius: 999px; background: #4CC38A"></span>PDF ready · Asha-Rao-Frontend-Engineer.pdf
+        <a href="#" style="color: #FFB547; font-weight: 700">Save file</a>
+      </div>
+    </sc-if>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center; font-size: 13px; color: {{t.text2}}">
+      <span style="font-family: 'JetBrains Mono', monospace">Asha-Rao-Frontend-Engineer.pdf</span>
+      <span>A4 · 1 page · selectable text · ATS-friendly single column</span>
+      <span>Downloads are free</span>
+    </div>
+    <article aria-label="Resume, A4 page 1" style="width: 100%; max-width: 794px; aspect-ratio: 210 / 297; box-sizing: border-box; background: #FFFFFF; color: #1A1A1A; box-shadow: 0 12px 40px rgba(0,0,0,0.22); padding: 56px 60px; display: flex; flex-direction: column; gap: 18px; font-family: Inter, sans-serif; font-size: 13px; line-height: 1.5">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px; font-weight: 700; color: #0F1B2A; letter-spacing: -0.01em">Asha Rao</span>
+        <span style="font-size: 12.5px; color: #444">Frontend Engineer · Bengaluru · asha.rao@example.com · +91 98xxx xxx21 · linkedin.com/in/asharao</span>
+      </div>
+      <sc-for list="{{resume}}" as="r" hint-placeholder-count="4">
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 13.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0A5BAD; border-bottom: 2px solid #0A5BAD; padding-bottom: 3px">{{r.h}}</h2>
+        <sc-for list="{{r.items}}" as="it" hint-placeholder-count="2">
+        <div style="display: flex; flex-direction: column; gap: 3px">
+          <sc-if value="{{it.title}}" hint-placeholder-val="{{ true }}"><div style="display: flex; justify-content: space-between; gap: 8px"><strong>{{it.title}}</strong><span style="color: #555">{{it.date}}</span></div></sc-if>
+          <sc-for list="{{it.lines}}" as="ln" hint-placeholder-count="2"><span>{{ln}}</span></sc-for>
+        </div>
+        </sc-for>
+      </section>
+      </sc-for>
+    </article>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { ready: false }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {surface:'#111B27',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',canvas:'#060B12'}
+                   : {surface:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',canvas:'#DDE3EA'};
+    const resume = [
+      { h: 'Summary', items: [{ title: '', date: '', lines: ['Frontend engineer with 5 years of experience building React and TypeScript design systems and fast, accessible web apps.'] }] },
+      { h: 'Experience', items: [
+        { title: 'Frontend Engineer · Northwind', date: 'Jul 2023 – Present', lines: ['• Lead development of Northwind’s React and TypeScript design system, used across all customer-facing web apps.', '• Partner with product designers on tokens, theming and accessible components.', '• Mentor two junior engineers through code reviews and pairing.'] },
+        { title: 'Software Engineer · Globex', date: 'Jan 2021 – Jun 2023', lines: ['• Built the checkout UI in React, used by every Globex web customer.', '• Maintained the shared component library and its documentation.', '• Worked with design to roll out a new type scale across the product.'] }
+      ] },
+      { h: 'Projects', items: [{ title: 'Open-source date picker', date: '2024', lines: ['• Accessible React date picker with keyboard support and TypeScript types.'] }] },
+      { h: 'Skills', items: [{ title: '', date: '', lines: ['React · TypeScript · JavaScript · Next.js · HTML · CSS · Storybook · Jest · Playwright · Git · Webpack · Figma'] }] },
+      { h: 'Education', items: [{ title: 'B.Tech, Computer Science · [UNIVERSITY]', date: '2016 – 2020', lines: [] }] }
+    ];
+    return { dark, t, resume, ready: this.state.ready, download: () => this.setState({ ready: true }) };
+  }
+}
+</script>
+</body>
+</html>

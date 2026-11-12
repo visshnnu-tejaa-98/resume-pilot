@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ATS report · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1700px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="resumes" min-height="1636px" hint-size="248px,1636px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 14px; color: {{t.text2}}; flex-wrap: wrap"><a href="MyResumes.dc.html" style="color: {{t.link}}">My resumes</a><span>/</span><a href="Editor.dc.html" style="color: {{t.link}}">Acme Corp · Frontend Engineer</a><span>/</span><span style="color: {{t.text}}">ATS report</span></nav>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">ATS report</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Tailored version vs Acme Corp · Frontend Engineer · scored today, 6:14 pm</span>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a href="Compare.dc.html" style="text-decoration: none; height: 42px; padding: 0 16px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 14px; display: flex; align-items: center">Compare with original</a>
+          <button type="button" style="font: 700 14px Inter, sans-serif; height: 42px; padding: 0 18px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Re-score · up to 150</button>
+        </div>
+      </div>
+
+      <div role="status" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 10px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+        <span style="flex: 1 1 300px; font-size: 14px"><strong>Outdated.</strong> You edited this resume after it was scored. The numbers below are from the earlier version.</span>
+      </div>
+
+      <nav aria-label="Report sections" style="display: flex; gap: 4px; border-bottom: 1px solid {{t.border}}; flex-wrap: wrap">
+        <a href="#overview" style="text-decoration: none; padding: 12px 16px; font-size: 14px; font-weight: 600; color: {{t.text}}; border-bottom: 3px solid {{t.accent}}; margin-bottom: -1px">Overview</a>
+        <a href="#keywords" style="text-decoration: none; padding: 12px 16px; font-size: 14px; font-weight: 500; color: {{t.text2}}">Keywords</a>
+        <a href="#skills" style="text-decoration: none; padding: 12px 16px; font-size: 14px; font-weight: 500; color: {{t.text2}}">Skills match</a>
+        <a href="#recs" style="text-decoration: none; padding: 12px 16px; font-size: 14px; font-weight: 500; color: {{t.text2}}">Recommendations</a>
+        <a href="#history" style="text-decoration: none; padding: 12px 16px; font-size: 14px; font-weight: 500; color: {{t.text2}}">History</a>
+      </nav>
+
+      <section id="overview" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 28px; display: flex; flex-wrap: wrap; gap: 32px; align-items: center">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+          <svg width="176" height="176" viewBox="0 0 120 120" role="img" aria-label="ATS score 82 out of 100">
+            <circle cx="60" cy="60" r="48" fill="none" stroke="{{t.surface2}}" stroke-width="11"></circle>
+            <circle cx="60" cy="60" r="48" fill="none" stroke="{{t.accent}}" stroke-width="11" stroke-linecap="round" stroke-dasharray="247.3 301.6" transform="rotate(-90 60 60)"></circle>
+            <text x="60" y="64" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="32" font-weight="600" fill="{{t.text}}">82</text>
+            <text x="60" y="82" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="{{t.text2}}">out of 100</text>
+          </svg>
+          <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Strong match</span>
+        </div>
+        <div style="flex: 1 1 380px; display: flex; flex-direction: column; gap: 14px">
+          <sc-for list="{{dims}}" as="d" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 5px">
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span>{{d.label}} <span style="color: {{t.text2}}">· {{d.weight}}</span></span><span style="font-family: 'JetBrains Mono', monospace; font-weight: 600">{{d.value}}</span></div>
+            <div style="height: 8px; border-radius: 999px; background: {{t.surface2}}"><div style="height: 8px; border-radius: 999px; width: {{d.pct}}; background: {{d.color}}"></div></div>
+          </div>
+          </sc-for>
+          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: {{t.text2}}">Your React, TypeScript and design-system experience covers most of what Acme asks for. The main gaps are GraphQL and Kubernetes, and CI/CD is only partly shown.</p>
+          <span style="font-size: 12px; color: {{t.text2}}">Estimated compatibility score. Employers' ATS systems differ; this is not a guarantee. <a href="FAQ.dc.html" style="color: {{t.link}}">How scoring works</a></span>
+        </div>
+      </section>
+
+      <div id="keywords" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 20px; align-items: start">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; display: flex; justify-content: space-between">Matched keywords <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: {{t.good}}">9</span></h2>
+          <sc-for list="{{matched}}" as="m" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px solid {{m.line}}">
+            <span style="align-self: flex-start; font-size: 13px; font-weight: 600; padding: 4px 9px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}">{{m.k}}</span>
+            <span style="font-size: 13px; line-height: 1.5; color: {{t.text2}}">“{{m.ev}}”</span>
+          </div>
+          </sc-for>
+          <button type="button" style="align-self: flex-start; border: 0; background: transparent; padding: 0; font: 600 14px Inter, sans-serif; color: {{t.link}}">Show all 9</button>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; display: flex; justify-content: space-between">Missing or partial <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; color: {{t.warn}}">3</span></h2>
+          <sc-for list="{{missing}}" as="m" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 12px; border-top: 1px solid {{m.line}}">
+            <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center">
+              <span style="font-size: 13px; font-weight: 600; padding: {{m.pad}}; border-radius: 6px; background: {{m.bg}}; color: {{m.fg}}; border: {{m.border}}">{{m.k}}</span>
+              <span style="font-size: 12px; color: {{t.text2}}">{{m.priority}}</span>
+            </div>
+            <span style="font-size: 13px; line-height: 1.5; color: {{t.text2}}">{{m.why}}</span>
+          </div>
+          </sc-for>
+          <span style="font-size: 12px; line-height: 1.5; color: {{t.text2}}">We never add skills for you. If you have one of these, add it to your resume yourself and re-score.</span>
+        </section>
+      </div>
+
+      <section id="skills" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 20px">
+        <sc-for list="{{skillStats}}" as="s" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 13px; color: {{t.text2}}">{{s.label}}</span>
+          <span style="font: 600 26px 'JetBrains Mono', monospace">{{s.value}}</span>
+          <span style="font-size: 13px; color: {{t.text2}}">{{s.sub}}</span>
+        </div>
+        </sc-for>
+      </section>
+
+      <section id="recs" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0 0 10px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Recommendations</h2>
+        <sc-for list="{{recs}}" as="r" hint-placeholder-count="4">
+        <div style="display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid {{r.line}}">
+          <span style="width: 28px; height: 28px; flex: none; border-radius: 999px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font: 600 12px 'JetBrains Mono', monospace">{{r.n}}</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 3px"><strong style="font-size: 15px">{{r.h}}</strong><span style="font-size: 14px; line-height: 1.55; color: {{t.text2}}">{{r.p}}</span></div>
+          <a href="Editor.dc.html" style="font-size: 13px; font-weight: 600; color: {{t.link}}; white-space: nowrap">Edit</a>
+        </div>
+        </sc-for>
+      </section>
+
+      <section id="history" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; overflow: hidden">
+        <h2 style="margin: 0; padding: 18px 22px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Score history</h2>
+        <sc-for list="{{history}}" as="h" hint-placeholder-count="2">
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid {{t.border}}; font-size: 14px">
+          <span>{{h.when}}</span><span style="color: {{t.text2}}">{{h.note}}</span><span style="font-family: 'JetBrains Mono', monospace; font-weight: 600">{{h.score}}</span>
+        </div>
+        </sc-for>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98'};
+    const dims = [['Required keywords', '30%', 26, 30], ['Skills match', '25%', 21, 25], ['Experience relevance', '20%', 16, 20], ['Education and qualifications', '10%', 8, 10], ['Structure and formatting', '15%', 11, 15]]
+      .map(([label, weight, v, max]) => ({ label, weight, value: v + ' / ' + max, pct: Math.round(v / max * 100) + '%', color: (v / max) >= 0.75 ? t.good : t.accent }));
+    const matched = [
+      ['React', 'Lead development of Northwind’s React and TypeScript design system…'],
+      ['TypeScript', 'Lead development of Northwind’s React and TypeScript design system…'],
+      ['Design systems', 'Maintained the shared component library and its documentation.'],
+      ['Accessibility', 'Partner with product designers on tokens, theming and accessible components.']
+    ].map(([k, ev], i) => ({ k, ev, line: i === 0 ? 'transparent' : t.border }));
+    const missing = [
+      ['CI/CD', 'Required', 'Partial: testing tools are listed, but no pipeline or deployment work is described.', true],
+      ['GraphQL', 'Preferred', 'Not found anywhere in your resume.', false],
+      ['Kubernetes', 'Preferred', 'Not found anywhere in your resume.', false]
+    ].map(([k, priority, why, partial], i) => ({
+      k, priority, why, line: i === 0 ? 'transparent' : t.border,
+      bg: partial ? t.warnBg : 'transparent', fg: partial ? t.warn : t.text2, border: partial ? '0' : '1px dashed ' + t.borderStrong, pad: partial ? '4px 9px' : '3px 8px'
+    }));
+    const recs = [
+      ['Show your CI/CD work', 'If you set up or maintained pipelines at Globex or Northwind, add a bullet that says so.'],
+      ['Lead with the design system', 'Move your design-system bullet to the top of Northwind; it’s Acme’s main requirement.'],
+      ['Add the month to your Globex start date', 'Exact dates parse more reliably in ATS systems.'],
+      ['Keep it to one page', 'You’re at one page now. Avoid adding more than two bullets per role.']
+    ].map(([h, p], i) => ({ h, p, n: String(i + 1), line: i === 0 ? 'transparent' : t.border }));
+    return {
+      dark, t, dims, matched, missing, recs,
+      skillStats: [
+        { label: 'Required skills matched', value: '7 / 9', sub: '1 partial, 1 missing' },
+        { label: 'Preferred skills matched', value: '2 / 5', sub: 'GraphQL and Kubernetes missing' },
+        { label: 'Experience', value: '5 yrs', sub: 'Job asks for 4+' }
+      ],
+      history: [
+        { when: 'Today, 6:14 pm', note: 'Tailored version, before your edits', score: '82' },
+        { when: 'Today, 6:13 pm', note: 'Original resume, same job', score: '61' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

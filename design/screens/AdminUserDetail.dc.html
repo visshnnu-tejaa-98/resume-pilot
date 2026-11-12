@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>User detail · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="position: relative; min-height: 1400px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="users" min-height="1336px" hint-size="248px,1336px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 13px; color: {{t.text2}}"><a href="AdminUsers.dc.html" style="color: {{t.link}}">Users</a><span>/</span><span style="color: {{t.text}}">Asha Rao</span></nav>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span style="width: 52px; height: 52px; border-radius: 999px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700">AR</span>
+          <div style="display: flex; flex-direction: column; gap: 3px">
+            <div style="display: flex; align-items: center; gap: 10px"><h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px">Asha Rao</h1><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Active</span></div>
+            <span style="font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">usr_01HX8K2M · as***@example.com · Google · joined 8 Nov 2026</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button type="button" onClick="{{openAdjust}}" style="font: 600 13px Inter, sans-serif; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; cursor: pointer">Adjust credits</button>
+          <button type="button" style="font: 700 13px Inter, sans-serif; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.crit}}; background: transparent; color: {{t.crit}}">Suspend account</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="5">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{s.label}}</span>
+          <span style="font: 600 22px 'JetBrains Mono', monospace">{{s.value}}</span>
+          <span style="font-size: 12px; color: {{t.text2}}">{{s.sub}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+          <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Credit ledger</h2>
+          <table style="width: 100%; min-width: 440px; border-collapse: collapse; font-size: 13px">
+            <tbody>
+              <sc-for list="{{ledger}}" as="l" hint-placeholder-count="5">
+              <tr style="border-top: 1px solid {{t.border}}">
+                <td style="padding: 10px 16px"><div style="display: flex; flex-direction: column; gap: 1px"><span>{{l.what}}</span><span style="font: 500 11px 'JetBrains Mono', monospace; color: {{t.text2}}">{{l.when}} · {{l.ref}}</span></div></td>
+                <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: {{l.color}}">{{l.amt}}</td>
+                <td style="padding: 10px 16px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{l.bal}}</td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+          <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px; display: flex; justify-content: space-between">AI jobs <a href="AdminAiJobs.dc.html" style="font: 600 13px Inter, sans-serif; color: {{t.link}}">All jobs</a></h2>
+          <table style="width: 100%; min-width: 440px; border-collapse: collapse; font-size: 13px">
+            <tbody>
+              <sc-for list="{{jobs}}" as="j" hint-placeholder-count="5">
+              <tr style="border-top: 1px solid {{t.border}}">
+                <td style="padding: 10px 16px"><div style="display: flex; flex-direction: column; gap: 1px"><a href="AdminAiJobDetail.dc.html" style="font-weight: 600; color: {{t.link}}">{{j.type}}</a><span style="font: 500 11px 'JetBrains Mono', monospace; color: {{t.text2}}">{{j.id}} · {{j.when}}</span></div></td>
+                <td style="padding: 10px 8px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{j.sBg}}; color: {{j.sFg}}">{{j.status}}</span></td>
+                <td style="padding: 10px 16px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{j.dur}}</td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 14px 16px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Resumes and versions</h2>
+          <span style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: {{t.text2}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Content hidden · metadata only</span>
+        </div>
+        <table style="width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Version</th>
+            <th scope="col" style="padding: 9px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Kind</th>
+            <th scope="col" style="padding: 9px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">ATS</th>
+            <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Updated</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{versions}}" as="v" hint-placeholder-count="4">
+            <tr style="border-top: 1px solid {{t.border}}"><td style="padding: 10px 16px; font-weight: 600">{{v.name}}</td><td style="padding: 10px; color: {{t.text2}}">{{v.kind}}</td><td style="padding: 10px; font-family: 'JetBrains Mono', monospace">{{v.ats}}</td><td style="padding: 10px 16px; color: {{t.text2}}">{{v.when}}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div style="padding: 12px 16px; border-top: 1px solid {{t.border}}; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between">
+          <span style="font-size: 12px; color: {{t.text2}}">Opening resume content needs a reason and is written to the audit log.</span>
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: transparent; color: {{t.text}}">Request content access</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <sc-if value="{{adjustOpen}}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; background: {{t.scrim}}; display: flex; align-items: flex-start; justify-content: center; padding: 160px 24px 24px">
+    <div role="dialog" aria-modal="true" aria-labelledby="adj-title" style="width: 100%; max-width: 460px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; box-shadow: {{t.shadowLg}}; display: flex; flex-direction: column">
+      <div style="padding: 20px 22px 0; display: flex; flex-direction: column; gap: 4px"><h2 id="adj-title" style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Adjust credits</h2><span style="font-size: 13px; color: {{t.text2}}">Asha Rao · current balance 9,770</span></div>
+      <div style="padding: 18px 22px; display: flex; flex-direction: column; gap: 14px">
+        <div role="radiogroup" aria-label="Direction" style="display: flex; gap: 8px">
+          <label style="flex: 1; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 8px; border: 2px solid {{t.link}}; font-size: 14px; font-weight: 600"><input type="radio" name="dir" checked style="accent-color: {{t.link}}">Grant</label>
+          <label style="flex: 1; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 8px; border: 1px solid {{t.border}}; font-size: 14px; font-weight: 600"><input type="radio" name="dir" style="accent-color: {{t.link}}">Deduct</label>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Credits<input type="number" value="640" style="font: 600 15px 'JetBrains Mono', monospace; height: 42px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Reason (required)<textarea rows="3" style="font: 400 14px/1.5 Inter, sans-serif; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}; resize: vertical">Goodwill credit for slow generation on 12 Nov (ticket #[TICKET])</textarea></label>
+        <span style="font-size: 12px; color: {{t.text2}}">Balance after: <strong style="font-family: 'JetBrains Mono', monospace">10,410</strong> · Recorded in the ledger and audit log.</span>
+      </div>
+      <div style="padding: 14px 22px; border-top: 1px solid {{t.border}}; display: flex; justify-content: flex-end; gap: 10px">
+        <button type="button" onClick="{{closeAdjust}}" style="font: 600 14px Inter, sans-serif; height: 40px; padding: 0 14px; border-radius: 6px; border: 0; background: transparent; color: {{t.link}}; cursor: pointer">Cancel</button>
+        <button type="button" onClick="{{closeAdjust}}" style="font: 700 14px Inter, sans-serif; height: 40px; padding: 0 16px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; cursor: pointer">Grant 640 credits</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { adjust: false }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311',scrim:'rgba(0,0,0,0.6)',shadowLg:'0 12px 40px rgba(0,0,0,0.55)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA',scrim:'rgba(15,27,42,0.5)',shadowLg:'0 12px 40px rgba(15,27,42,0.22)'};
+    const sf = (s) => s === 'Succeeded' ? [t.goodBg, t.good] : (s === 'Failed' ? [t.critBg, t.crit] : [t.infoBg, t.info]);
+    return {
+      dark, t, adjustOpen: this.state.adjust,
+      openAdjust: () => this.setState({ adjust: true }), closeAdjust: () => this.setState({ adjust: false }),
+      stats: [
+        { label: 'Balance', value: '9,770', sub: '0 on hold' },
+        { label: 'Paid', value: '₹500', sub: '1 top-up' },
+        { label: 'Credits used', value: '730', sub: '2 charged actions' },
+        { label: 'AI jobs', value: '7', sub: '1 failed, not charged' },
+        { label: 'Code used', value: 'EARLYBIRD', sub: '+500 on 12 Nov' }
+      ],
+      ledger: [
+        ['ATS score · Acme Corp', '12 Nov 18:14', 'job_8f21', '−148', '9,770', t.text],
+        ['Generation · Acme Corp', '12 Nov 18:12', 'job_8f1c', '−582', '9,918', t.text],
+        ['Generation failed · released', '12 Nov 17:58', 'job_8e90', '0', '10,500', t.text2],
+        ['Coupon EARLYBIRD', '12 Nov 17:40', 'code_redeem', '+500', '10,500', t.good],
+        ['Wallet top-up · ₹500', '12 Nov 17:38', 'pay_PX81kLm2', '+10,000', '10,000', t.good]
+      ].map(([what, when, ref, amt, bal, color]) => ({ what, when, ref, amt, bal, color })),
+      jobs: [
+        ['ATS score', 'job_8f21', '12 Nov 18:14', 'Succeeded', '7.8 s'],
+        ['Generation', 'job_8f1c', '12 Nov 18:12', 'Succeeded', '48.2 s'],
+        ['Generation', 'job_8e90', '12 Nov 17:58', 'Failed', '61.0 s'],
+        ['JD analysis', 'job_8e8a', '12 Nov 17:57', 'Succeeded', '6.1 s'],
+        ['Extraction', 'job_7a02', '8 Nov 11:20', 'Succeeded', '14.3 s']
+      ].map(([type, id, when, status, dur]) => { const [sBg, sFg] = sf(status); return { type, id, when, status, dur, sBg, sFg }; }),
+      versions: [
+        { name: 'Asha Rao · Original', kind: 'Original', ats: '61', when: '8 Nov 2026' },
+        { name: 'Acme Corp · Frontend Engineer', kind: 'Generated', ats: '82 · outdated', when: '12 Nov 2026' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

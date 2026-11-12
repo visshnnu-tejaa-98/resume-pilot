@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Legal · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif">
+  <dc-import name="SiteNav" dark="{{dark}}" active="none" hint-size="100%,72px"></dc-import>
+
+  <section style="background: {{t.surface}}; border-bottom: 1px solid {{t.border}}">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 56px 24px 0; display: flex; flex-direction: column; gap: 20px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{t.accentText}}">Legal</span>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: clamp(32px, 4.5vw, 46px); letter-spacing: -0.02em">{{doc.title}}</h1>
+      <span style="font-size: 14px; color: {{t.text2}}">Last updated [DATE]</span>
+      <div role="tablist" aria-label="Legal documents" style="display: flex; flex-wrap: wrap; gap: 4px">
+        <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3">
+        <button type="button" role="tab" aria-selected="{{tb.selected}}" onClick="{{tb.pick}}" style="font: 600 15px Inter, sans-serif; padding: 14px 16px; border: 0; background: transparent; cursor: pointer; color: {{tb.color}}; border-bottom: 3px solid {{tb.line}}">{{tb.label}}</button>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1180px; margin: 0 auto; padding: 48px 24px 96px; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+    <nav aria-label="On this page" style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}; margin-bottom: 6px">On this page</span>
+      <sc-for list="{{doc.sections}}" as="s" hint-placeholder-count="6">
+      <a href="#{{s.id}}" style="font-size: 14px; color: {{t.link}}; text-decoration: none; padding: 4px 0">{{s.h}}</a>
+      </sc-for>
+    </nav>
+    <article style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 32px; max-width: 760px">
+      <div role="note" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}; font-size: 14px; line-height: 1.55">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true" style="flex: none"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+        <span>Template only. Final wording must be drafted or reviewed by a lawyer before launch.</span>
+      </div>
+      <sc-for list="{{doc.sections}}" as="s" hint-placeholder-count="6">
+      <div id="{{s.id}}" style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px">{{s.h}}</h2>
+        <p style="margin: 0; font-size: 16px; line-height: 1.75; color: {{t.text2}}">{{s.p}}</p>
+      </div>
+      </sc-for>
+      <div style="border-top: 1px solid {{t.border}}; padding-top: 24px; font-size: 15px; color: {{t.text2}}">Questions about this policy? <a href="Contact.dc.html" style="color: {{t.link}}; font-weight: 600">Contact us</a></div>
+    </article>
+  </section>
+
+  <dc-import name="SiteFooter" dark="{{dark}}" hint-size="100%,340px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'privacy' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {
+      bg: '#0A1119', surface: '#111B27', border: '#26364A', text: '#E8EEF5', text2: '#A3B3C5', accent: '#FF9F1C', accentText: '#FFB547', link: '#5AABFF', warn: '#F5B54A', warnBg: '#30220C', warnLine: '#5E4216'
+    } : {
+      bg: '#F4F6F8', surface: '#FFFFFF', border: '#D6DDE6', text: '#0F1B2A', text2: '#4B5A6B', accent: '#FF9900', accentText: '#A85E00', link: '#0A6BCB', warn: '#8F4D00', warnBg: '#FFF1DC', warnLine: '#F2CF98'
+    };
+    const docs = {
+      privacy: { title: 'Privacy policy', sections: [
+        ['collect', 'What we collect', 'Your account details from sign-in (name, email), the resumes you upload, the structured data we extract, job descriptions you paste, and payment records from Razorpay. [LEGAL TEXT]'],
+        ['use', 'How we use it', 'Only to run the features you ask for: extraction, tailoring, scoring and PDF export. Your resume data is never used to train AI models. [LEGAL TEXT]'],
+        ['ai', 'AI processing', 'Resume and job description text is sent to our AI provider (OpenAI) to generate results. [PROVIDER DATA-RETENTION TERMS]'],
+        ['retention', 'How long we keep it', 'Uploaded files are deleted after 30 days. Structured resumes, versions and reports stay until you delete them or your account.'],
+        ['rights', 'Your rights', 'You can view, correct and delete your data, and delete your account, at any time. We follow India’s Digital Personal Data Protection Act, 2023. [LEGAL TEXT]'],
+        ['contact-p', 'Grievance officer', '[NAME, EMAIL, ADDRESS]']
+      ]},
+      terms: { title: 'Terms and conditions', sections: [
+        ['service', 'The service', 'Resume Pilot tailors resumes and estimates ATS compatibility. The score is an estimate, not a guarantee of any employer’s result. [LEGAL TEXT]'],
+        ['account', 'Your account', 'One account per person. Coupon and referral codes can be used once per account. [LEGAL TEXT]'],
+        ['content', 'Your content', 'You own your resume. You are responsible for the accuracy of anything you add or edit manually. [LEGAL TEXT]'],
+        ['credits', 'Credits', 'Credits are bought through Razorpay, are not cash, cannot be transferred, and do not expire. [LEGAL TEXT]'],
+        ['use-rules', 'Acceptable use', '[LEGAL TEXT]'],
+        ['liability', 'Liability', '[LEGAL TEXT]']
+      ]},
+      refunds: { title: 'Refund policy', sections: [
+        ['failed', 'Failed actions', 'If an AI action fails, its held credits are released automatically. No refund request is needed.'],
+        ['unused', 'Unused credits', 'Unused purchased credits can be refunded within [REFUND WINDOW] of purchase. Free credits from coupons or referrals are not refundable.'],
+        ['how', 'How to request', 'Contact support with your Razorpay payment ID. Refunds go back to the original payment method. [PROCESSING TIME]'],
+        ['gst', 'Taxes', '[GST TREATMENT]']
+      ]}
+    };
+    const tab = this.state.tab;
+    const cur = docs[tab];
+    const doc = { title: cur.title, sections: cur.sections.map(([id, h, p]) => ({ id, h, p })) };
+    const tabs = [['privacy', 'Privacy'], ['terms', 'Terms'], ['refunds', 'Refunds']].map(([id, label]) => ({
+      label, selected: id === tab ? 'true' : 'false',
+      color: id === tab ? t.text : t.text2, line: id === tab ? t.accent : 'transparent',
+      pick: () => this.setState({ tab: id })
+    }));
+    return { dark, t, doc, tabs };
+  }
+}
+</script>
+</body>
+</html>

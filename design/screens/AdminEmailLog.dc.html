@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email log · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1000px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="emaillog" min-height="936px" hint-size="248px,936px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Email log</h1>
+          <span style="font-size: 13px; color: {{t.text2}}">Every email sent, with delivery status from the provider. Kept for [RETENTION PERIOD].</span>
+        </div>
+        <button type="button" style="height: 38px; padding: 0 14px; border-radius: 6px; cursor: pointer; font: 600 13px Inter, sans-serif; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Export CSV</button>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+        <label style="flex: 1 1 260px; display: flex; align-items: center; gap: 8px; height: 38px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{t.text2}}" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+          <input aria-label="Search by email or message ID" placeholder="Search email or message ID" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: {{t.text}}; font: 400 13.5px Inter, sans-serif">
+        </label>
+        <div role="tablist" aria-label="Status" style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{chips}}" as="c" hint-placeholder-count="6">
+          <button type="button" role="tab" aria-selected="{{c.sel}}" onClick="{{c.pick}}" style="height: 32px; padding: 0 12px; border-radius: 999px; cursor: pointer; font: 600 12.5px Inter, sans-serif; border: 1px solid {{c.ring}}; background: {{c.bg}}; color: {{c.fg}}">{{c.label}} <span style="font-family: 'JetBrains Mono', monospace; opacity: 0.75">{{c.n}}</span></button>
+          </sc-for>
+        </div>
+        <span style="height: 32px; display: flex; align-items: center; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.border}}; font-size: 12.5px; color: {{t.text2}}">Last 7 days ▾</span>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 820px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Time (IST)</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Recipient</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Template</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Detail</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Message ID</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 11px 14px; font-family: 'JetBrains Mono', monospace; white-space: nowrap">{{r.time}}</td>
+              <td style="padding: 11px 8px"><a href="AdminUserDetail.dc.html" style="color: {{t.link}}; font-weight: 600">{{r.to}}</a></td>
+              <td style="padding: 11px 8px">{{r.tpl}}</td>
+              <td style="padding: 11px 8px"><span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: {{r.bg}}; color: {{r.fg}}; white-space: nowrap">{{r.status}}</span></td>
+              <td style="padding: 11px 8px; color: {{t.text2}}">{{r.detail}}</td>
+              <td style="padding: 11px 14px; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{r.id}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+          <div style="padding: 36px; text-align: center; font-size: 13px; color: {{t.text2}}">No emails with this status in the last 7 days.</div>
+        </sc-if>
+      </section>
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12.5px; color: {{t.text2}}">
+        <span>Recipients are masked. Open the user to see the full address.</span>
+        <span>Showing {{shown}} of 1,148</span>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { f: 'all' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',warn:'#F5B54A',warnBg:'#30220C',bad:'#FF8A7E',badBg:'#3A1512',mute:'#A3B3C5',muteBg:'#1A2636'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',warn:'#8F4D00',warnBg:'#FFF1DC',bad:'#B42318',badBg:'#FDECEA',mute:'#4B5A6B',muteBg:'#EAEEF3'};
+    const S = { opened: [t.good, t.goodBg, 'Opened'], delivered: [t.info, t.infoBg, 'Delivered'], bounced: [t.bad, t.badBg, 'Bounced'], unsub: [t.warn, t.warnBg, 'Unsubscribed'], suppressed: [t.mute, t.muteBg, 'Skipped'] };
+    const R = [
+      ['12 Nov 14:22', 'as***@gmail.com', 'Recharge successful', 'opened', 'Opened 14:24', 'msg_8fK2a19'],
+      ['12 Nov 14:05', 'ro***@outlook.com', 'Recharge pending', 'delivered', '—', 'msg_8fK1zQ4'],
+      ['12 Nov 13:51', 'pr***@yahoo.in', 'Welcome', 'opened', 'Opened 13:58', 'msg_8fK1v07'],
+      ['12 Nov 13:40', 'ka***@gmail.com', 'Code applied', 'delivered', '—', 'msg_8fK1sLm'],
+      ['12 Nov 12:18', 'de***@company.co', 'Recharge failed', 'bounced', 'Mailbox full (soft)', 'msg_8fK0pX2'],
+      ['12 Nov 10:00', 'ni***@gmail.com', 'Promo code', 'opened', 'Clicked CTA', 'msg_8fJz3aa'],
+      ['12 Nov 10:00', 'sa***@gmail.com', 'Promo code', 'unsub', 'Unsubscribed from marketing', 'msg_8fJz3ab'],
+      ['12 Nov 10:00', 'ha***@hotmail.com', 'Promo code', 'suppressed', 'Opted out earlier', '—'],
+      ['11 Nov 19:44', 'me***@gmail.com', 'Inactive nudge', 'delivered', '—', 'msg_8fJq9Wc'],
+      ['11 Nov 18:02', 'ar***@old-domain.in', 'Welcome', 'bounced', 'Address does not exist (hard)', 'msg_8fJp1Rt'],
+      ['11 Nov 16:30', 'vi***@gmail.com', 'New features', 'opened', 'Opened 17:12', 'msg_8fJn7Ke'],
+      ['11 Nov 15:15', 'ta***@gmail.com', 'Recharge successful', 'opened', 'Opened 15:15', 'msg_8fJm2Bd']
+    ];
+    const f = this.state.f;
+    const rows = R.filter((r) => f === 'all' || r[3] === f).map(([time, to, tpl, k, detail, id]) => ({ time, to, tpl, detail, id, status: S[k][2], fg: S[k][0], bg: S[k][1] }));
+    const counts = { all: '1,148', opened: '642', delivered: '471', bounced: '9', unsub: '4', suppressed: '22' };
+    const chips = [['all', 'All'], ['opened', 'Opened'], ['delivered', 'Delivered'], ['bounced', 'Bounced'], ['unsub', 'Unsubscribed'], ['suppressed', 'Skipped']].map(([id, label]) => {
+      const on = f === id;
+      return { label, n: counts[id], sel: on ? 'true' : 'false', ring: on ? t.text : t.border, bg: on ? t.text : t.surface, fg: on ? t.surface : t.text, pick: () => this.setState({ f: id }) };
+    });
+    return { dark, t, rows, chips, empty: rows.length === 0, shown: rows.length };
+  }
+}
+</script>
+</body>
+</html>

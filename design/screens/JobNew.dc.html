@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New job description · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1050px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="jobs" min-height="986px" hint-size="248px,986px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 14px; color: {{t.text2}}"><a href="Jobs.dc.html" style="color: {{t.link}}">Job descriptions</a><span>/</span><span style="color: {{t.text}}">New</span></nav>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Add a job description</h1>
+        <span style="font-size: 15px; color: {{t.text2}}">Paste the whole posting. The more detail, the better the match. Saving is free.</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+        <form style="flex: 999 1 520px; min-width: 0; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Company <span style="font-weight: 400; color: {{t.text2}}">(optional)</span>
+              <input type="text" value="Acme Corp" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Job title <span style="font-weight: 400; color: {{t.text2}}">(optional)</span>
+              <input type="text" value="Frontend Engineer" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+            </label>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Posting link <span style="font-weight: 400; color: {{t.text2}}">(optional, saved for your reference)</span>
+            <input type="url" placeholder="https://" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Job description
+            <textarea rows="12" onInput="{{onText}}" style="font: 400 15px/1.6 Inter, sans-serif; box-sizing: border-box; padding: 12px; border-radius: 6px; border: {{areaBorder}}; background: {{t.inputBg}}; color: {{t.text}}; resize: vertical">We're hiring a Frontend Engineer to build and own our React design system.
+
+What you'll do
+- Build accessible, reusable components in React and TypeScript
+- Partner with designers on tokens, theming and documentation
+- Improve performance across our customer-facing web apps
+
+What we're looking for
+- 4+ years of professional frontend experience
+- Strong React, TypeScript and CSS skills
+- Experience with testing (Jest, Playwright) and CI/CD
+- Nice to have: GraphQL, Kubernetes basics</textarea>
+            <span style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 400"><span style="color: {{hintColor}}">{{hint}}</span><span style="font-family: 'JetBrains Mono', monospace; color: {{countColor}}">{{count}} / 30,000</span></span>
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; border-top: 1px solid {{t.border}}; padding-top: 18px">
+            <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}">Save job</button>
+            <a href="Generate.dc.html" style="text-decoration: none; height: 44px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Save and tailor resume</a>
+          </div>
+        </form>
+        <aside style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 14px">
+          <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+            <strong style="font-size: 15px">For the best match</strong>
+            <sc-for list="{{tips}}" as="tip" hint-placeholder-count="3">
+            <span style="display: flex; gap: 8px; font-size: 14px; line-height: 1.5; color: {{t.text2}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.6" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M5 12l5 5 9-10"></path></svg>{{tip}}</span>
+            </sc-for>
+          </div>
+          <div style="background: {{t.infoBg}}; border: 1px solid {{t.infoLine}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+            <strong style="font-size: 14px">When does this cost credits?</strong>
+            <span style="font-size: 14px; line-height: 1.55; color: {{t.text2}}">Saving is free. The job is analysed the first time you tailor or score against it, after you confirm the estimate.</span>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { len: 512 }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',crit:'#FF8A7E',infoBg:'#0E2339',infoLine:'#1E4670'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',crit:'#B42318',infoBg:'#E6F0FB',infoLine:'#B9D3F1'};
+    const len = this.state.len;
+    const over = len > 30000, short = len < 200;
+    return {
+      dark, t,
+      count: len.toLocaleString('en-IN'),
+      countColor: over ? t.crit : t.text2,
+      areaBorder: over ? '2px solid ' + t.crit : '1px solid ' + t.borderStrong,
+      hint: over ? 'Too long. Trim it to 30,000 characters or fewer.' : (short ? 'Add at least 200 characters.' : 'Looks good. Include requirements and responsibilities.'),
+      hintColor: over ? t.crit : t.text2,
+      onText: (e) => this.setState({ len: (e && e.target && e.target.value || '').length }),
+      tips: ['Include the requirements and nice-to-haves', 'Keep the responsibilities section', 'Remove unrelated text like cookie notices']
+    };
+  }
+}
+</script>
+</body>
+</html>

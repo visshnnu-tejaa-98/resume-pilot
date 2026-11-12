@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Audit log · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 950px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="audit" min-height="886px" hint-size="248px,886px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Audit log</h1>
+          <span style="font-size: 13px; color: {{t.text2}}">Read-only. Every admin action, with who did it and why.</span>
+        </div>
+        <button type="button" style="font: 600 13px Inter, sans-serif; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Export CSV</button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Admin<select style="font: 500 13px Inter, sans-serif; height: 36px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All admins</option></select></label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Action<select style="font: 500 13px Inter, sans-serif; height: 36px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All actions</option><option>Credit adjustment</option><option>Refund</option><option>Suspension</option><option>Content access</option><option>Config change</option></select></label>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Time</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Admin</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Action</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Target</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Reason</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+            <tr style="border-top: 1px solid {{t.border}}; vertical-align: top">
+              <td style="padding: 11px 14px; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}; white-space: nowrap">{{r.at}}</td>
+              <td style="padding: 11px 8px">{{r.admin}}</td>
+              <td style="padding: 11px 8px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; background: {{r.bg}}; color: {{r.fg}}">{{r.action}}</span></td>
+              <td style="padding: 11px 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px">{{r.target}}</td>
+              <td style="padding: 11px 14px; line-height: 1.5; color: {{t.text2}}">{{r.reason}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":950}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA'};
+    const k = { 'Credit grant': [t.goodBg, t.good], 'Refund': [t.warnBg, t.warn], 'Suspension': [t.critBg, t.crit], 'Content access': [t.infoBg, t.info], 'Config change': [t.surface2, t.text2], 'Coupon change': [t.surface2, t.text2] };
+    const R = [
+      ['12 Nov 17:51', 'Ravi K.', 'Credit grant', 'usr_DK44 · +640', 'Generation timed out twice during queue incident; goodwill.'],
+      ['12 Nov 15:10', 'Ravi K.', 'Refund', 'pay_PT11zYw3', 'Unused credits, requested within refund window.'],
+      ['12 Nov 12:02', 'Ops bot', 'Coupon change', 'LAUNCHTEST · disabled', 'Reached max redemptions.'],
+      ['11 Nov 19:30', 'Ravi K.', 'Suspension', 'usr_XX09', 'Coupon abuse: 14 linked accounts from one device.'],
+      ['11 Nov 10:44', 'Anita R.', 'Content access', 'job_8e51 output', 'Investigating repeated fact-check failures for support ticket.'],
+      ['1 Nov 09:00', 'Ravi K.', 'Config change', 'pricing v2 → v3', 'Markup raised to 5.0× after measured AI cost on eval set.'],
+      ['31 Oct 18:20', 'Anita R.', 'Config change', 'templates · default Classic', 'Classic tested best on ATS parsing.'],
+      ['30 Oct 16:05', 'Ravi K.', 'Coupon change', 'EARLYBIRD · created', 'Launch offer, 500 credits, limit 5,000.']
+    ];
+    return { dark, t, rows: R.map(([at, admin, action, target, reason]) => { const [bg, fg] = k[action]; return { at, admin, action, target, reason, bg, fg }; }) };
+  }
+}
+</script>
+</body>
+</html>

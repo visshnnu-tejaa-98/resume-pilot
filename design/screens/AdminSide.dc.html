@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin sidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<aside style="width: 248px; min-height: {{minH}}; box-sizing: border-box; background: {{bg}}; border-right: 1px solid {{line}}; padding: 18px 12px; display: flex; flex-direction: column; gap: 20px; font-family: Inter, system-ui, sans-serif; color: {{text}}">
+  <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+  <nav aria-label="{{g.title}}" style="display: flex; flex-direction: column; gap: 2px">
+    <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{muted}}; padding: 0 12px 6px">{{g.title}}</span>
+    <sc-for list="{{g.items}}" as="i" hint-placeholder-count="3">
+    <a href="{{i.href}}" aria-current="{{i.current}}" style="display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: {{i.weight}}; color: {{i.color}}; background: {{i.bg}}">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{i.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>
+      <span style="flex: 1">{{i.label}}</span>
+      <span style="font: 600 11px 'JetBrains Mono', monospace; color: {{i.badgeFg}}">{{i.badge}}</span>
+    </a>
+    </sc-for>
+  </nav>
+  </sc-for>
+  <div style="margin-top: auto; border-top: 1px solid {{line}}; padding: 12px 12px 0; font-size: 12px; line-height: 1.5; color: {{muted}}">Every admin action is written to the audit log.</div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"active":{"editor":"enum","options":["overview","aijobs","users","coupons","emails","campaigns","emaillog","ledger","payments","pricing","templates","audit","settings"],"default":"overview"},"minHeight":{"editor":"text","default":"900px"},"$preview":{"width":248,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const active = this.props.active ?? 'overview';
+    const c = dark
+      ? { bg: '#0D1620', line: '#26364A', text: '#E8EEF5', text2: '#A3B3C5', muted: '#8193A8', on: '#1A2636', onText: '#FFFFFF', icon: '#A3B3C5', iconOn: '#FFB547', alert: '#FF8A7E' }
+      : { bg: '#FFFFFF', line: '#D6DDE6', text: '#0F1B2A', text2: '#4B5A6B', muted: '#5E6E80', on: '#EAEEF3', onText: '#0F1B2A', icon: '#4B5A6B', iconOn: '#A85E00', alert: '#B42318' };
+    const mk = ([id, label, href, d, badge]) => {
+      const on = id === active;
+      return { label, href, d, badge: badge || '', badgeFg: c.alert, current: on ? 'page' : 'false', weight: on ? 600 : 500, color: on ? c.onText : c.text2, bg: on ? c.on : 'transparent', icon: on ? c.iconOn : c.icon };
+    };
+    const groups = [
+      { title: 'Monitor', items: [
+        ['overview', 'Overview', 'AdminOverview.dc.html', 'M4 19h16M7 16V9M12 16V5M17 16v-4'],
+        ['aijobs', 'AI jobs and logs', 'AdminAiJobs.dc.html', 'M4 6h16v12H4zM8 10l2 2-2 2M12 14h4', '3']
+      ] },
+      { title: 'People', items: [
+        ['users', 'Users', 'AdminUsers.dc.html', 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 2.7-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M21 20c0-2.5-1.5-4.2-4-4.8'],
+        ['coupons', 'Coupons and referrals', 'AdminCoupons.dc.html', 'M4 7h16v4a2 2 0 0 0 0 4v4H4v-4a2 2 0 0 0 0-4zM10 7v12', '2']
+      ] },
+      { title: 'Engage', items: [
+        ['emails', 'Email templates', 'AdminEmails.dc.html', 'M3 6h18v12H3zM3 7l9 6 9-6'],
+        ['campaigns', 'Campaigns', 'AdminCampaign.dc.html', 'M4 10v4h3l6 4V6L7 10zM17 9a4 4 0 0 1 0 6'],
+        ['emaillog', 'Email log', 'AdminEmailLog.dc.html', 'M5 4h14v16H5zM9 8h6M9 12h6M9 16h3']
+      ] },
+      { title: 'Money', items: [
+        ['ledger', 'Credit ledger', 'AdminLedger.dc.html', 'M5 4h14v16H5zM9 8h6M9 12h6M9 16h3'],
+        ['payments', 'Payments and refunds', 'AdminPayments.dc.html', 'M3 6h18v12H3zM3 10h18M7 15h3'],
+        ['pricing', 'Pricing config', 'AdminPricing.dc.html', 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4']
+      ] },
+      { title: 'System', items: [
+        ['templates', 'Templates', 'AdminTemplates.dc.html', 'M5 3h14v18H5zM9 7h6M9 11h6M9 15h4'],
+        ['audit', 'Audit log', 'AdminAudit.dc.html', 'M12 8v4l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z'],
+        ['settings', 'App settings', 'AdminSettings.dc.html', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1']
+      ] }
+    ].map((g) => ({ title: g.title, items: g.items.map(mk) }));
+    return Object.assign({}, c, { groups, minH: this.props.minHeight ?? '900px' });
+  }
+}
+</script>
+</body>
+</html>

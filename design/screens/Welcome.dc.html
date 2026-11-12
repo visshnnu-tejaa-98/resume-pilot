@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Welcome · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1000px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="background: {{t.hero}}; color: #F2F5F9; border-bottom: 1px solid #22344A">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px">
+      <span style="display: flex; align-items: center; gap: 10px">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+        <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700">Resume<span style="color: #FF9900">Pilot</span></span>
+      </span>
+      <span style="display: flex; align-items: center; gap: 12px">
+        <span style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; background: #1B2A3D; border: 1px solid #33475E; font: 600 14px 'JetBrains Mono', monospace"><span style="width: 8px; height: 8px; border-radius: 999px; background: #FF9900"></span>{{balance}} credits</span>
+        <span aria-label="Account: Asha Rao" style="width: 34px; height: 34px; border-radius: 999px; background: #33475E; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">AR</span>
+      </span>
+    </div>
+  </header>
+
+  <main style="flex: 1; max-width: 880px; width: 100%; box-sizing: border-box; margin: 0 auto; padding: 64px 24px 80px; display: flex; flex-direction: column; gap: 28px">
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">ACCOUNT CREATED</span>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: clamp(32px, 4.5vw, 46px); line-height: 1.08; letter-spacing: -0.02em">You're in, Asha. Let's get you airborne.</h1>
+      <p style="margin: 0; font-size: 17px; line-height: 1.6; color: {{t.text2}}">Two quick steps and you're ready to tailor your first resume.</p>
+    </div>
+
+    <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 16px; box-shadow: {{t.shadow}}">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span style="width: 32px; height: 32px; border-radius: 999px; background: {{stepOneBg}}; color: {{stepOneFg}}; display: flex; align-items: center; justify-content: center; font: 600 13px 'JetBrains Mono', monospace">1</span>
+          <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Claim your free credits</strong>
+        </div>
+        <span style="font-size: 13px; color: {{t.text2}}">Optional</span>
+      </div>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{t.text2}}">Your wallet starts at 0 credits. Apply EARLYBIRD or a friend's referral code to add 500.</p>
+      <sc-if value="{{notApplied}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <label for="w-code" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Coupon or referral code</label>
+          <input id="w-code" type="text" value="EARLYBIRD" style="flex: 1 1 240px; min-width: 0; font: 600 16px 'JetBrains Mono', monospace; letter-spacing: 0.06em; height: 48px; box-sizing: border-box; padding: 0 14px; border-radius: 6px; border: 1px dashed {{t.accentLine}}; background: {{t.accentTint}}; color: {{t.text}}">
+          <button type="button" onClick="{{apply}}" style="font: 700 15px Inter, sans-serif; height: 48px; padding: 0 22px; border-radius: 6px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}; cursor: pointer">Apply code</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{applied}}" hint-placeholder-val="{{ false }}">
+        <div role="status" style="display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 8px; background: {{t.goodBg}}; border: 1px solid {{t.goodLine}}">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+          <span style="font-size: 15px"><strong>EARLYBIRD applied.</strong> 500 credits added to your wallet.</span>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 18px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="width: 32px; height: 32px; border-radius: 999px; background: {{t.accent}}; color: {{t.onAccent}}; display: flex; align-items: center; justify-content: center; font: 600 13px 'JetBrains Mono', monospace">2</span>
+        <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Upload your resume</strong>
+      </div>
+      <div style="border: 2px dashed {{t.borderStrong}}; border-radius: 12px; padding: 36px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; background: {{t.bg}}">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="{{t.link}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        <strong style="font-size: 16px">Drop your resume here, or <span style="color: {{t.link}}">browse</span></strong>
+        <span style="font-size: 14px; color: {{t.text2}}">PDF, DOCX, LaTeX (.tex), PNG or JPG · up to 10 MB · free</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+        <a href="Dashboard.dc.html" style="font-size: 15px; font-weight: 600; color: {{t.link}}">Skip to dashboard</a>
+        <span style="font-size: 13px; color: {{t.text2}}">Uploading and extraction never use credits.</span>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { applied: false }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {
+      bg: '#0A1119', surface: '#111B27', border: '#26364A', borderStrong: '#4A5F78', text: '#E8EEF5', text2: '#A3B3C5', accent: '#FF9F1C', onAccent: '#0A1119', accentText: '#FFB547', accentTint: '#2E2210', accentLine: '#C9801C', link: '#5AABFF', good: '#4CC38A', goodBg: '#10291C', goodLine: '#1E5236', hero: '#060B12', surface2: '#1A2636',
+      shadow: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.35)'
+    } : {
+      bg: '#F4F6F8', surface: '#FFFFFF', border: '#D6DDE6', borderStrong: '#9AA8B8', text: '#0F1B2A', text2: '#4B5A6B', accent: '#FF9900', onAccent: '#0F1B2A', accentText: '#A85E00', accentTint: '#FFF4E2', accentLine: '#C77700', link: '#0A6BCB', good: '#1B7A43', goodBg: '#E3F4EA', goodLine: '#B5DFC5', hero: '#0F1B2A', surface2: '#EAEEF3',
+      shadow: '0 1px 2px rgba(15,27,42,0.06), 0 12px 32px rgba(15,27,42,0.08)'
+    };
+    const applied = this.state.applied;
+    return {
+      dark, t, applied, notApplied: !applied,
+      balance: applied ? '500' : '0',
+      stepOneBg: applied ? t.good : t.hero,
+      stepOneFg: '#FFFFFF',
+      apply: () => this.setState({ applied: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

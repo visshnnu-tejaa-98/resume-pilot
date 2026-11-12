@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Resume editor · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Source+Serif+4:wght@400;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1150px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+
+  <div style="background: {{t.surface}}; border-bottom: 1px solid {{t.border}}; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center">
+    <a href="MyResumes.dc.html" aria-label="Back to my resumes" style="width: 36px; height: 36px; border-radius: 6px; border: 1px solid {{t.border}}; display: flex; align-items: center; justify-content: center; color: {{t.text}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></a>
+    <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+      <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Acme Corp · Frontend Engineer</strong>
+      <span style="font-size: 12px; color: {{t.text2}}">Tailored from Asha Rao · Original · saved just now</span>
+    </div>
+    <div style="display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: {{t.surface2}}; margin-left: auto; flex-wrap: wrap" role="radiogroup" aria-label="Template">
+      <sc-for list="{{templates}}" as="tp" hint-placeholder-count="5">
+      <button type="button" role="radio" aria-checked="{{tp.on}}" onClick="{{tp.pick}}" style="font: {{tp.weight}} 13px Inter, sans-serif; height: 32px; padding: 0 12px; border-radius: 6px; border: 0; cursor: pointer; background: {{tp.bg}}; color: {{tp.color}}">{{tp.name}}</button>
+      </sc-for>
+    </div>
+    <a href="AtsReport.dc.html" style="text-decoration: none; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; color: {{t.text}}; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px">ATS score <span style="font: 600 12px 'JetBrains Mono', monospace; padding: 2px 6px; border-radius: 4px; background: {{t.goodBg}}; color: {{t.good}}">82</span></a>
+    <a href="Preview.dc.html" style="text-decoration: none; height: 38px; padding: 0 16px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 14px; display: flex; align-items: center">Download PDF</a>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; align-items: stretch">
+    <nav aria-label="Sections" style="flex: 0 1 210px; box-sizing: border-box; border-right: 1px solid {{t.border}}; background: {{t.surface}}; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{t.text2}}; padding: 0 10px 8px">Sections</span>
+      <sc-for list="{{sections}}" as="s" hint-placeholder-count="7">
+      <div style="display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 8px 0 10px; border-radius: 6px; background: {{s.bg}}">
+        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; color: {{t.borderStrong}}"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"></path></svg>
+        <span style="flex: 1; font-size: 14px; font-weight: {{s.weight}}; color: {{s.color}}">{{s.label}}</span>
+        <button type="button" aria-label="{{s.toggleLabel}}" style="width: 28px; height: 28px; border: 0; background: transparent; color: {{s.eye}}; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="{{s.eyeD}}"></path></svg></button>
+      </div>
+      </sc-for>
+      <button type="button" style="margin-top: 8px; font: 600 13px Inter, sans-serif; height: 34px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; background: transparent; color: {{t.link}}">+ Custom section</button>
+    </nav>
+
+    <section aria-label="Edit work experience" style="flex: 1 1 420px; min-width: 0; box-sizing: border-box; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Work experience</h2>
+        <button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: transparent; color: {{t.text}}">+ Add role</button>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Company<input type="text" value="Northwind" style="font: 400 14px Inter, sans-serif; height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Designation<input type="text" value="Frontend Engineer" style="font: 400 14px Inter, sans-serif; height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Dates<input type="text" value="Jul 2023 – Present" style="font: 400 14px Inter, sans-serif; height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+        </div>
+        <span style="font-size: 13px; font-weight: 600">Bullets</span>
+        <sc-for list="{{bullets}}" as="b" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 8px; background: {{t.surface2}}">
+          <div style="display: flex; gap: 8px; align-items: flex-start">
+            <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; margin-top: 10px; color: {{t.borderStrong}}"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"></path></svg>
+            <textarea rows="2" aria-label="Bullet {{b.n}}" style="flex: 1; min-width: 0; font: 400 14px/1.5 Inter, sans-serif; box-sizing: border-box; padding: 8px 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}; resize: vertical">{{b.text}}</textarea>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center; padding-left: 20px; font-size: 12px">
+            <span style="font-weight: 600; padding: 2px 8px; border-radius: 999px; background: {{b.tagBg}}; color: {{b.tagFg}}">{{b.tag}}</span>
+            <button type="button" style="border: 0; background: transparent; padding: 0; font: 600 12px Inter, sans-serif; color: {{t.link}}">Show original</button>
+          </div>
+        </div>
+        </sc-for>
+        <span style="font-size: 12px; color: {{t.text2}}">You're responsible for the accuracy of anything you add by hand.</span>
+      </div>
+      <div role="status" style="display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-radius: 8px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}; font-size: 13px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true" style="flex: none"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+        <span style="flex: 1">You edited this version. Its ATS score of 82 is now outdated.</span>
+        <a href="AtsReport.dc.html" style="font-weight: 700; color: {{t.link}}">Re-score</a>
+      </div>
+    </section>
+
+    <section aria-label="Live preview" style="flex: 1 1 520px; min-width: 0; box-sizing: border-box; background: {{t.canvas}}; padding: 20px; display: flex; flex-direction: column; gap: 12px; align-items: center">
+      <div style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: {{t.text2}}">
+        <button type="button" aria-label="Zoom out" style="width: 30px; height: 30px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text}}">−</button>
+        <span style="font-family: 'JetBrains Mono', monospace">80%</span>
+        <button type="button" aria-label="Zoom in" style="width: 30px; height: 30px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text}}">+</button>
+        <span style="margin-left: 12px">Page 1 of 1 · A4</span>
+      </div>
+      <article aria-label="Resume preview" style="width: 100%; max-width: 520px; aspect-ratio: 210 / 297; box-sizing: border-box; background: #FFFFFF; color: #1A1A1A; box-shadow: 0 8px 30px rgba(0,0,0,0.18); padding: 36px 38px; display: flex; flex-direction: column; gap: 12px; font-family: {{p.body}}; font-size: 9.5px; line-height: 1.45; overflow: hidden">
+        <div style="display: flex; flex-direction: column; gap: 3px; text-align: {{p.align}}">
+          <span style="font-family: {{p.head}}; font-size: 20px; font-weight: 700; color: {{p.nameColor}}; letter-spacing: {{p.track}}">Asha Rao</span>
+          <span style="font-size: 9px; color: #444">Frontend Engineer · Bengaluru · asha.rao@example.com · linkedin.com/in/asharao</span>
+        </div>
+        <sc-for list="{{resume}}" as="r" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 5px">
+          <span style="font-family: {{p.head}}; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: {{p.headColor}}; border-bottom: {{p.rule}}; padding-bottom: 2px">{{r.h}}</span>
+          <sc-for list="{{r.items}}" as="it" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <sc-if value="{{it.title}}" hint-placeholder-val="{{ true }}"><div style="display: flex; justify-content: space-between; gap: 8px"><strong>{{it.title}}</strong><span style="color: #555">{{it.date}}</span></div></sc-if>
+            <sc-for list="{{it.lines}}" as="ln" hint-placeholder-count="2"><span>{{ln}}</span></sc-for>
+          </div>
+          </sc-for>
+        </div>
+        </sc-for>
+      </article>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tpl: 'Modern' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216',info:'#6FB5FF',infoBg:'#0E2339',canvas:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98',info:'#0A62BA',infoBg:'#E6F0FB',canvas:'#DDE3EA'};
+    const tpl = this.state.tpl;
+    const styles = {
+      Classic:      { head: "'Source Serif 4', Georgia, serif", body: "'Source Serif 4', Georgia, serif", nameColor: '#111', headColor: '#111', rule: '1px solid #111', align: 'center', track: '0' },
+      Modern:       { head: "'Space Grotesk', Inter, sans-serif", body: 'Inter, sans-serif', nameColor: '#0F1B2A', headColor: '#0A5BAD', rule: '2px solid #0A5BAD', align: 'left', track: '-0.01em' },
+      Minimal:      { head: 'Inter, sans-serif', body: 'Inter, sans-serif', nameColor: '#111', headColor: '#555', rule: '0', align: 'left', track: '0' },
+      Professional: { head: "'Source Serif 4', Georgia, serif", body: 'Inter, sans-serif', nameColor: '#0F1B2A', headColor: '#0F1B2A', rule: '1px solid #9AA8B8', align: 'left', track: '0' },
+      Technical:    { head: "'JetBrains Mono', monospace", body: 'Inter, sans-serif', nameColor: '#0F1B2A', headColor: '#0F1B2A', rule: '1px dashed #9AA8B8', align: 'left', track: '0' }
+    };
+    const templates = Object.keys(styles).map((name) => ({
+      name, on: name === tpl ? 'true' : 'false', weight: name === tpl ? 600 : 500,
+      bg: name === tpl ? t.surface : 'transparent', color: name === tpl ? t.text : t.text2,
+      pick: () => this.setState({ tpl: name })
+    }));
+    const eyeOn = 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z';
+    const eyeOff = 'M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.2 3.9M6.6 6.6C3.9 8.4 2 12 2 12s4 7 10 7a9.7 9.7 0 0 0 5.4-1.6';
+    const sections = [['Personal info', true], ['Summary', true], ['Work experience', true], ['Skills', true], ['Projects', true], ['Education', true], ['Certifications', false]].map(([label, vis], i) => ({
+      label, bg: i === 2 ? t.surface2 : 'transparent', weight: i === 2 ? 600 : 500, color: vis ? t.text : t.text2,
+      eye: vis ? t.text2 : t.borderStrong, eyeD: vis ? eyeOn : eyeOff, toggleLabel: (vis ? 'Hide ' : 'Show ') + label
+    }));
+    const bullets = [
+      ['Lead development of Northwind’s React and TypeScript design system, used across all customer-facing web apps.', 'AI rewrite', t.infoBg, t.info],
+      ['Partner with product designers on tokens, theming and accessible components.', 'AI rewrite', t.infoBg, t.info],
+      ['Mentor two junior engineers through code reviews and pairing.', 'Edited by you', t.warnBg, t.warn]
+    ].map(([text, tag, tagBg, tagFg], i) => ({ text, tag, tagBg, tagFg, n: String(i + 1) }));
+    const resume = [
+      { h: 'Summary', items: [{ title: '', date: '', lines: ['Frontend engineer with 5 years of experience building React and TypeScript design systems and fast, accessible web apps.'] }] },
+      { h: 'Experience', items: [
+        { title: 'Frontend Engineer · Northwind', date: 'Jul 2023 – Present', lines: ['• Lead development of Northwind’s React and TypeScript design system, used across all customer-facing web apps.', '• Partner with product designers on tokens, theming and accessible components.', '• Mentor two junior engineers through code reviews and pairing.'] },
+        { title: 'Software Engineer · Globex', date: 'Jan 2021 – Jun 2023', lines: ['• Built the checkout UI in React, used by every Globex web customer.', '• Maintained the shared component library and its documentation.'] }
+      ] },
+      { h: 'Skills', items: [{ title: '', date: '', lines: ['React · TypeScript · JavaScript · Next.js · CSS · Storybook · Jest · Playwright · Git · Figma'] }] },
+      { h: 'Education', items: [{ title: 'B.Tech, Computer Science · [UNIVERSITY]', date: '2016 – 2020', lines: [] }] }
+    ];
+    return { dark, t, templates, sections, bullets, resume, p: styles[tpl] };
+  }
+}
+</script>
+</body>
+</html>

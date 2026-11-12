@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Generate · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="position: relative; min-height: 1100px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="generate" min-height="1036px" hint-size="248px,1036px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 760px">
+        <sc-for list="{{route}}" as="r" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center">
+            <span style="width: 28px; height: 28px; flex: none; box-sizing: border-box; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 600 12px 'JetBrains Mono', monospace; background: {{r.bg}}; color: {{r.fg}}; border: 2px solid {{r.ring}}">{{r.n}}</span>
+            <span style="flex: 1; border-top: 2px {{r.style}} {{r.line}}; margin: 0 6px"></span>
+          </div>
+          <span style="font-size: 13px; font-weight: {{r.weight}}; color: {{r.color}}">{{r.label}}</span>
+        </div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Tailor a resume</h1>
+        <span style="font-size: 15px; color: {{t.text2}}">Pick the resume to start from and the job to tailor it for. Your source stays unchanged.</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+        <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+          <fieldset style="margin: 0; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.surface}}; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+            <legend style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600; padding: 0 6px">1. Start from</legend>
+            <sc-for list="{{sources}}" as="s" hint-placeholder-count="3">
+            <label style="display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 8px; border: {{s.border}}; background: {{s.bg}}; cursor: pointer">
+              <input type="radio" name="src" checked="{{s.on}}" style="width: 18px; height: 18px; accent-color: {{t.link}}">
+              <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">{{s.name}}</strong><span style="font-size: 13px; color: {{t.text2}}">{{s.sub}}</span></span>
+            </label>
+            </sc-for>
+          </fieldset>
+          <fieldset style="margin: 0; border: 1px solid {{t.border}}; border-radius: 12px; background: {{t.surface}}; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+            <legend style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px; font-weight: 600; padding: 0 6px">2. Tailor for</legend>
+            <sc-for list="{{jobs}}" as="j" hint-placeholder-count="4">
+            <label style="display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: 8px; border: {{j.border}}; background: {{j.bg}}; cursor: pointer">
+              <input type="radio" name="job" checked="{{j.on}}" style="width: 18px; height: 18px; accent-color: {{t.link}}">
+              <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">{{j.name}}</strong><span style="font-size: 13px; color: {{t.text2}}">{{j.sub}}</span></span>
+              <span style="font-size: 12px; font-weight: 600; color: {{j.tagFg}}">{{j.tag}}</span>
+            </label>
+            </sc-for>
+            <a href="JobNew.dc.html" style="font-size: 14px; font-weight: 600; color: {{t.link}}; padding: 6px 2px">+ Paste a new job description</a>
+          </fieldset>
+        </div>
+
+        <aside style="flex: 1 1 300px; position: relative; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: {{t.shadow}}">
+          <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Summary</strong>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 14px"><span style="color: {{t.text2}}">From</span><strong>Asha Rao · Original</strong></div>
+          <div style="display: flex; flex-direction: column; gap: 4px; font-size: 14px"><span style="color: {{t.text2}}">For</span><strong>Umbrella Health · Frontend Developer</strong></div>
+          <div style="border-top: 1px solid {{t.border}}; padding-top: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+            <span style="color: {{t.text2}}">Will run</span>
+            <span>Job description analysis <span style="color: {{t.text2}}">(first time for this job)</span></span>
+            <span>Resume generation</span>
+          </div>
+          <span style="font-size: 13px; line-height: 1.5; color: {{t.text2}}">You'll see the exact credit estimate before anything runs.</span>
+          <button type="button" onClick="{{open}}" style="font: 700 16px Inter, sans-serif; height: 48px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; cursor: pointer">Proceed</button>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{isOpen}}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; background: {{t.scrim}}; display: flex; align-items: flex-start; justify-content: center; padding: 160px 24px 24px">
+    <div role="dialog" aria-modal="true" aria-labelledby="cf-title" style="width: 100%; max-width: 480px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; box-shadow: {{t.shadowLg}}; display: flex; flex-direction: column">
+      <div style="padding: 22px 24px 0; display: flex; flex-direction: column; gap: 6px">
+        <h2 id="cf-title" style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px">Generate tailored resume?</h2>
+        <span style="font-size: 14px; color: {{t.text2}}">Umbrella Health · Frontend Developer · from your original</span>
+      </div>
+      <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; font-size: 15px">
+        <div style="display: flex; justify-content: space-between"><span>Job description analysis</span><span style="font-family: 'JetBrains Mono', monospace">up to 120</span></div>
+        <div style="display: flex; justify-content: space-between"><span>Resume generation</span><span style="font-family: 'JetBrains Mono', monospace">up to 520</span></div>
+        <div style="display: flex; justify-content: space-between; border-top: 1px solid {{t.border}}; padding-top: 10px; font-weight: 700"><span>Estimate</span><span style="font-family: 'JetBrains Mono', monospace">up to 640 credits</span></div>
+        <div style="display: flex; justify-content: space-between; color: {{t.text2}}"><span>Balance after</span><span style="font-family: 'JetBrains Mono', monospace">9,770 → 9,130 or more</span></div>
+        <div style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; background: {{t.infoBg}}; font-size: 13px; line-height: 1.5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.info}}" stroke-width="2" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.01"></path></svg>
+          <span>We hold the estimate and charge only what's used. If anything fails, you pay nothing.</span>
+        </div>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid {{t.border}}; display: flex; justify-content: flex-end; gap: 10px">
+        <button type="button" onClick="{{close}}" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 18px; border-radius: 6px; border: 0; background: transparent; color: {{t.link}}; cursor: pointer">Cancel</button>
+        <a href="GenProgress.dc.html" style="text-decoration: none; height: 44px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Confirm and generate</a>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"showDialog":{"editor":"boolean","default":true},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { open: null }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',info:'#6FB5FF',infoBg:'#0E2339',selBg:'#0E2339',scrim:'rgba(0,0,0,0.6)',shadow:'0 1px 2px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3)',shadowLg:'0 12px 40px rgba(0,0,0,0.55)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',info:'#0A62BA',infoBg:'#E6F0FB',selBg:'#F1F6FC',scrim:'rgba(15,27,42,0.5)',shadow:'0 1px 2px rgba(15,27,42,0.06), 0 6px 18px rgba(15,27,42,0.06)',shadowLg:'0 12px 40px rgba(15,27,42,0.22)'};
+    const open = this.state.open === null ? (this.props.showDialog ?? true) : this.state.open;
+    const opt = (on) => ({ on, border: on ? '2px solid ' + t.link : '1px solid ' + t.border, bg: on ? t.selBg : 'transparent' });
+    const steps = ['Upload', 'Review', 'Job description', 'Generate', 'Score'];
+    const route = steps.map((label, i) => {
+      const done = i < 3, cur = i === 3;
+      return { n: String(i + 1), label, bg: done ? t.link : (cur ? t.accent : t.surface), fg: done ? '#FFFFFF' : (cur ? t.onAccent : t.text2), ring: done ? t.link : (cur ? t.accent : t.borderStrong), style: i < 3 ? 'solid' : 'dashed', line: i === 4 ? 'transparent' : (i < 3 ? t.link : t.borderStrong), weight: cur ? 600 : 500, color: (done || cur) ? t.text : t.text2 };
+    });
+    return {
+      dark, t, route, isOpen: open,
+      open: () => this.setState({ open: true }),
+      close: () => this.setState({ open: false }),
+      sources: [
+        Object.assign({ name: 'Asha Rao · Original', sub: 'Reviewed 4 days ago' }, opt(true)),
+        Object.assign({ name: 'Acme Corp · Frontend Engineer', sub: 'Tailored version · edited today' }, opt(false)),
+        Object.assign({ name: 'Initech · Senior React Developer', sub: 'Tailored version · edited yesterday' }, opt(false))
+      ],
+      jobs: [
+        Object.assign({ name: 'Umbrella Health · Frontend Developer', sub: '4,330 characters', tag: 'Needs analysis', tagFg: t.text2 }, opt(true)),
+        Object.assign({ name: 'Acme Corp · Frontend Engineer', sub: '12,480 characters', tag: 'Analysed', tagFg: t.good }, opt(false)),
+        Object.assign({ name: 'Initech · Senior React Developer', sub: '8,912 characters', tag: 'Analysed', tagFg: t.good }, opt(false)),
+        Object.assign({ name: 'Globex · UI Engineer II', sub: '6,204 characters', tag: 'Analysed', tagFg: t.good }, opt(false))
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

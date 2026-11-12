@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1300px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="settings" min-height="1236px" hint-size="248px,1236px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 960px">
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Settings</h1>
+      <div role="tablist" aria-label="Settings" style="display: flex; gap: 4px; border-bottom: 1px solid {{t.border}}; flex-wrap: wrap">
+        <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="3">
+        <button type="button" role="tab" aria-selected="{{tb.sel}}" onClick="{{tb.pick}}" style="font: 600 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; cursor: pointer; color: {{tb.color}}; border-bottom: 3px solid {{tb.line}}; margin-bottom: -1px">{{tb.label}}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{isProfile}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; align-items: center; gap: 16px">
+            <span style="width: 64px; height: 64px; border-radius: 999px; background: {{t.navyTint}}; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700">AR</span>
+            <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 17px">Asha Rao</strong><span style="font-size: 14px; color: {{t.text2}}">Member since 8 Nov 2026</span></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Full name<input type="text" value="Asha Rao" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Email<input type="email" value="asha.rao@example.com" readonly style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface2}}; color: {{t.text2}}"><span style="font-size: 12px; font-weight: 400; color: {{t.text2}}">Managed by your sign-in provider</span></label>
+          </div>
+          <div style="display: flex; justify-content: flex-end"><button type="button" style="font: 700 14px Inter, sans-serif; height: 42px; padding: 0 18px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Save changes</button></div>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+          <h2 style="margin: 0; padding: 18px 24px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Sign-in methods</h2>
+          <sc-for list="{{logins}}" as="l" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px; border-top: 1px solid {{t.border}}">
+            <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">{{l.name}}</strong><span style="font-size: 13px; color: {{t.text2}}">{{l.sub}}</span></div>
+            <button type="button" style="font: 600 13px Inter, sans-serif; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: transparent; color: {{l.color}}">{{l.action}}</button>
+          </div>
+          </sc-for>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{isPrefs}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Appearance</h2>
+          <div role="radiogroup" aria-label="Theme" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+            <sc-for list="{{themes}}" as="th" hint-placeholder-count="3">
+            <label style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 10px; border: {{th.border}}; cursor: pointer">
+              <span style="height: 64px; border-radius: 6px; background: {{th.swatch}}; border: 1px solid {{t.border}}"></span>
+              <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600"><input type="radio" name="theme" checked="{{th.on}}" style="accent-color: {{t.link}}">{{th.name}}</span>
+            </label>
+            </sc-for>
+          </div>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Resume defaults</h2>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; max-width: 320px">Default template
+            <select style="font: 500 15px Inter, sans-serif; height: 44px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"><option>Classic</option><option>Modern</option><option>Minimal</option><option>Professional</option><option>Technical</option></select>
+          </label>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+          <h2 style="margin: 0; padding: 18px 24px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Email notifications</h2>
+          <sc-for list="{{notifs}}" as="n" hint-placeholder-count="3">
+          <label style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 24px; border-top: 1px solid {{t.border}}; cursor: pointer">
+            <span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">{{n.h}}</strong><span style="font-size: 13px; color: {{t.text2}}">{{n.p}}</span></span>
+            <span style="width: 40px; height: 24px; flex: none; box-sizing: border-box; border-radius: 999px; padding: 2px; display: flex; justify-content: {{n.justify}}; background: {{n.track}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span></span>
+          </label>
+          </sc-for>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{isPrivacy}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 20px">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">How we keep your data</h2>
+          <sc-for list="{{retention}}" as="r" hint-placeholder-count="3">
+          <span style="display: flex; gap: 10px; font-size: 14px; line-height: 1.55"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.6" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M5 12l5 5 9-10"></path></svg>{{r}}</span>
+          </sc-for>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between">
+          <div style="display: flex; flex-direction: column; gap: 4px"><strong style="font-size: 16px">Download your data</strong><span style="font-size: 14px; color: {{t.text2}}">Resumes, versions, reports and credit history as a ZIP.</span></div>
+          <button type="button" style="font: 600 14px Inter, sans-serif; height: 42px; padding: 0 16px; border-radius: 6px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}">Request download</button>
+        </section>
+        <section style="background: {{t.critBg}}; border: 1px solid {{t.critLine}}; border-radius: 12px; padding: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between">
+          <div style="display: flex; flex-direction: column; gap: 4px; max-width: 520px"><strong style="font-size: 16px; color: {{t.crit}}">Delete account</strong><span style="font-size: 14px; line-height: 1.55; color: {{t.text}}">Permanently deletes your resumes, versions, reports and remaining credits. This can't be undone.</span></div>
+          <button type="button" style="font: 700 14px Inter, sans-serif; height: 42px; padding: 0 16px; border-radius: 6px; border: 0; background: {{t.crit}}; color: {{t.onCrit}}">Delete account</button>
+        </section>
+      </div>
+      </sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'profile' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',crit:'#FF8A7E',critBg:'#341311',critLine:'#6A2620',onCrit:'#2A0B07',navyTint:'#1F3047'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',crit:'#B42318',critBg:'#FDECEA',critLine:'#F4C1BC',onCrit:'#FFFFFF',navyTint:'#DCE4EE'};
+    const tab = this.state.tab;
+    const tabs = [['profile', 'Profile'], ['prefs', 'Preferences'], ['privacy', 'Privacy and data']].map(([id, label]) => ({
+      label, sel: id === tab ? 'true' : 'false', color: id === tab ? t.text : t.text2, line: id === tab ? t.accent : 'transparent', pick: () => this.setState({ tab: id })
+    }));
+    const cur = dark ? 'Dark' : 'Light';
+    return {
+      dark, t, tabs,
+      isProfile: tab === 'profile', isPrefs: tab === 'prefs', isPrivacy: tab === 'privacy',
+      logins: [
+        { name: 'Google', sub: 'Connected · asha.rao@example.com', action: 'Disconnect', color: t.text },
+        { name: 'LinkedIn', sub: 'Not connected', action: 'Connect', color: t.link },
+        { name: 'Email and password', sub: 'Set up', action: 'Change password', color: t.text }
+      ],
+      themes: [['Light', '#F4F6F8'], ['Dark', '#0A1119'], ['Match system', 'linear-gradient(90deg, #F4F6F8 50%, #0A1119 50%)']].map(([name, swatch]) => ({
+        name, swatch, on: name === cur, border: name === cur ? '2px solid ' + t.link : '1px solid ' + t.border
+      })),
+      notifs: [['Generation finished', 'When a tailored resume is ready', true], ['Payment receipts', 'After every wallet top-up', true], ['Product updates', 'New templates and features, monthly at most', false]].map(([h, p, on]) => ({
+        h, p, justify: on ? 'flex-end' : 'flex-start', track: on ? t.link : t.borderStrong
+      })),
+      retention: [
+        'Uploaded files are deleted 30 days after upload.',
+        'Your structured resume, versions and reports stay until you delete them.',
+        'Your resume data is never used to train AI models.'
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

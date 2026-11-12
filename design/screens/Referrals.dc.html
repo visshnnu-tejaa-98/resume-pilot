@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Referrals · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1000px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="referrals" min-height="936px" hint-size="248px,936px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1080px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Referrals</h1>
+        <span style="font-size: 15px; color: {{t.text2}}">Friends who sign up with your code get 500 free credits.</span>
+      </div>
+
+      <section style="background: {{t.hero}}; color: #F2F5F9; border-radius: 16px; padding: 28px; display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: space-between; position: relative; overflow: hidden">
+        <svg width="360" height="140" viewBox="0 0 360 140" aria-hidden="true" style="position: absolute; right: -20px; bottom: -20px; opacity: 0.45"><path d="M0 130 C 110 130, 170 40, 260 44 S 350 18, 360 10" fill="none" stroke="#FF9900" stroke-width="2" stroke-dasharray="7 9"></path></svg>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 14px; color: #A9B8C9">Your referral code</span>
+          <span style="font: 700 38px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: #FFB547">RP-7K3XQ</span>
+          <span style="font: 500 13px 'JetBrains Mono', monospace; color: #C3CFDC">resumepilot.in/r/RP-7K3XQ</span>
+        </div>
+        <div style="position: relative; display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" onClick="{{copy}}" style="font: 700 15px Inter, sans-serif; height: 46px; padding: 0 20px; border-radius: 6px; border: 0; background: #FF9900; color: #0F1B2A; cursor: pointer; display: flex; align-items: center; gap: 8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="{{copyIcon}}"></path></svg>{{copyLabel}}
+          </button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 46px; padding: 0 18px; border-radius: 6px; border: 1px solid #4A5F78; background: transparent; color: #F2F5F9">Share</button>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 16px">
+        <sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <span style="width: 32px; height: 32px; border-radius: 999px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font: 600 13px 'JetBrains Mono', monospace">{{s.n}}</span>
+          <strong style="font-size: 16px">{{s.h}}</strong>
+          <span style="font-size: 14px; line-height: 1.55; color: {{t.text2}}">{{s.p}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; gap: 10px; padding: 14px 16px; border-radius: 10px; background: {{t.infoBg}}; border: 1px solid {{t.infoLine}}; font-size: 14px; line-height: 1.5">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.info}}" stroke-width="2" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.01"></path></svg>
+        <span>[REFERRER REWARD: decide whether you also earn credits when a friend joins, and how many.]</span>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; overflow: hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Friends who joined</h2><span style="font: 600 14px 'JetBrains Mono', monospace; color: {{t.text2}}">2</span></div>
+        <sc-for list="{{friends}}" as="f" hint-placeholder-count="2">
+        <div style="display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-top: 1px solid {{t.border}}">
+          <span style="width: 36px; height: 36px; border-radius: 999px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600">{{f.ini}}</span>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 600">{{f.name}}</span><span style="font-size: 12px; color: {{t.text2}}">Joined {{f.when}}</span></div>
+          <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Got 500 credits</span>
+        </div>
+        </sc-for>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { copied: false }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',infoLine:'#1E4670',hero:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',infoLine:'#B9D3F1',hero:'#0F1B2A'};
+    const copied = this.state.copied;
+    return {
+      dark, t,
+      copyLabel: copied ? 'Copied' : 'Copy code',
+      copyIcon: copied ? 'M5 12l5 5 9-10' : 'M9 9h10v10H9zM5 15V5h10',
+      copy: () => this.setState({ copied: true }),
+      steps: [
+        { n: '1', h: 'Share your code', p: 'Send your code or link to a friend who’s job hunting.' },
+        { n: '2', h: 'They sign up', p: 'They enter RP-7K3XQ at sign-up or later in their wallet.' },
+        { n: '3', h: 'They get 500 credits', p: 'One code per account, so it only works if they haven’t used EARLYBIRD.' }
+      ],
+      friends: [
+        { ini: 'KM', name: 'Karthik M.', when: '10 Nov 2026' },
+        { ini: 'PS', name: 'Priya S.', when: '11 Nov 2026' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

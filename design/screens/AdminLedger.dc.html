@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Credit ledger · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1050px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="ledger" min-height="986px" hint-size="248px,986px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Credit ledger</h1>
+        <span style="font-size: 12px; color: {{t.text2}}">Append-only. Every row links to a payment, AI job, code or admin action.</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{tiles}}" as="k" hint-placeholder-count="6">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{k.label}}</span>
+          <span style="font: 600 20px 'JetBrains Mono', monospace; color: {{k.color}}">{{k.value}}</span>
+        </div>
+        </sc-for>
+      </div>
+      <div role="tablist" aria-label="Ledger view" style="display: flex; gap: 4px; border-bottom: 1px solid {{t.border}}">
+        <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="2">
+        <button type="button" role="tab" aria-selected="{{tb.sel}}" onClick="{{tb.pick}}" style="font: 600 14px Inter, sans-serif; padding: 10px 14px; border: 0; background: transparent; cursor: pointer; color: {{tb.color}}; border-bottom: 3px solid {{tb.line}}; margin-bottom: -1px">{{tb.label}}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{isEntries}}" hint-placeholder-val="{{ true }}">
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Time</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">User</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Type</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Source</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Credits</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Balance after</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{entries}}" as="e" hint-placeholder-count="9">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 10px 14px; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}; white-space: nowrap">{{e.at}}</td>
+              <td style="padding: 10px 8px">{{e.user}}</td>
+              <td style="padding: 10px 8px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{e.tBg}}; color: {{e.tFg}}">{{e.type}}</span></td>
+              <td style="padding: 10px 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: {{t.link}}">{{e.src}}</td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: {{e.color}}">{{e.amt}}</td>
+              <td style="padding: 10px 14px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{e.bal}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      </sc-if>
+      <sc-if value="{{isHolds}}" hint-placeholder-val="{{ false }}">
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Hold</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">User</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">AI job</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Credits</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Auto-release</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{holds}}" as="h" hint-placeholder-count="4">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 10px 14px; font-family: 'JetBrains Mono', monospace">{{h.id}}</td><td style="padding: 10px 8px">{{h.user}}</td>
+              <td style="padding: 10px 8px; font-family: 'JetBrains Mono', monospace; color: {{t.link}}">{{h.job}}</td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600">{{h.amt}}</td>
+              <td style="padding: 10px 14px; color: {{t.text2}}">{{h.exp}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      </sc-if>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'entries' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',accent:'#E08600',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA'};
+    const tab = this.state.tab;
+    const tabs = [['entries', 'Entries'], ['holds', 'Active holds · 4']].map(([id, label]) => ({
+      label, sel: id === tab ? 'true' : 'false', color: id === tab ? t.text : t.text2, line: id === tab ? t.accent : 'transparent', pick: () => this.setState({ tab: id })
+    }));
+    const typ = { Purchase: [t.goodBg, t.good], Coupon: [t.goodBg, t.good], Capture: [t.surface2, t.text2], Refund: [t.critBg, t.crit], Admin: [t.warnBg, t.warn] };
+    const E = [
+      ['18:14:08', 'Asha Rao', 'Capture', 'job_8f21', '−148', '9,770'],
+      ['18:12:51', 'Asha Rao', 'Capture', 'job_8f1c', '−582', '9,918'],
+      ['18:06:32', 'Meera J.', 'Capture', 'job_8f02', '−662', '4,410'],
+      ['17:51:20', 'Divya K.', 'Admin', 'adm_0192 · goodwill', '+640', '640'],
+      ['17:40:02', 'Asha Rao', 'Coupon', 'EARLYBIRD', '+500', '10,500'],
+      ['17:38:40', 'Asha Rao', 'Purchase', 'pay_PX81kLm2', '+10,000', '10,000'],
+      ['16:22:11', 'Rahul N.', 'Purchase', 'pay_PW77hQa1', '+10,000', '18,846'],
+      ['15:10:47', 'Vikram P.', 'Refund', 'rfnd_Q1x7 · unused', '−10,000', '0'],
+      ['14:02:33', 'Priya S.', 'Coupon', 'RP-7K3XQ', '+500', '500']
+    ];
+    return {
+      dark, t, tabs, isEntries: tab === 'entries', isHolds: tab === 'holds',
+      tiles: [
+        { label: 'Purchased', value: '4.12M', color: t.text }, { label: 'From codes', value: '0.61M', color: t.text },
+        { label: 'Admin grants', value: '18.4k', color: t.text }, { label: 'Consumed', value: '1.64M', color: t.text },
+        { label: 'Refunded', value: '30k', color: t.text }, { label: 'Outstanding', value: '3.07M', color: t.warn }
+      ],
+      entries: E.map(([at, user, type, src, amt, bal]) => {
+        const [tBg, tFg] = typ[type];
+        return { at: '12 Nov ' + at, user, type, src, amt, bal, tBg, tFg, color: amt.charAt(0) === '+' ? t.good : t.text };
+      }),
+      holds: [
+        { id: 'hold_9a01', user: 'Rahul N.', job: 'job_8f3a', amt: '640', exp: 'in 14 min' },
+        { id: 'hold_9a00', user: 'Karan V.', job: 'job_8f39', amt: '150', exp: 'in 13 min' },
+        { id: 'hold_99fe', user: 'Sneha R.', job: 'job_8f37', amt: '600', exp: 'in 11 min' },
+        { id: 'hold_99fa', user: 'Arjun T.', job: 'job_8f35', amt: '120', exp: 'in 9 min' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

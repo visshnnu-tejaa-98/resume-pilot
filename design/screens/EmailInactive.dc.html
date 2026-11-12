@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · Inactive nudge</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 1120px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> Your resumes are ready for the next application</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> You still have 9,770 credits. They never expire.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> no sign-in for [30] days · marketing (respects opt-out)</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="" hint-size="600px,80px"></dc-import>
+    <div style="padding: 36px 40px 40px; display: flex; flex-direction: column; gap: 22px">
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; line-height: 1.2">Found a new job to apply for, Asha?</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.7; color: {{t.text2}}">Everything is where you left it. Paste the next job description and you'll have a tailored resume in about a minute.</p>
+      <div style="background: {{t.navy}}; color: #F2F5F9; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <span style="font-size: 13px; font-weight: 600; color: #A9B8C9">Your Resume Pilot at a glance</span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 2px"><span style="font: 600 24px 'JetBrains Mono', monospace; color: {{s.color}}">{{s.v}}</span><span style="font-size: 13px; color: #C3CFDC">{{s.k}}</span></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border: 1px solid {{t.border}}; border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+        <strong style="font-size: 14px">Pick up where you left off</strong>
+        <span style="font-size: 14px; line-height: 1.55; color: {{t.text2}}">Your Globex resume was edited after its last score. A quick re-score shows where it stands now.</span>
+      </div>
+      <a href="#" style="align-self: flex-start; text-decoration: none; padding: 14px 26px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px">Tailor for a new job</a>
+      <p style="margin: 0; font-size: 13px; color: {{t.text2}}">Not job hunting right now? <a href="#" style="color: {{t.link}}">Pause these reminders</a>.</p>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ true }}" hint-size="600px,220px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',navy:'#060B12'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',navy:'#0F1B2A'};
+    return {
+      dark, t,
+      stats: [
+        { k: 'Credits in your wallet', v: '9,770', color: '#FFB547' },
+        { k: 'Tailored versions', v: '3', color: '#F2F5F9' },
+        { k: 'Best ATS score', v: '82', color: '#4CC38A' },
+        { k: 'Saved job descriptions', v: '4', color: '#F2F5F9' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

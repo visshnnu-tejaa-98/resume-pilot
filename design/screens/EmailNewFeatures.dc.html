@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · New features</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 1380px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> New in Resume Pilot: compare scores, re-score after edits, invite friends</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> Three updates to help you send stronger applications.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> admin campaign · product updates · marketing</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="Product update" hint-size="600px,80px"></dc-import>
+    <div style="padding: 36px 40px 8px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font: 600 12px 'JetBrains Mono', monospace; letter-spacing: 0.08em; color: {{t.accentText}}">WHAT'S NEW · [MONTH YEAR]</span>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 28px; line-height: 1.2">Three new ways to get your resume interview-ready</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.7; color: {{t.text2}}">Hi Asha, here's what we shipped this month.</p>
+    </div>
+    <div style="padding: 16px 40px 8px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{features}}" as="f" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column; gap: 14px; padding: 22px 0; border-top: 1px solid {{f.line}}">
+        <div style="background: {{t.soft}}; border-radius: 10px; padding: 18px; display: flex; align-items: center; justify-content: center; gap: 14px; min-height: 84px">
+          <sc-if value="{{f.isCompare}}" hint-placeholder-val="{{ false }}">
+            <span style="font: 600 26px 'JetBrains Mono', monospace; color: {{t.text2}}">61</span>
+            <svg width="40" height="20" viewBox="0 0 40 20" aria-hidden="true"><path d="M2 10h32M28 4l6 6-6 6" fill="none" stroke="{{t.text2}}" stroke-width="2"></path></svg>
+            <span style="font: 600 26px 'JetBrains Mono', monospace">82</span>
+            <span style="font: 600 13px 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}">+21</span>
+          </sc-if>
+          <sc-if value="{{f.isRescore}}" hint-placeholder-val="{{ false }}">
+            <span style="font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">Score outdated</span>
+            <svg width="40" height="20" viewBox="0 0 40 20" aria-hidden="true"><path d="M2 10h32M28 4l6 6-6 6" fill="none" stroke="{{t.text2}}" stroke-width="2"></path></svg>
+            <span style="font-size: 13px; font-weight: 700; padding: 8px 14px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}">Re-score</span>
+          </sc-if>
+          <sc-if value="{{f.isRefer}}" hint-placeholder-val="{{ false }}">
+            <span style="font: 700 20px 'JetBrains Mono', monospace; letter-spacing: 0.08em; padding: 8px 14px; border-radius: 8px; border: 2px dashed {{t.accentLine}}">RP-7K3XQ</span>
+            <span style="font-size: 13px; color: {{t.text2}}">= 500 credits for a friend</span>
+          </sc-if>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <strong style="font-family: 'Space Grotesk', Arial, sans-serif; font-size: 19px">{{f.h}}</strong>
+          <span style="font-size: 14px; line-height: 1.65; color: {{t.text2}}">{{f.p}}</span>
+          <a href="#" style="font-size: 14px; font-weight: 600; color: {{t.link}}">{{f.cta}}</a>
+        </div>
+      </div>
+      </sc-for>
+    </div>
+    <div style="padding: 8px 40px 40px; display: flex; flex-direction: column; gap: 12px; align-items: center">
+      <a href="#" style="text-decoration: none; padding: 14px 28px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px">Open Resume Pilot</a>
+      <span style="font-size: 13px; color: {{t.text2}}">Got an idea for us? Just reply to this email.</span>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ true }}" hint-size="600px,220px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":1380}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',soft:'#1A2636',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',accent:'#FF9F1C',onAccent:'#0A1119',accentText:'#FFB547',accentLine:'#C9801C',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',soft:'#F4F6F8',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',accent:'#FF9900',onAccent:'#0F1B2A',accentText:'#A85E00',accentLine:'#C77700',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC'};
+    const F = [
+      ['compare', 'Compare original vs tailored', 'See both ATS scores side by side, the change in each category, and the keywords you gained. Free when both scores are saved.', 'Try a comparison'],
+      ['rescore', 'Re-score after your edits', 'Edited a tailored resume by hand? Its score is marked outdated so you know to re-score before you apply.', 'See how scoring works'],
+      ['refer', 'Invite friends, they get 500 credits', 'Share your referral code. Friends who sign up with it get 500 free credits.', 'Get your referral code']
+    ];
+    return {
+      dark, t,
+      features: F.map(([id, h, p, cta], i) => ({ h, p, cta, isCompare: id === 'compare', isRescore: id === 'rescore', isRefer: id === 'refer', line: i === 0 ? 'transparent' : t.border }))
+    };
+  }
+}
+</script>
+</body>
+</html>

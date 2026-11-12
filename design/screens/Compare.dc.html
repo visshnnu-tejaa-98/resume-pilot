@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Compare · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1300px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="resumes" min-height="1236px" hint-size="248px,1236px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Compare scores</h1>
+        <span style="font-size: 15px; color: {{t.text2}}">See what tailoring changed for one job.</span>
+      </div>
+
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end">
+        <label style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Version A
+          <select style="font: 500 14px Inter, sans-serif; height: 40px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"><option>Asha Rao · Original</option></select>
+        </label>
+        <label style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Version B
+          <select style="font: 500 14px Inter, sans-serif; height: 40px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"><option>Acme Corp · Frontend Engineer</option></select>
+        </label>
+        <label style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Against job
+          <select style="font: 500 14px Inter, sans-serif; height: 40px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"><option>Acme Corp · Frontend Engineer</option></select>
+        </label>
+        <span style="flex: 1 1 100%; font-size: 13px; color: {{t.good}}; font-weight: 500">Both scores are saved, so this comparison is free.</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px; align-items: stretch">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+          <span style="font-size: 13px; font-weight: 600; color: {{t.text2}}">A · Original</span>
+          <svg width="140" height="140" viewBox="0 0 120 120" role="img" aria-label="Original score 61"><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.surface2}}" stroke-width="11"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.borderStrong}}" stroke-width="11" stroke-linecap="round" stroke-dasharray="184 301.6" transform="rotate(-90 60 60)"></circle><text x="60" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="30" font-weight="600" fill="{{t.text}}">61</text></svg>
+        </div>
+        <div style="background: {{t.hero}}; color: #F2F5F9; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px">
+          <span style="font-size: 13px; color: #A9B8C9">Change</span>
+          <span style="font: 600 48px 'JetBrains Mono', monospace; color: #4CC38A">+21</span>
+          <span style="font-size: 14px; color: #C3CFDC">points after tailoring</span>
+        </div>
+        <div style="background: {{t.surface}}; border: 2px solid {{t.accent}}; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+          <span style="font-size: 13px; font-weight: 600; color: {{t.text2}}">B · Acme Corp tailored</span>
+          <svg width="140" height="140" viewBox="0 0 120 120" role="img" aria-label="Tailored score 82"><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.surface2}}" stroke-width="11"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.accent}}" stroke-width="11" stroke-linecap="round" stroke-dasharray="247.3 301.6" transform="rotate(-90 60 60)"></circle><text x="60" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="30" font-weight="600" fill="{{t.text}}">82</text></svg>
+        </div>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; overflow-x: auto">
+        <table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 14px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 14px 20px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Category</th>
+            <th scope="col" style="padding: 14px 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">A</th>
+            <th scope="col" style="padding: 14px 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">B</th>
+            <th scope="col" style="padding: 14px 20px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Change</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 14px 20px">{{r.label}}</td>
+              <td style="padding: 14px 12px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{r.a}}</td>
+              <td style="padding: 14px 12px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600">{{r.b}}</td>
+              <td style="padding: 14px 20px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: {{r.color}}">{{r.d}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 16px">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Keywords gained</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{gained}}" as="g" hint-placeholder-count="4"><span style="font-size: 13px; font-weight: 500; padding: 5px 10px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}">+ {{g}}</span></sc-for>
+          </div>
+          <span style="font-size: 13px; color: {{t.text2}}">All were already in your experience; tailoring used the job's wording.</span>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Still missing</h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <span style="font-size: 13px; padding: 4px 9px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; color: {{t.text2}}">GraphQL</span>
+            <span style="font-size: 13px; padding: 4px 9px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; color: {{t.text2}}">Kubernetes</span>
+            <span style="font-size: 13px; padding: 5px 10px; border-radius: 6px; background: {{t.warnBg}}; color: {{t.warn}}">CI/CD · partial</span>
+          </div>
+          <a href="AtsReport.dc.html" style="font-size: 14px; font-weight: 600; color: {{t.link}}">See recommendations</a>
+        </section>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">What changed in one bullet</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 12px">
+          <div style="border-radius: 8px; padding: 14px; background: {{t.surface2}}; display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: {{t.text2}}">ORIGINAL</span><span style="font-size: 14px; line-height: 1.55">Worked on the company's UI component library in React.</span></div>
+          <div style="border-radius: 8px; padding: 14px; background: {{t.goodBg}}; display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: {{t.good}}">TAILORED</span><span style="font-size: 14px; line-height: 1.55">Lead development of Northwind's React and TypeScript design system, used across all customer-facing web apps.</span></div>
+        </div>
+        <span style="font-size: 13px; color: {{t.text2}}">Same role, same facts. The fact check confirmed nothing was added.</span>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',hero:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',hero:'#0F1B2A'};
+    const rows = [['Required keywords', 17, 26, 30], ['Skills match', 16, 21, 25], ['Experience relevance', 12, 16, 20], ['Education and qualifications', 8, 8, 10], ['Structure and formatting', 8, 11, 15]]
+      .map(([label, a, b, max]) => ({ label, a: a + ' / ' + max, b: b + ' / ' + max, d: b - a > 0 ? '+' + (b - a) : '0', color: b - a > 0 ? t.good : t.text2 }));
+    return { dark, t, rows, gained: ['Design systems', 'Accessibility', 'Component library', 'Theming', 'Performance'] };
+  }
+}
+</script>
+</body>
+</html>

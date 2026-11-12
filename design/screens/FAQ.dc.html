@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FAQ · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif">
+  <dc-import name="SiteNav" dark="{{dark}}" active="faq" hint-size="100%,72px"></dc-import>
+
+  <section style="max-width: 1180px; margin: 0 auto; padding: 80px 24px 40px; display: flex; flex-direction: column; gap: 16px">
+    <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{t.accentText}}">FAQ</span>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: clamp(36px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.025em">Questions, answered.</h1>
+  </section>
+
+  <section style="max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start">
+    <nav aria-label="FAQ topics" style="flex: 1 1 220px; display: flex; flex-direction: column; gap: 4px">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+      <a href="#{{g.id}}" style="text-decoration: none; padding: 10px 14px; border-radius: 6px; font-size: 15px; font-weight: 600; color: {{g.navColor}}; background: {{g.navBg}}">{{g.title}}</a>
+      </sc-for>
+    </nav>
+    <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+      <div id="{{g.id}}" style="display: flex; flex-direction: column; gap: 14px">
+        <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px">{{g.title}}</h2>
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+          <sc-for list="{{g.items}}" as="q" hint-placeholder-count="3">
+          <details open="{{q.open}}" style="border-top: 1px solid {{q.line}}">
+            <summary style="padding: 18px 22px; font-weight: 600; font-size: 16px; cursor: pointer">{{q.q}}</summary>
+            <p style="margin: 0; padding: 0 22px 20px; font-size: 15px; line-height: 1.65; color: {{t.text2}}">{{q.a}}</p>
+          </details>
+          </sc-for>
+        </div>
+      </div>
+      </sc-for>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 24px; border-radius: 12px; background: {{t.hero}}; color: #F2F5F9">
+        <span style="font-size: 17px; font-weight: 600">Still stuck?</span>
+        <a href="Contact.dc.html" style="text-decoration: none; height: 44px; padding: 0 20px; border-radius: 6px; background: #FF9900; color: #0F1B2A; font-weight: 700; display: flex; align-items: center">Contact support</a>
+      </div>
+    </div>
+  </section>
+
+  <dc-import name="SiteFooter" dark="{{dark}}" hint-size="100%,340px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {
+      bg: '#0A1119', surface: '#111B27', surface2: '#1A2636', border: '#26364A', text: '#E8EEF5', text2: '#A3B3C5', accent: '#FF9F1C', accentText: '#FFB547', hero: '#060B12'
+    } : {
+      bg: '#F4F6F8', surface: '#FFFFFF', surface2: '#EAEEF3', border: '#D6DDE6', text: '#0F1B2A', text2: '#4B5A6B', accent: '#FF9900', accentText: '#A85E00', hero: '#0F1B2A'
+    };
+    const raw = [
+      ['credits', 'Credits and payments', [
+        ['How do credits work?', 'Add ₹500 to your wallet and get 10,000 credits. Paid actions (job description analysis, generation and ATS scoring) use credits. You see the estimate before every action and only pay what’s used.'],
+        ['Do credits expire?', 'No. Credits stay in your wallet until you use them.'],
+        ['What happens if a generation fails?', 'The credits held for it are released straight away. You’re never charged for a failed run.'],
+        ['How do I use EARLYBIRD?', 'Enter it when you sign up or later on the Wallet page to get 500 free credits. Each account can use one code, either a coupon or a referral code.'],
+        ['Can I get a refund?', 'Unused purchased credits can be refunded within [REFUND WINDOW]. See the refund policy for details.']
+      ]],
+      ['ai', 'Resumes and AI', [
+        ['Will the AI make things up?', 'No. It rewrites and reorders what’s already in your resume. Every result is checked so companies, titles, dates, skills and numbers match your original.'],
+        ['What if the job needs a skill I don’t have?', 'It appears as a gap in your report. If you do have it, add it to your resume yourself; the AI never adds it for you.'],
+        ['Can I edit the generated resume?', 'Yes, every field. Your manual edits are always kept. After editing, re-score to update the ATS score.'],
+        ['Is the ATS score what employers see?', 'It’s an estimate based on a documented method. Employers use different ATS systems, so no score is a guarantee.']
+      ]],
+      ['files', 'Uploads and files', [
+        ['Which formats can I upload?', 'PDF, DOCX, LaTeX (.tex), PNG and JPG, up to 10 MB and 5 pages. Scanned documents are read with OCR.'],
+        ['Is uploading free?', 'Yes. Uploading and extraction never use credits.']
+      ]],
+      ['privacy', 'Privacy', [
+        ['Is my resume used to train AI?', 'No. Your resume data is never used for model training.'],
+        ['How long do you keep my files?', 'Uploaded files are deleted after 30 days. Your structured resume and versions stay until you delete them or your account.']
+      ]]
+    ];
+    const groups = raw.map(([id, title, qs], gi) => ({
+      id, title,
+      navColor: gi === 0 ? t.text : t.text2,
+      navBg: gi === 0 ? t.surface2 : 'transparent',
+      navLine: gi === 0 ? t.accent : 'transparent',
+      items: qs.map(([q, a], i) => ({ q, a, open: gi === 0 && i === 0, line: i === 0 ? 'transparent' : t.border }))
+    }));
+    return { dark, t, groups };
+  }
+}
+</script>
+</body>
+</html>

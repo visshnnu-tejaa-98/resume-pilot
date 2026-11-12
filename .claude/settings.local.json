@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm turbo *)",
+      "Bash(docker rm *)",
+      "Bash(docker run *)",
+      "Bash(docker exec *)",
+      "Bash(kill -9 84247 84253)"
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI job detail · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1200px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="aijobs" min-height="1136px" hint-size="248px,1136px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 13px; color: {{t.text2}}"><a href="AdminAiJobs.dc.html" style="color: {{t.link}}">AI jobs</a><span>/</span><span style="color: {{t.text}}; font-family: 'JetBrains Mono', monospace">job_8f02</span></nav>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <div style="display: flex; align-items: center; gap: 10px"><h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px">Generation · job_8f02</h1><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Succeeded after retry</span></div>
+          <span style="font-size: 13px; color: {{t.text2}}">Meera J. · Initech · Senior React Developer · 12 Nov 2026, 18:05</span>
+        </div>
+        <a href="AdminUserDetail.dc.html" style="font-size: 13px; font-weight: 600; color: {{t.link}}">Open user</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="6">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{s.label}}</span>
+          <span style="font: 600 20px 'JetBrains Mono', monospace">{{s.value}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px; align-items: start">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 8px 18px 14px">
+          <h2 style="margin: 10px 0 6px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Timeline</h2>
+          <sc-for list="{{events}}" as="e" hint-placeholder-count="8">
+          <div style="display: flex; gap: 14px">
+            <div style="display: flex; flex-direction: column; align-items: center; padding-top: 12px">
+              <span style="width: 10px; height: 10px; flex: none; border-radius: 999px; background: {{e.dot}}"></span>
+              <span style="flex: 1; min-height: 10px; border-left: 2px solid {{e.line}}; margin-top: 4px"></span>
+            </div>
+            <div style="flex: 1; display: flex; justify-content: space-between; gap: 10px; padding: 8px 0">
+              <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 13px">{{e.h}}</strong><span style="font-size: 12px; line-height: 1.5; color: {{t.text2}}">{{e.p}}</span></div>
+              <span style="font: 500 11px 'JetBrains Mono', monospace; color: {{t.text2}}; white-space: nowrap">{{e.at}}</span>
+            </div>
+          </div>
+          </sc-for>
+        </section>
+        <div style="display: flex; flex-direction: column; gap: 16px">
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+            <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Attempts</h2>
+            <table style="width: 100%; min-width: 380px; border-collapse: collapse; font-size: 12.5px">
+              <thead><tr style="background: {{t.surface2}}; text-align: right">
+                <th scope="col" style="padding: 8px 16px; text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">#</th>
+                <th scope="col" style="padding: 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">In</th>
+                <th scope="col" style="padding: 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Out</th>
+                <th scope="col" style="padding: 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Cost</th>
+                <th scope="col" style="padding: 8px 16px; text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Result</th>
+              </tr></thead>
+              <tbody>
+                <tr style="border-top: 1px solid {{t.border}}; text-align: right; font-family: 'JetBrains Mono', monospace"><td style="padding: 10px 16px; text-align: left">1</td><td style="padding: 10px 8px">4,060</td><td style="padding: 10px 8px">2,110</td><td style="padding: 10px 8px">₹3.30</td><td style="padding: 10px 16px; text-align: left; font-family: Inter, sans-serif; color: {{t.warn}}; font-weight: 600">1 violation</td></tr>
+                <tr style="border-top: 1px solid {{t.border}}; text-align: right; font-family: 'JetBrains Mono', monospace"><td style="padding: 10px 16px; text-align: left">2</td><td style="padding: 10px 8px">4,060</td><td style="padding: 10px 8px">2,120</td><td style="padding: 10px 8px">₹3.32</td><td style="padding: 10px 16px; text-align: left; font-family: Inter, sans-serif; color: {{t.good}}; font-weight: 600">Passed</td></tr>
+              </tbody>
+            </table>
+          </section>
+          <section style="background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+            <strong style="font-size: 14px">Violation on attempt 1</strong>
+            <span style="font: 500 12px/1.6 'JetBrains Mono', monospace">rule: number_not_in_source<br>field: workExperience[we_2].bullets[b_4]<br>value: "40%"</span>
+            <span style="font-size: 12px; color: {{t.text2}}">Fed back to the model; attempt 2 removed the number.</span>
+          </section>
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px">
+            <strong style="font-size: 14px">Configuration</strong>
+            <sc-for list="{{config}}" as="c" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; gap: 10px"><span style="color: {{t.text2}}">{{c.k}}</span><span style="font-family: 'JetBrains Mono', monospace">{{c.v}}</span></div>
+            </sc-for>
+            <span style="font-size: 12px; color: {{t.text2}}">Prompt and output content are not shown here. Opening them needs a logged reason.</span>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',accent:'#FF9F1C',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216',info:'#6FB5FF'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',accent:'#E08600',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98',info:'#0A62BA'};
+    const ev = [
+      ['Queued', 'Confirmed by user after estimate dialog', '18:05:01', t.info],
+      ['Hold placed', '700 credits held · idem key gen_8f02_a1', '18:05:01', t.accent],
+      ['Attempt 1 finished', '4,060 in · 2,110 out', '18:05:44', t.info],
+      ['Fact check failed', '1 violation: number not in source', '18:05:44', t.warn],
+      ['Attempt 2 finished', 'Violations fed back to the model', '18:06:29', t.info],
+      ['Fact check passed', 'Companies, dates, skills and numbers match source', '18:06:29', t.good],
+      ['Version saved', 'ver_3QK1 · parent ver_2ZA0 (original)', '18:06:31', t.good],
+      ['Hold captured', '662 charged · 38 released', '18:06:32', t.good]
+    ];
+    return {
+      dark, t,
+      events: ev.map(([h, p, at, dot], i) => ({ h, p, at, dot, line: i === ev.length - 1 ? 'transparent' : t.border })),
+      stats: [
+        { label: 'Duration', value: '1:31' }, { label: 'Attempts', value: '2' }, { label: 'Tokens', value: '12,350' },
+        { label: 'AI cost', value: '₹6.62' }, { label: 'Estimate', value: '700' }, { label: 'Charged', value: '662' }
+      ],
+      config: [
+        { k: 'Model', v: '[GENERATION MODEL]' }, { k: 'Prompt version', v: 'gen-v7' },
+        { k: 'Pricing config', v: 'v3 · markup 5.0×' }, { k: 'Max output budget', v: '4,500 tokens' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

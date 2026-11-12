@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Resume Pilot design system</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0A6BCB}a:hover{color:#08569F}
+</style>
+</helmet>
+<div style="width: 1440px; box-sizing: border-box; background: #0F1B2A; font-family: Inter, system-ui, sans-serif; color: #F2F5F9">
+
+  <header style="padding: 56px 48px 48px; display: flex; flex-direction: column; gap: 24px; border-bottom: 1px solid #22344A">
+    <div style="display: flex; align-items: center; gap: 12px">
+      <svg width="36" height="36" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.01em">Resume<span style="color: #FF9900">Pilot</span></span>
+      <span style="margin-left: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #A9B8C9; border: 1px solid #33475E; border-radius: 999px; padding: 4px 10px">Design system v1.0</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 56px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em; max-width: 900px">Console-grade clarity for an anxious moment.</h1>
+    <p style="margin: 0; font-size: 18px; line-height: 1.6; color: #A9B8C9; max-width: 820px">Deep navy chrome, one signal-orange action per view, route-blue links. Every credit is visible before it is spent. The signature element is the flight route: a dashed line with stops that shows where the user is in the journey.</p>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap">
+      <span style="font-size: 13px; color: #F2F5F9; background: #1B2A3D; border-radius: 6px; padding: 8px 12px">Headings · Space Grotesk 600/700</span>
+      <span style="font-size: 13px; color: #F2F5F9; background: #1B2A3D; border-radius: 6px; padding: 8px 12px">Body · Inter 400/500/600</span>
+      <span style="font-size: 13px; color: #F2F5F9; background: #1B2A3D; border-radius: 6px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace">Numbers · JetBrains Mono</span>
+      <span style="font-size: 13px; color: #F2F5F9; background: #1B2A3D; border-radius: 6px; padding: 8px 12px">Radius · 6 controls / 10 cards / 999 pills</span>
+      <span style="font-size: 13px; color: #F2F5F9; background: #1B2A3D; border-radius: 6px; padding: 8px 12px">Spacing · 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64</span>
+    </div>
+  </header>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0">
+  <sc-for list="{{themes}}" as="t" hint-placeholder-count="2">
+  <section style="background: {{t.bg}}; color: {{t.text}}; padding: 40px 48px 64px; display: flex; flex-direction: column; gap: 40px">
+
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid {{t.border}}; padding-bottom: 16px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px; font-weight: 700">{{t.label}}</h2>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: {{t.text2}}">{{t.mode}}</span>
+    </div>
+
+    <!-- 01 Colour -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">01 · Colour tokens</div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{t.swatches}}" as="s" hint-placeholder-count="16">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div style="height: 56px; border-radius: 8px; background: {{s.hex}}; border: 1px solid {{t.border}}"></div>
+          <div style="font-size: 13px; font-weight: 600">{{s.name}}</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: {{t.text2}}">{{s.hex}}</div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 02 Type -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">02 · Typography</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+        <div style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 48px; line-height: 1.05; font-weight: 700; letter-spacing: -0.02em">Display 48</div>
+        <div style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 36px; line-height: 1.1; font-weight: 700">Heading 1 · 36</div>
+        <div style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px; line-height: 1.2; font-weight: 600">Heading 2 · 28</div>
+        <div style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px; line-height: 1.3; font-weight: 600">Heading 3 · 20</div>
+        <div style="font-size: 16px; line-height: 1.6">Body 16 · Tailor your resume to every job without inventing anything.</div>
+        <div style="font-size: 14px; line-height: 1.5; color: {{t.text2}}">Small 14 · Secondary text, helper text, table cells.</div>
+        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">Overline 12 · section labels</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600">Mono 15 · 9,360 credits · 78/100</div>
+        <a href="#" style="font-size: 16px; color: {{t.link}}; font-weight: 500">Link · Read how scoring works</a>
+      </div>
+    </div>
+
+    <!-- 03 Buttons -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">03 · Buttons</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Primary</button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}">Secondary</button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 16px; border-radius: 6px; border: 0; background: transparent; color: {{t.link}}">Tertiary</button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.crit}}; color: {{t.onCrit}}">Delete</button>
+          <button type="button" disabled style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.surface2}}; color: {{t.disabledText}}">Disabled</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 32px; padding: 0 12px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Small</button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Medium</button>
+          <button type="button" style="font: 600 17px Inter, sans-serif; height: 52px; padding: 0 28px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; display: flex; align-items: center; gap: 10px">Large with icon
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+          <button type="button" aria-label="More actions" style="width: 44px; height: 44px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="12" r="2"></circle></svg>
+          </button>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 48px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; gap: 10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M12 12h6" stroke="currentColor" stroke-width="2"></path></svg>
+            Continue with Google
+          </button>
+          <button type="button" style="font: 600 15px Inter, sans-serif; height: 48px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; gap: 10px">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"></rect><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>
+            Continue with LinkedIn
+          </button>
+        </div>
+        <div style="font-size: 13px; color: {{t.text2}}">Social buttons use placeholder glyphs; swap in the official Google and LinkedIn marks per their brand rules.</div>
+      </div>
+    </div>
+
+    <!-- 04 Form controls -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">04 · Form controls</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Email
+            <input type="email" placeholder="you@example.com" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+            <span style="font-size: 13px; font-weight: 400; color: {{t.text2}}">Helper text</span>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Focused
+            <input type="text" value="Senior Frontend Engineer" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 2px solid {{t.link}}; outline: 3px solid {{t.focusRing}}; background: {{t.inputBg}}; color: {{t.text}}">
+            <span style="font-size: 13px; font-weight: 400; color: {{t.text2}}">2px route-blue border + soft ring</span>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Error
+            <input type="text" value="not-an-email" style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 2px solid {{t.crit}}; background: {{t.inputBg}}; color: {{t.text}}">
+            <span style="font-size: 13px; font-weight: 500; color: {{t.crit}}">Enter a valid email address</span>
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Topic
+            <select style="font: 400 15px Inter, sans-serif; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+              <option>Billing and credits</option><option>Extraction issue</option><option>Other</option>
+            </select>
+            <span style="font-size: 13px; font-weight: 400; color: {{t.text2}}">Native select</span>
+          </label>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Job description
+          <textarea rows="3" style="font: 400 15px/1.5 Inter, sans-serif; box-sizing: border-box; padding: 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}; resize: vertical">We are looking for a Frontend Engineer with 4+ years of React and TypeScript…</textarea>
+          <span style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 400; color: {{t.text2}}"><span>Paste the full posting for the best match</span><span style="font-family: 'JetBrains Mono', monospace">12,480 / 30,000</span></span>
+        </label>
+        <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: center; font-size: 15px">
+          <label style="display: flex; align-items: center; gap: 8px"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: {{t.link}}"> Checkbox</label>
+          <label style="display: flex; align-items: center; gap: 8px"><input type="radio" name="r{{t.mode}}" checked style="width: 18px; height: 18px; accent-color: {{t.link}}"> Radio on</label>
+          <label style="display: flex; align-items: center; gap: 8px"><input type="radio" name="r{{t.mode}}" style="width: 18px; height: 18px; accent-color: {{t.link}}"> Radio off</label>
+          <label style="display: flex; align-items: center; gap: 10px">
+            <span style="width: 40px; height: 24px; border-radius: 999px; background: {{t.link}}; display: flex; align-items: center; justify-content: flex-end; padding: 2px; box-sizing: border-box"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span></span>
+            Toggle
+          </label>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="code{{t.mode}}" style="font-size: 14px; font-weight: 600">Coupon or referral code</label>
+          <div style="display: flex; gap: 8px">
+            <input id="code{{t.mode}}" type="text" value="EARLYBIRD" style="flex: 1; min-width: 0; font: 600 15px 'JetBrains Mono', monospace; letter-spacing: 0.06em; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 6px; border: 1px dashed {{t.accentLine}}; background: {{t.accentTint}}; color: {{t.text}}">
+            <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}">Apply</button>
+          </div>
+          <span style="font-size: 13px; font-weight: 500; color: {{t.good}}">500 credits added to your wallet</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 Badges & chips -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">05 · Badges, chips, credit pill</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Completed</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.infoBg}}; color: {{t.info}}">Processing</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">Outdated</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.critBg}}; color: {{t.crit}}">Failed · 0 credits used</span>
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: {{t.surface2}}; color: {{t.text2}}">Original</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span style="font-size: 13px; font-weight: 500; padding: 6px 10px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>React</span>
+          <span style="font-size: 13px; font-weight: 500; padding: 6px 10px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>TypeScript</span>
+          <span style="font-size: 13px; font-weight: 500; padding: 6px 10px; border-radius: 6px; background: {{t.warnBg}}; color: {{t.warn}}; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M5 12h14"></path></svg>CI/CD · partial</span>
+          <span style="font-size: 13px; font-weight: 500; padding: 5px 9px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; color: {{t.text2}}; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle></svg>Kubernetes · not found</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+          <span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: #0F1B2A; border: 1px solid #33475E; color: #F2F5F9; font: 600 14px 'JetBrains Mono', monospace">
+            <span style="width: 8px; height: 8px; border-radius: 999px; background: #FF9900"></span>9,360 credits
+          </span>
+          <span style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}; font: 600 14px 'JetBrains Mono', monospace">640 on hold</span>
+          <span style="font-size: 13px; color: {{t.text2}}">Credit pill always sits in the app's top bar.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 Alerts -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">06 · Alerts and toast</div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div role="status" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.infoBg}}; border: 1px solid {{t.infoLine}}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.info}}" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.01"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 14px">Estimated score</strong><span style="font-size: 14px; color: {{t.text2}}">Employers' ATS systems differ; this is not a guarantee.</span></div>
+        </div>
+        <div role="status" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.goodBg}}; border: 1px solid {{t.goodLine}}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 14px">Resume generated</strong><span style="font-size: 14px; color: {{t.text2}}">582 credits used of 640 estimated. 58 returned.</span></div>
+        </div>
+        <div role="status" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 14px">Score is outdated</strong><span style="font-size: 14px; color: {{t.text2}}">You edited this resume. Re-score to see the new result.</span></div>
+        </div>
+        <div role="alert" style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.critBg}}; border: 1px solid {{t.critLine}}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.crit}}" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9 9l6 6M15 9l-6 6"></path></svg>
+          <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 14px">Generation failed</strong><span style="font-size: 14px; color: {{t.text2}}">No credits were used. Try again.</span></div>
+        </div>
+        <div style="align-self: flex-start; display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: #0F1B2A; color: #F2F5F9; box-shadow: {{t.shadowLg}}; font-size: 14px">
+          <span style="width: 8px; height: 8px; border-radius: 999px; background: #4CC38A"></span>PDF ready · Asha-Rao-Frontend-Engineer.pdf
+          <a href="#" style="color: #FFB547; font-weight: 600">Download</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 Navigation -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">07 · Navigation: tabs, breadcrumb, flight route</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 24px">
+        <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 14px; color: {{t.text2}}">
+          <a href="#" style="color: {{t.link}}">My resumes</a><span>/</span><a href="#" style="color: {{t.link}}">Asha Rao · Original</a><span>/</span><span style="color: {{t.text}}">Acme Corp · Frontend Engineer</span>
+        </nav>
+        <div role="tablist" style="display: flex; gap: 4px; border-bottom: 1px solid {{t.border}}">
+          <button type="button" role="tab" aria-selected="true" style="font: 600 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; color: {{t.text}}; border-bottom: 3px solid {{t.accent}}; margin-bottom: -1px">Overview</button>
+          <button type="button" role="tab" style="font: 500 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; color: {{t.text2}}">Keywords</button>
+          <button type="button" role="tab" style="font: 500 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; color: {{t.text2}}">Recommendations</button>
+          <button type="button" role="tab" style="font: 500 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; color: {{t.text2}}">History</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="font-size: 13px; color: {{t.text2}}">Flight route · signature progress element</div>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start">
+            <sc-for list="{{t.route}}" as="r" hint-placeholder-count="5">
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <div style="display: flex; align-items: center">
+                <span style="width: 28px; height: 28px; flex: none; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 600 12px 'JetBrains Mono', monospace; background: {{r.dotBg}}; color: {{r.dotFg}}; border: 2px solid {{r.dotLine}}; box-sizing: border-box">{{r.n}}</span>
+                <span style="flex: 1; height: 0; border-top: 2px {{r.lineStyle}} {{r.lineColor}}; margin: 0 6px"></span>
+              </div>
+              <span style="font-size: 13px; font-weight: {{r.weight}}; color: {{r.labelColor}}">{{r.label}}</span>
+            </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 Data display -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">08 · Data: score ring, bars, version card, table</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 24px; display: flex; gap: 28px; align-items: center">
+        <svg width="132" height="132" viewBox="0 0 120 120" role="img" aria-label="ATS score 78 out of 100">
+          <circle cx="60" cy="60" r="48" fill="none" stroke="{{t.surface2}}" stroke-width="12"></circle>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="{{t.accent}}" stroke-width="12" stroke-linecap="round" stroke-dasharray="235.2 301.6" transform="rotate(-90 60 60)"></circle>
+          <text x="60" y="64" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="30" font-weight="600" fill="{{t.text}}">78</text>
+          <text x="60" y="84" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="{{t.text2}}">of 100</text>
+        </svg>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 10px">
+          <sc-for list="{{t.dims}}" as="d" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 4px">
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{d.label}}</span><span style="font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{d.value}}</span></div>
+            <div style="height: 6px; border-radius: 999px; background: {{t.surface2}}"><div style="height: 6px; border-radius: 999px; width: {{d.pct}}; background: {{d.color}}"></div></div>
+          </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <article style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: {{t.shadow}}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 8px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Acme Corp</strong><span style="font-size: 13px; color: {{t.text2}}">Frontend Engineer</span></div>
+            <span style="font: 600 13px 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; background: {{t.goodBg}}; color: {{t.good}}">82</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: {{t.text2}}"><span>Modern template</span><span>Edited 2h ago</span></div>
+        </article>
+        <article style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: {{t.shadow}}">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 8px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Globex</strong><span style="font-size: 13px; color: {{t.text2}}">UI Engineer II</span></div>
+            <span style="font: 600 13px 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; background: {{t.warnBg}}; color: {{t.warn}}">64 · old</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: {{t.text2}}"><span>Classic template</span><span>Edited 3d ago</span></div>
+        </article>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; overflow: hidden">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 10px 16px; background: {{t.surface2}}; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{t.text2}}"><span>Activity</span><span style="text-align: right">Credits</span><span style="text-align: right">Balance</span></div>
+        <sc-for list="{{t.rows}}" as="row" hint-placeholder-count="3">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 12px 16px; border-top: 1px solid {{t.border}}; font-size: 14px">
+          <span>{{row.what}}</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; color: {{row.color}}">{{row.amt}}</span><span style="text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{row.bal}}</span>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- 09 Overlays -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">09 · Confirm dialog (before every paid action)</div>
+      <div style="background: {{t.scrim}}; border-radius: 10px; padding: 32px; display: flex; justify-content: center">
+        <div role="dialog" aria-label="Confirm generation" style="width: 440px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; box-shadow: {{t.shadowLg}}; display: flex; flex-direction: column">
+          <div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 6px">
+            <h3 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Generate tailored resume?</h3>
+            <span style="font-size: 14px; color: {{t.text2}}">Acme Corp · Frontend Engineer</span>
+          </div>
+          <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+            <div style="display: flex; justify-content: space-between"><span>Job description analysis</span><span style="font-family: 'JetBrains Mono', monospace">up to 120</span></div>
+            <div style="display: flex; justify-content: space-between"><span>Resume generation</span><span style="font-family: 'JetBrains Mono', monospace">up to 520</span></div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid {{t.border}}; padding-top: 10px; font-weight: 600"><span>Estimate</span><span style="font-family: 'JetBrains Mono', monospace">up to 640</span></div>
+            <div style="display: flex; justify-content: space-between; color: {{t.text2}}"><span>Balance after</span><span style="font-family: 'JetBrains Mono', monospace">10,000 → 9,360</span></div>
+            <span style="font-size: 13px; color: {{t.text2}}">You pay only what's used. Failed runs cost nothing.</span>
+          </div>
+          <div style="padding: 16px 24px; border-top: 1px solid {{t.border}}; display: flex; justify-content: flex-end; gap: 10px">
+            <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 18px; border-radius: 6px; border: 0; background: transparent; color: {{t.link}}">Cancel</button>
+            <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Confirm and generate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 Misc -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: {{t.text2}}">10 · Accordion, upload zone, progress, empty state</div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; overflow: hidden">
+        <details open style="border-bottom: 1px solid {{t.border}}">
+          <summary style="padding: 16px 20px; font-weight: 600; font-size: 15px; cursor: pointer">Do credits expire?</summary>
+          <div style="padding: 0 20px 16px; font-size: 14px; line-height: 1.6; color: {{t.text2}}">No. Credits stay in your wallet until you use them.</div>
+        </details>
+        <details>
+          <summary style="padding: 16px 20px; font-weight: 600; font-size: 15px; cursor: pointer">What happens if a generation fails?</summary>
+          <div style="padding: 0 20px 16px; font-size: 14px; line-height: 1.6; color: {{t.text2}}">The held credits go straight back. You're never charged for a failed run.</div>
+        </details>
+      </div>
+      <div style="border: 2px dashed {{t.borderStrong}}; border-radius: 10px; padding: 28px; display: flex; flex-direction: column; align-items: center; gap: 10px; background: {{t.surface}}">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="{{t.link}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        <strong style="font-size: 15px">Drop your resume here, or <a href="#" style="color: {{t.link}}">browse</a></strong>
+        <span style="font-size: 13px; color: {{t.text2}}">PDF, DOCX, LaTeX (.tex), PNG or JPG · up to 10 MB · upload is free</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; font-size: 13px"><span>Reading your resume…</span><span style="font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">64%</span></div>
+        <div style="height: 8px; border-radius: 999px; background: {{t.surface2}}"><div style="height: 8px; width: 64%; border-radius: 999px; background: {{t.link}}"></div></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 14px">
+        <span style="width: 40px; height: 40px; border-radius: 999px; background: {{t.navyTint}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; font: 600 14px Inter, sans-serif">AR</span>
+        <span style="width: 32px; height: 32px; border-radius: 999px; background: {{t.accentTint}}; color: {{t.text}}; display: flex; align-items: center; justify-content: center; font: 600 12px Inter, sans-serif">VT</span>
+        <span style="font-size: 13px; color: {{t.text2}}">Avatars · initials on tinted ground</span>
+      </div>
+      <div style="border: 1px solid {{t.border}}; border-radius: 10px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; background: {{t.surface}}">
+        <svg width="120" height="40" viewBox="0 0 120 40" aria-hidden="true"><path d="M8 30 C 40 30, 50 10, 80 12 S 108 18, 112 8" fill="none" stroke="{{t.borderStrong}}" stroke-width="2" stroke-dasharray="5 5"></path><circle cx="8" cy="30" r="5" fill="{{t.accent}}"></circle><circle cx="112" cy="8" r="5" fill="none" stroke="{{t.borderStrong}}" stroke-width="2"></circle></svg>
+        <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">No tailored resumes yet</strong>
+        <span style="font-size: 14px; color: {{t.text2}}; max-width: 360px">Upload a resume and add a job description to plot your first route.</span>
+        <button type="button" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 20px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Upload resume</button>
+      </div>
+    </div>
+
+  </section>
+  </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const L = {
+      label: 'Light', mode: 'theme: light',
+      bg: '#F4F6F8', surface: '#FFFFFF', surface2: '#EAEEF3', inputBg: '#FFFFFF',
+      border: '#D6DDE6', borderStrong: '#9AA8B8',
+      text: '#0F1B2A', text2: '#4B5A6B', disabledText: '#6B7889',
+      accent: '#FF9900', onAccent: '#0F1B2A', accentTint: '#FFF4E2', accentLine: '#C77700',
+      link: '#0A6BCB', focusRing: 'rgba(10,107,203,0.22)', navyTint: '#DCE4EE',
+      good: '#1B7A43', goodBg: '#E3F4EA', goodLine: '#B5DFC5',
+      warn: '#8F4D00', warnBg: '#FFF1DC', warnLine: '#F2CF98',
+      info: '#0A62BA', infoBg: '#E6F0FB', infoLine: '#B9D3F1',
+      crit: '#B42318', onCrit: '#FFFFFF', critBg: '#FDECEA', critLine: '#F4C1BC',
+      scrim: 'rgba(15,27,42,0.55)',
+      shadow: '0 1px 2px rgba(15,27,42,0.06), 0 6px 18px rgba(15,27,42,0.06)',
+      shadowLg: '0 12px 40px rgba(15,27,42,0.22)'
+    };
+    const D = {
+      label: 'Dark', mode: 'theme: dark',
+      bg: '#0A1119', surface: '#111B27', surface2: '#1A2636', inputBg: '#0D1620',
+      border: '#26364A', borderStrong: '#4A5F78',
+      text: '#E8EEF5', text2: '#A3B3C5', disabledText: '#7D8EA2',
+      accent: '#FF9F1C', onAccent: '#0A1119', accentTint: '#2E2210', accentLine: '#C9801C',
+      link: '#5AABFF', focusRing: 'rgba(90,171,255,0.28)', navyTint: '#1F3047',
+      good: '#4CC38A', goodBg: '#10291C', goodLine: '#1E5236',
+      warn: '#F5B54A', warnBg: '#30220C', warnLine: '#5E4216',
+      info: '#6FB5FF', infoBg: '#0E2339', infoLine: '#1E4670',
+      crit: '#FF8A7E', onCrit: '#2A0B07', critBg: '#341311', critLine: '#6A2620',
+      scrim: 'rgba(0,0,0,0.6)',
+      shadow: '0 1px 2px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3)',
+      shadowLg: '0 12px 40px rgba(0,0,0,0.55)'
+    };
+    const build = (t) => {
+      const sw = [
+        ['Background', t.bg], ['Surface', t.surface], ['Surface 2', t.surface2], ['Border', t.border],
+        ['Text', t.text], ['Text 2', t.text2], ['Navy chrome', '#0F1B2A'], ['Navy 2', '#1B2A3D'],
+        ['Signal orange', t.accent], ['Route blue', t.link], ['Success', t.good], ['Warning', t.warn],
+        ['Critical', t.crit], ['Info tint', t.infoBg], ['Accent tint', t.accentTint], ['Border strong', t.borderStrong]
+      ].map(([name, hex]) => ({ name, hex }));
+      const steps = ['Upload', 'Review', 'Job description', 'Generate', 'Score'];
+      const route = steps.map((label, i) => {
+        const done = i < 2, cur = i === 2;
+        return {
+          n: String(i + 1), label,
+          dotBg: done ? t.link : (cur ? t.accent : t.surface),
+          dotFg: done ? '#FFFFFF' : (cur ? t.onAccent : t.text2),
+          dotLine: done ? t.link : (cur ? t.accent : t.borderStrong),
+          lineStyle: i < 2 ? 'solid' : 'dashed',
+          lineColor: i === steps.length - 1 ? 'transparent' : (i < 2 ? t.link : t.borderStrong),
+          labelColor: (done || cur) ? t.text : t.text2,
+          weight: cur ? 600 : 500
+        };
+      });
+      const dims = [
+        ['Required keywords', 24, 30], ['Skills match', 20, 25], ['Experience', 16, 20], ['Education', 8, 10], ['Structure', 10, 15]
+      ].map(([label, v, max]) => ({ label, value: v + ' / ' + max, pct: Math.round(v / max * 100) + '%', color: (v / max) >= 0.75 ? t.good : t.accent }));
+      const rows = [
+        { what: 'Generation · Acme Corp', amt: '−582', bal: '9,918', color: t.text },
+        { what: 'Coupon EARLYBIRD', amt: '+500', bal: '10,500', color: t.good },
+        { what: 'Wallet top-up · ₹500', amt: '+10,000', bal: '10,000', color: t.good }
+      ];
+      return Object.assign({}, t, { swatches: sw, route, dims, rows });
+    };
+    return { themes: [build(L), build(D)] };
+  }
+}
+</script>
+</body>
+</html>

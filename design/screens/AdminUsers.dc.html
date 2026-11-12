@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Users · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1000px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="users" min-height="936px" hint-size="248px,936px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Users <span style="font: 600 15px 'JetBrains Mono', monospace; color: {{t.text2}}">1,284</span></h1>
+        <button type="button" style="font: 600 13px Inter, sans-serif; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Export CSV</button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+        <label style="flex: 1 1 260px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{t.text2}}" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search users</span>
+          <input type="search" placeholder="Name, email or user ID" style="flex: 1; min-width: 0; border: 0; background: transparent; color: {{t.text}}; font: 400 14px Inter, sans-serif; outline: none">
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Status<select style="font: 500 13px Inter, sans-serif; height: 38px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All</option><option>Active</option><option>Suspended</option></select></label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Payer<select style="font: 500 13px Inter, sans-serif; height: 38px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>Any</option><option>Has topped up</option><option>Never topped up</option></select></label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Code<select style="font: 500 13px Inter, sans-serif; height: 38px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>Any</option><option>EARLYBIRD</option><option>Referral</option><option>None</option></select></label>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 13px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">User</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Joined</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Code</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Balance</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Top-ups</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">AI actions</th>
+            <th scope="col" style="padding: 10px 10px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+            <th scope="col" style="padding: 10px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Actions</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{users}}" as="u" hint-placeholder-count="8">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 11px 16px"><div style="display: flex; align-items: center; gap: 10px"><span style="width: 30px; height: 30px; flex: none; border-radius: 999px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700">{{u.ini}}</span><div style="display: flex; flex-direction: column; gap: 1px"><strong>{{u.name}}</strong><span style="font-size: 12px; color: {{t.text2}}">{{u.email}}</span></div></div></td>
+              <td style="padding: 11px 10px; color: {{t.text2}}">{{u.joined}}</td>
+              <td style="padding: 11px 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px">{{u.code}}</td>
+              <td style="padding: 11px 10px; text-align: right; font-family: 'JetBrains Mono', monospace">{{u.bal}}</td>
+              <td style="padding: 11px 10px; text-align: right; font-family: 'JetBrains Mono', monospace">{{u.topups}}</td>
+              <td style="padding: 11px 10px; text-align: right; font-family: 'JetBrains Mono', monospace">{{u.actions}}</td>
+              <td style="padding: 11px 10px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{u.sBg}}; color: {{u.sFg}}">{{u.status}}</span></td>
+              <td style="padding: 11px 16px; text-align: right; white-space: nowrap"><a href="AdminUserDetail.dc.html" style="font-weight: 600; color: {{t.link}}">View</a></td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: {{t.text2}}">
+        <span>Showing 1–8 of 1,284</span>
+        <div style="display: flex; gap: 6px">
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.border}}; background: {{t.surface}}; color: {{t.text2}}" disabled>Previous</button>
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Next</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',crit:'#FF8A7E',critBg:'#341311'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',crit:'#B42318',critBg:'#FDECEA'};
+    const st = (s) => s === 'Active' ? [t.goodBg, t.good] : (s === 'Flagged' ? [t.warnBg, t.warn] : [t.critBg, t.crit]);
+    const raw = [
+      ['AR', 'Asha Rao', 'as***@example.com', '8 Nov 2026', 'EARLYBIRD', '9,770', '1', '7', 'Active'],
+      ['KM', 'Karthik M.', 'ka***@example.com', '10 Nov 2026', 'RP-7K3XQ', '500', '0', '0', 'Active'],
+      ['PS', 'Priya S.', 'pr***@example.com', '11 Nov 2026', 'RP-7K3XQ', '12,340', '1', '4', 'Active'],
+      ['RN', 'Rahul N.', 'ra***@example.com', '2 Nov 2026', 'EARLYBIRD', '18,205', '2', '19', 'Active'],
+      ['DK', 'Divya K.', 'di***@example.com', '1 Nov 2026', '—', '0', '0', '0', 'Active'],
+      ['TS', 'test.user.441', 'te***@mailinator.com', '12 Nov 2026', 'RP-QQ81M', '500', '0', '1', 'Flagged'],
+      ['MJ', 'Meera J.', 'me***@example.com', '28 Oct 2026', 'EARLYBIRD', '4,410', '1', '11', 'Active'],
+      ['XX', 'Spam account', 'xx***@example.net', '27 Oct 2026', 'EARLYBIRD', '500', '0', '0', 'Suspended']
+    ];
+    const users = raw.map(([ini, name, email, joined, code, bal, topups, actions, status]) => {
+      const [sBg, sFg] = st(status);
+      return { ini, name, email, joined, code, bal, topups, actions, status, sBg, sFg };
+    });
+    return { dark, t, users };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email footer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 600px; box-sizing: border-box; padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 14px; font-family: Inter, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: {{muted}}; text-align: center">
+  <div style="display: flex; justify-content: center; gap: 18px; font-weight: 600">
+    <a href="#" style="color: {{link}}">Help centre</a>
+    <a href="#" style="color: {{link}}">Your wallet</a>
+    <a href="#" style="color: {{link}}">Privacy</a>
+  </div>
+  <span>Questions? Reply to this email or write to [SUPPORT EMAIL].</span>
+  <sc-if value="{{marketing}}" hint-placeholder-val="{{ false }}">
+    <span>You're getting this because you have a Resume Pilot account and opted in to updates. <a href="#" style="color: {{link}}">Unsubscribe</a> · <a href="#" style="color: {{link}}">Email preferences</a></span>
+  </sc-if>
+  <sc-if value="{{transactional}}" hint-placeholder-val="{{ true }}">
+    <span>This is a service email about your account, so it's sent even if you've turned off updates.</span>
+  </sc-if>
+  <span>Resume Pilot · [REGISTERED ADDRESS] · India</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"marketing":{"editor":"boolean","default":false},"$preview":{"width":600,"height":260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const marketing = this.props.marketing ?? false;
+    return { marketing, transactional: !marketing, muted: dark ? '#8193A8' : '#5E6E80', link: dark ? '#5AABFF' : '#0A6BCB' };
+  }
+}
+</script>
+</body>
+</html>

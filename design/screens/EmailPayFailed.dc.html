@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · Recharge failed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 980px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> Your ₹500 payment didn't go through</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> No credits were added. You can try again in a minute.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> Razorpay payment.failed · transactional</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="Payment update" hint-size="600px,80px"></dc-import>
+    <div style="padding: 36px 40px 40px; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; gap: 16px; align-items: center">
+        <span style="width: 52px; height: 52px; flex: none; border-radius: 999px; background: {{t.critBg}}; display: flex; align-items: center; justify-content: center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="{{t.crit}}" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"></path></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px">Payment didn't go through</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Your wallet hasn't changed.</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{t.infoBg}}; font-size: 14px; line-height: 1.55">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.info}}" stroke-width="2" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.01"></path></svg>
+        <span>If money left your account, it's usually returned by your bank within [5–7] working days. You don't need to do anything.</span>
+      </div>
+      <div style="border: 1px solid {{t.border}}; border-radius: 10px; overflow: hidden">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid {{r.line}}; font-size: 14px"><span style="color: {{t.text2}}">{{r.k}}</span><span style="font-family: 'JetBrains Mono', monospace; text-align: right">{{r.v}}</span></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <strong style="font-size: 14px">Things that usually help</strong>
+        <sc-for list="{{tips}}" as="tip" hint-placeholder-count="3"><span style="font-size: 14px; line-height: 1.55; color: {{t.text2}}">• {{tip}}</span></sc-for>
+      </div>
+      <a href="#" style="align-self: flex-start; text-decoration: none; padding: 14px 26px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px">Try again</a>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ false }}" hint-size="600px,200px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',accent:'#FF9F1C',onAccent:'#0A1119',crit:'#FF8A7E',critBg:'#341311',info:'#6FB5FF',infoBg:'#0E2339'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',accent:'#FF9900',onAccent:'#0F1B2A',crit:'#B42318',critBg:'#FDECEA',info:'#0A62BA',infoBg:'#E6F0FB'};
+    const rows = [['Amount', '₹500.00'], ['Method', 'Netbanking'], ['Reason', '[REASON FROM RAZORPAY]'], ['Payment ID', 'pay_PV02mNx9']].map(([k, v], i) => ({ k, v, line: i === 0 ? 'transparent' : t.border }));
+    return { dark, t, rows, tips: ['Try UPI or a different card', 'Check that your bank allows online payments', 'Wait a minute before retrying so the bank can reset'] };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email templates · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="position: relative; min-height: 1100px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="emails" min-height="1036px" hint-size="248px,1036px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Email templates</h1>
+          <span style="font-size: 13px; color: {{t.text2}}">Transactional emails always send. Marketing emails respect each user's opt-out.</span>
+        </div>
+        <a href="AdminCampaign.dc.html" style="text-decoration: none; height: 38px; padding: 0 16px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 13px; display: flex; align-items: center">New campaign</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{tiles}}" as="k" hint-placeholder-count="4">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{k.label}}</span><span style="font: 600 20px 'JetBrains Mono', monospace">{{k.value}}</span><span style="font-size: 12px; color: {{t.text2}}">{{k.sub}}</span></div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <section style="flex: 999 1 560px; min-width: 0; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+          <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 12.5px">
+            <thead><tr style="background: {{t.surface2}}; text-align: left">
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Template</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Trigger</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Sent 30d</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Opened</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">On</th>
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Actions</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+              <tr style="border-top: 1px solid {{t.border}}">
+                <td style="padding: 11px 14px"><div style="display: flex; flex-direction: column; gap: 3px"><strong>{{r.name}}</strong><span style="align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; background: {{r.kBg}}; color: {{r.kFg}}">{{r.kind}}</span></div></td>
+                <td style="padding: 11px 8px; color: {{t.text2}}">{{r.trigger}}</td>
+                <td style="padding: 11px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.sent}}</td>
+                <td style="padding: 11px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.open}}</td>
+                <td style="padding: 11px 8px">
+                  <sc-if value="{{r.locked}}" hint-placeholder-val="{{ true }}"><span style="font-size: 11px; color: {{t.text2}}">Always</span></sc-if>
+                  <sc-if value="{{r.toggleable}}" hint-placeholder-val="{{ false }}"><button type="button" role="switch" aria-checked="{{r.onStr}}" aria-label="Enable {{r.name}}" onClick="{{r.toggle}}" style="width: 36px; height: 22px; box-sizing: border-box; border-radius: 999px; padding: 2px; border: 0; cursor: pointer; display: flex; justify-content: {{r.justify}}; background: {{r.track}}"><span style="width: 18px; height: 18px; border-radius: 999px; background: #FFFFFF"></span></button></sc-if>
+                </td>
+                <td style="padding: 11px 14px; text-align: right; white-space: nowrap"><a href="{{r.preview}}" style="font-weight: 600; color: {{t.link}}">Preview</a> · <button type="button" onClick="{{r.test}}" style="border: 0; background: transparent; padding: 0; font: 600 12.5px Inter, sans-serif; color: {{t.link}}; cursor: pointer">Send test</button></td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+        <aside style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 14px">
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+            <strong style="font-size: 15px">Sender</strong>
+            <sc-for list="{{sender}}" as="s" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; gap: 10px"><span style="color: {{t.text2}}">{{s.k}}</span><span style="font-family: 'JetBrains Mono', monospace; text-align: right">{{s.v}}</span></div>
+            </sc-for>
+          </section>
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: 13px">
+            <strong style="font-size: 15px">Domain checks</strong>
+            <sc-for list="{{dns}}" as="d" hint-placeholder-count="3">
+            <div style="display: flex; justify-content: space-between"><span style="font-family: 'JetBrains Mono', monospace">{{d.k}}</span><span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: {{d.bg}}; color: {{d.fg}}">{{d.v}}</span></div>
+            </sc-for>
+          </section>
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+            <strong style="font-size: 15px">Inactive nudge</strong>
+            <span style="color: {{t.text2}}; line-height: 1.5">Send after <strong style="font-family: 'JetBrains Mono', monospace; color: {{t.text}}">30</strong> days without sign-in, at most once every <strong style="font-family: 'JetBrains Mono', monospace; color: {{t.text}}">30</strong> days.</span>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; right: 28px; bottom: 28px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; background: #0F1B2A; color: #F2F5F9; box-shadow: 0 12px 30px rgba(0,0,0,0.3); font-size: 13px">
+      <span style="width: 8px; height: 8px; border-radius: 999px; background: #4CC38A"></span>Test "{{toastName}}" sent to your admin email
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { off: {}, toast: '' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',warn:'#F5B54A',warnBg:'#30220C'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',warn:'#8F4D00',warnBg:'#FFF1DC'};
+    const { off, toast } = this.state;
+    const R = [
+      ['Welcome', 'T', 'First sign-in', '1,284', '71%', 'EmailWelcome.dc.html'],
+      ['Code applied', 'T', 'Coupon or referral redeemed', '1,302', '64%', 'EmailCodeApplied.dc.html'],
+      ['Recharge successful', 'T', 'payment.captured', '412', '82%', 'EmailPaySuccess.dc.html'],
+      ['Recharge failed', 'T', 'payment.failed', '23', '77%', 'EmailPayFailed.dc.html'],
+      ['Recharge pending', 'T', 'Pending after 10 min', '6', '100%', 'EmailPayPending.dc.html'],
+      ['Inactive nudge', 'M', 'No sign-in for 30 days', '318', '29%', 'EmailInactive.dc.html'],
+      ['Promo code', 'M', 'Admin campaign', '500', '44%', 'EmailPromo.dc.html'],
+      ['New features', 'M', 'Admin campaign', '1,061', '38%', 'EmailNewFeatures.dc.html']
+    ];
+    const rows = R.map(([name, k, trigger, sent, open, preview]) => {
+      const marketing = k === 'M', on = !off[name];
+      return {
+        name, trigger, sent, open, preview,
+        kind: marketing ? 'MARKETING' : 'TRANSACTIONAL', kBg: marketing ? t.warnBg : t.infoBg, kFg: marketing ? t.warn : t.info,
+        locked: !marketing, toggleable: marketing,
+        onStr: on ? 'true' : 'false', justify: on ? 'flex-end' : 'flex-start', track: on ? t.good : t.borderStrong,
+        toggle: () => this.setState({ off: Object.assign({}, off, { [name]: on }) }),
+        test: () => this.setState({ toast: name })
+      };
+    });
+    return {
+      dark, t, rows, toast: !!toast, toastName: toast,
+      tiles: [
+        { label: 'Sent (30 days)', value: '4,906', sub: 'All templates' },
+        { label: 'Delivered', value: '99.2%', sub: '39 bounced' },
+        { label: 'Opened', value: '58%', sub: 'Unique opens' },
+        { label: 'Unsubscribed', value: '0.6%', sub: 'Marketing only' }
+      ],
+      sender: [{ k: 'From', v: 'Resume Pilot' }, { k: 'Address', v: '[SENDER EMAIL]' }, { k: 'Reply-to', v: '[SUPPORT EMAIL]' }, { k: 'Provider', v: '[EMAIL PROVIDER]' }],
+      dns: ['SPF', 'DKIM', 'DMARC'].map((k) => ({ k, v: 'Verified', bg: t.goodBg, fg: t.good }))
+    };
+  }
+}
+</script>
+</body>
+</html>

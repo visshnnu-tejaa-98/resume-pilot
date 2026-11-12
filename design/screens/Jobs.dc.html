@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Job descriptions · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 950px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="jobs" min-height="886px" hint-size="248px,886px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Job descriptions</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Saved jobs are analysed once, then reused for free in every version and score.</span>
+        </div>
+        <a href="JobNew.dc.html" style="text-decoration: none; height: 42px; padding: 0 18px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 14px; display: flex; align-items: center">New job description</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px">
+        <sc-for list="{{jobs}}" as="j" hint-placeholder-count="3">
+        <article style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <div style="display: flex; justify-content: space-between; gap: 10px; align-items: flex-start">
+            <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+              <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">{{j.company}}</strong>
+              <span style="font-size: 14px; color: {{t.text2}}">{{j.role}}</span>
+            </div>
+            <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; background: {{j.bg}}; color: {{j.fg}}">{{j.status}}</span>
+          </div>
+          <p style="margin: 0; font-size: 14px; line-height: 1.55; color: {{t.text2}}">{{j.excerpt}}</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px">
+            <sc-for list="{{j.keys}}" as="k" hint-placeholder-count="4"><span style="font-size: 12px; padding: 4px 8px; border-radius: 6px; background: {{t.surface2}}">{{k}}</span></sc-for>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; color: {{t.text2}}; font-family: 'JetBrains Mono', monospace"><span>{{j.chars}} chars</span><span>{{j.used}}</span></div>
+          <div style="display: flex; gap: 10px; border-top: 1px solid {{t.border}}; padding-top: 14px; flex-wrap: wrap">
+            <a href="Generate.dc.html" style="text-decoration: none; height: 36px; padding: 0 14px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 13px; display: flex; align-items: center">Tailor resume</a>
+            <a href="AtsReport.dc.html" style="text-decoration: none; height: 36px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; color: {{t.text}}; font-weight: 600; font-size: 13px; display: flex; align-items: center">Score a resume</a>
+            <a href="JobNew.dc.html" style="margin-left: auto; font-size: 13px; font-weight: 600; color: {{t.link}}; display: flex; align-items: center">Edit as new</a>
+          </div>
+        </article>
+        </sc-for>
+      </div>
+      <span style="font-size: 13px; color: {{t.text2}}">Editing a job description saves it as a new job, so older versions keep the job they were built from.</span>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":950}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB'};
+    const j = (company, role, analysed, excerpt, keys, chars, used) => ({
+      company, role, excerpt, keys, chars, used,
+      status: analysed ? 'Analysed' : 'Not analysed yet',
+      bg: analysed ? t.goodBg : t.infoBg, fg: analysed ? t.good : t.info
+    });
+    return {
+      dark, t,
+      jobs: [
+        j('Acme Corp', 'Frontend Engineer', true, 'Build and own our React design system, partner with product designers, and ship fast, accessible UI.', ['React', 'TypeScript', 'Design systems', 'Accessibility'], '12,480', 'Used by 1 version'),
+        j('Initech', 'Senior React Developer', true, 'Lead frontend for a B2B dashboard used by finance teams. Strong state management and testing culture.', ['React', 'Redux', 'Testing', 'GraphQL'], '8,912', 'Used by 1 version'),
+        j('Globex', 'UI Engineer II', true, 'Join the platform UI team to modernise our component library and improve web performance.', ['TypeScript', 'Performance', 'Storybook', 'CI/CD'], '6,204', 'Used by 1 version'),
+        j('Umbrella Health', 'Frontend Developer', false, 'Work on patient-facing web apps with a focus on clarity, accessibility and reliability.', ['Vue', 'Accessibility', 'Healthcare'], '4,330', 'Not used yet')
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

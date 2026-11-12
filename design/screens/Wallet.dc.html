@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wallet · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="position: relative; min-height: 1400px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="wallet" min-height="1336px" hint-size="248px,1336px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Wallet</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Credits never expire. You only pay for AI actions that succeed.</span>
+        </div>
+        <button type="button" onClick="{{openPay}}" style="font: 700 14px Inter, sans-serif; height: 42px; padding: 0 18px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; cursor: pointer">Add money</button>
+      </div>
+
+      <div role="tablist" aria-label="Wallet" style="display: flex; gap: 4px; border-bottom: 1px solid {{t.border}}">
+        <sc-for list="{{tabs}}" as="tb" hint-placeholder-count="2">
+        <button type="button" role="tab" aria-selected="{{tb.sel}}" onClick="{{tb.pick}}" style="font: 600 14px Inter, sans-serif; padding: 12px 16px; border: 0; background: transparent; cursor: pointer; color: {{tb.color}}; border-bottom: 3px solid {{tb.line}}; margin-bottom: -1px">{{tb.label}}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{isOverview}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 16px">
+          <div style="background: {{t.hero}}; color: #F2F5F9; border-radius: 14px; padding: 26px; display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden; grid-column: span 2">
+            <svg width="320" height="120" viewBox="0 0 320 120" aria-hidden="true" style="position: absolute; right: -10px; bottom: -10px; opacity: 0.5"><path d="M0 110 C 100 110, 150 30, 230 34 S 310 14, 320 8" fill="none" stroke="#FF9900" stroke-width="2" stroke-dasharray="7 9"></path></svg>
+            <span style="position: relative; font-size: 14px; color: #A9B8C9">Available balance</span>
+            <span style="position: relative; font: 600 48px 'JetBrains Mono', monospace">9,770 <span style="font-size: 18px; color: #A9B8C9">credits</span></span>
+            <div style="position: relative; display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: #C3CFDC">
+              <span>On hold: <strong style="font-family: 'JetBrains Mono', monospace; color: #F2F5F9">0</strong></span>
+              <span>Purchased: <strong style="font-family: 'JetBrains Mono', monospace; color: #F2F5F9">10,000</strong></span>
+              <span>From codes: <strong style="font-family: 'JetBrains Mono', monospace; color: #F2F5F9">500</strong></span>
+            </div>
+          </div>
+          <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+            <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Coupon or referral code</strong>
+            <div role="status" style="display: flex; gap: 10px; padding: 12px; border-radius: 8px; background: {{t.goodBg}}; font-size: 13px; line-height: 1.5">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.4" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+              <span><strong>EARLYBIRD</strong> applied on 12 Nov. Each account can use one code.</span>
+            </div>
+            <a href="Referrals.dc.html" style="font-size: 14px; font-weight: 600; color: {{t.link}}">Invite friends with your code</a>
+          </div>
+        </div>
+
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 22px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Top-up pack</strong>
+            <span style="font-size: 15px"><span style="font-family: 'Space Grotesk', Inter, sans-serif; font-weight: 700; font-size: 22px">₹500</span> <span style="color: {{t.text2}}">→</span> <span style="font: 600 18px 'JetBrains Mono', monospace; color: {{t.accentText}}">10,000 credits</span></span>
+            <span style="font-size: 13px; color: {{t.text2}}">UPI, cards and netbanking via Razorpay · [GST NOTE]</span>
+          </div>
+          <button type="button" onClick="{{openPay}}" style="font: 700 15px Inter, sans-serif; height: 46px; padding: 0 22px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}; cursor: pointer">Add ₹500</button>
+        </section>
+
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; overflow: hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Recent activity</h2><button type="button" onClick="{{showHistory}}" style="border: 0; background: transparent; font: 600 14px Inter, sans-serif; color: {{t.link}}; cursor: pointer">Full history</button></div>
+          <sc-for list="{{recent}}" as="r" hint-placeholder-count="4">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 13px 20px; border-top: 1px solid {{t.border}}; font-size: 14px">
+            <div style="display: flex; flex-direction: column; gap: 2px"><span>{{r.what}}</span><span style="font-size: 12px; color: {{t.text2}}">{{r.when}}</span></div>
+            <span style="font: 600 14px 'JetBrains Mono', monospace; color: {{r.color}}">{{r.amt}}</span>
+          </div>
+          </sc-for>
+        </section>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{isHistory}}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: {{t.text2}}">Type
+            <select style="font: 500 14px Inter, sans-serif; height: 38px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All activity</option><option>Top-ups</option><option>AI actions</option><option>Codes</option><option>Refunds</option></select>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: {{t.text2}}">Period
+            <select style="font: 500 14px Inter, sans-serif; height: 38px; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>Last 30 days</option><option>All time</option></select>
+          </label>
+          <button type="button" style="margin-left: auto; font: 600 14px Inter, sans-serif; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Export CSV</button>
+        </div>
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; overflow-x: auto">
+          <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px">
+            <thead><tr style="background: {{t.surface2}}; text-align: left">
+              <th scope="col" style="padding: 12px 18px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Date</th>
+              <th scope="col" style="padding: 12px 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Activity</th>
+              <th scope="col" style="padding: 12px 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+              <th scope="col" style="padding: 12px 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Credits</th>
+              <th scope="col" style="padding: 12px 18px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Balance</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ledger}}" as="l" hint-placeholder-count="6">
+              <tr style="border-top: 1px solid {{t.border}}">
+                <td style="padding: 14px 18px; color: {{t.text2}}; white-space: nowrap">{{l.when}}</td>
+                <td style="padding: 14px 12px"><div style="display: flex; flex-direction: column; gap: 2px"><span>{{l.what}}</span><span style="font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">{{l.ref}}</span></div></td>
+                <td style="padding: 14px 12px"><span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{l.sBg}}; color: {{l.sFg}}">{{l.status}}</span></td>
+                <td style="padding: 14px 12px; text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: {{l.color}}">{{l.amt}}</td>
+                <td style="padding: 14px 18px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{l.bal}}</td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <sc-if value="{{payOpen}}" hint-placeholder-val="{{ false }}">
+  <div style="position: absolute; inset: 0; background: {{t.scrim}}; display: flex; align-items: flex-start; justify-content: center; padding: 160px 24px 24px">
+    <div role="dialog" aria-modal="true" aria-labelledby="pay-title" style="width: 100%; max-width: 440px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; box-shadow: {{t.shadowLg}}; display: flex; flex-direction: column">
+      <div style="padding: 22px 24px 0"><h2 id="pay-title" style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 22px">Add money</h2></div>
+      <div style="padding: 18px 24px; display: flex; flex-direction: column; gap: 12px">
+        <label style="display: flex; gap: 12px; align-items: center; padding: 16px; border-radius: 10px; border: 2px solid {{t.link}}; background: {{t.selBg}}">
+          <input type="radio" name="pack" checked style="width: 18px; height: 18px; accent-color: {{t.link}}">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 17px">₹500</strong><span style="font: 600 14px 'JetBrains Mono', monospace; color: {{t.accentText}}">10,000 credits</span></span>
+        </label>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: {{t.text2}}"><span>Balance after payment</span><span style="font-family: 'JetBrains Mono', monospace">9,770 → 19,770</span></div>
+        <span style="font-size: 13px; color: {{t.text2}}">You'll complete payment securely in Razorpay Checkout.</span>
+      </div>
+      <div style="padding: 16px 24px; border-top: 1px solid {{t.border}}; display: flex; justify-content: flex-end; gap: 10px">
+        <button type="button" onClick="{{closePay}}" style="font: 600 15px Inter, sans-serif; height: 44px; padding: 0 16px; border-radius: 6px; border: 0; background: transparent; color: {{t.link}}; cursor: pointer">Cancel</button>
+        <a href="PaymentResult.dc.html" style="text-decoration: none; height: 44px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Pay ₹500</a>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'overview', pay: false }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',accentText:'#FFB547',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',hero:'#060B12',selBg:'#0E2339',scrim:'rgba(0,0,0,0.6)',shadowLg:'0 12px 40px rgba(0,0,0,0.55)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',accentText:'#A85E00',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',hero:'#0F1B2A',selBg:'#F1F6FC',scrim:'rgba(15,27,42,0.5)',shadowLg:'0 12px 40px rgba(15,27,42,0.22)'};
+    const tab = this.state.tab;
+    const tabs = [['overview', 'Overview'], ['history', 'History']].map(([id, label]) => ({
+      label, sel: id === tab ? 'true' : 'false', color: id === tab ? t.text : t.text2, line: id === tab ? t.accent : 'transparent',
+      pick: () => this.setState({ tab: id })
+    }));
+    const L = [
+      ['12 Nov, 6:14 pm', 'ATS score · Acme Corp', 'job_8f21', 'Completed', '−148', '9,770', 'debit'],
+      ['12 Nov, 6:12 pm', 'Generation · Acme Corp (held 640)', 'job_8f1c', 'Completed', '−582', '9,918', 'debit'],
+      ['12 Nov, 5:58 pm', 'Generation · Acme Corp', 'job_8e90', 'Failed · released', '0', '10,500', 'zero'],
+      ['12 Nov, 5:40 pm', 'Coupon EARLYBIRD', 'code_redeem', 'Completed', '+500', '10,500', 'credit'],
+      ['12 Nov, 5:38 pm', 'Wallet top-up · ₹500', 'pay_PX81kLm2', 'Completed', '+10,000', '10,000', 'credit']
+    ];
+    const ledger = L.map(([when, what, ref, status, amt, bal, kind]) => ({
+      when, what, ref, status, amt, bal,
+      color: kind === 'credit' ? t.good : (kind === 'zero' ? t.text2 : t.text),
+      sBg: status.indexOf('Failed') === 0 ? t.infoBg : t.goodBg, sFg: status.indexOf('Failed') === 0 ? t.info : t.good
+    }));
+    return {
+      dark, t, tabs, ledger,
+      recent: ledger.slice(0, 4).map((l) => ({ what: l.what, when: l.when, amt: l.amt, color: l.color })),
+      isOverview: tab === 'overview', isHistory: tab === 'history', payOpen: this.state.pay,
+      openPay: () => this.setState({ pay: true }), closePay: () => this.setState({ pay: false }),
+      showHistory: () => this.setState({ tab: 'history' })
+    };
+  }
+}
+</script>
+</body>
+</html>

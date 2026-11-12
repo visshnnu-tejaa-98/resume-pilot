@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pricing config · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1200px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="pricing" min-height="1136px" hint-size="248px,1136px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Pricing config</h1>
+          <span style="font-size: 13px; color: {{t.text2}}">Live: <strong style="font-family: 'JetBrains Mono', monospace; color: {{t.text}}">v3</strong> since 1 Nov 2026. Saving creates v4; every charge records the version it used.</span>
+        </div>
+        <div style="display: flex; gap: 8px">
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 38px; padding: 0 14px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Version history</button>
+          <button type="button" style="font: 700 13px Inter, sans-serif; height: 38px; padding: 0 16px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Save as v4</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Top-up packs</h2><button type="button" style="font: 600 13px Inter, sans-serif; border: 0; background: transparent; color: {{t.link}}">+ Add pack</button></div>
+            <table style="width: 100%; min-width: 460px; border-collapse: collapse; font-size: 13px">
+              <thead><tr style="background: {{t.surface2}}; text-align: left">
+                <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Price</th>
+                <th scope="col" style="padding: 9px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Credits</th>
+                <th scope="col" style="padding: 9px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Per credit</th>
+                <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+              </tr></thead>
+              <tbody>
+                <tr style="border-top: 1px solid {{t.border}}; font-family: 'JetBrains Mono', monospace"><td style="padding: 12px 16px; font-weight: 600">₹500</td><td style="padding: 12px 8px">10,000</td><td style="padding: 12px 8px">₹0.05</td><td style="padding: 12px 16px"><span style="font: 700 11px Inter, sans-serif; padding: 3px 8px; border-radius: 999px; background: {{t.goodBg}}; color: {{t.good}}">Active</span></td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Formula</h2>
+            <code style="font: 500 13px/1.6 'JetBrains Mono', monospace; padding: 12px 14px; border-radius: 8px; background: {{t.surface2}}">credits = ceil( AI cost (₹) × markup ÷ credit value (₹0.05) )</code>
+            <label style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 600">
+              <span style="display: flex; justify-content: space-between">Markup <span style="font-family: 'JetBrains Mono', monospace">{{markupLabel}}</span></span>
+              <input type="range" min="2" max="8" step="0.5" value="{{markup}}" onInput="{{onMarkup}}" style="accent-color: {{t.link}}">
+              <span style="font-size: 12px; font-weight: 400; color: {{t.text2}}">Covers Razorpay fees, GST, hosting and margin.</span>
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">USD → INR rate<input type="text" value="[RATE]" style="font: 500 14px 'JetBrains Mono', monospace; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Hold expiry<input type="text" value="15 min" style="font: 500 14px 'JetBrains Mono', monospace; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+            </div>
+          </section>
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+            <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Per-action limits</h2>
+            <table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px">
+              <thead><tr style="background: {{t.surface2}}; text-align: left">
+                <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Action</th>
+                <th scope="col" style="padding: 9px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Model</th>
+                <th scope="col" style="padding: 9px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Max output tokens</th>
+                <th scope="col" style="padding: 9px 16px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Min credits</th>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{actions}}" as="a" hint-placeholder-count="4">
+                <tr style="border-top: 1px solid {{t.border}}"><td style="padding: 11px 16px; font-weight: 600">{{a.name}}</td><td style="padding: 11px 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: {{t.text2}}">{{a.model}}</td><td style="padding: 11px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{a.out}}</td><td style="padding: 11px 16px; text-align: right; font-family: 'JetBrains Mono', monospace">{{a.min}}</td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <div style="padding: 12px 16px; border-top: 1px solid {{t.border}}; font-size: 12px; color: {{t.text2}}">Model prices per 1M tokens (input, cached input, output): [FILL FROM PROVIDER PRICE LIST]</div>
+          </section>
+        </div>
+
+        <aside style="flex: 1 1 300px; background: {{t.hero}}; color: #F2F5F9; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">What users would pay</strong>
+          <span style="font-size: 12px; color: #A9B8C9">Using last 14 days' average AI cost per action</span>
+          <sc-for list="{{preview}}" as="p" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 8px; background: #1B2A3D">
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span>{{p.name}}</span><span style="font-family: 'JetBrains Mono', monospace; color: #A9B8C9">AI cost {{p.cost}}</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font: 600 20px 'JetBrains Mono', monospace; color: #FFB547">{{p.credits}} cr</span><span style="font-size: 12px; color: #C3CFDC">= {{p.inr}} · {{p.margin}} margin</span></div>
+          </div>
+          </sc-for>
+          <span style="font-size: 12px; line-height: 1.5; color: #A9B8C9">Changes apply only to new actions after you save v4. Users always see the estimate before they confirm.</span>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { markup: 5 }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',hero:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',hero:'#0F1B2A'};
+    const m = this.state.markup;
+    const preview = [['Resume generation', 5.60], ['ATS score', 1.40], ['JD analysis', 1.10]].map(([name, cost]) => {
+      const credits = Math.ceil(cost * m / 0.05);
+      return { name, cost: '₹' + cost.toFixed(2), credits: credits.toLocaleString('en-IN'), inr: '₹' + (credits * 0.05).toFixed(2), margin: Math.round((1 - 1 / m) * 100) + '%' };
+    });
+    return {
+      dark, t, preview, markup: m, markupLabel: m.toFixed(1) + '×',
+      onMarkup: (e) => this.setState({ markup: parseFloat(e && e.target ? e.target.value : m) }),
+      actions: [
+        { name: 'Resume generation', model: '[GENERATION MODEL]', out: '4,500', min: '200' },
+        { name: 'ATS score', model: '[SCORING MODEL]', out: '1,500', min: '50' },
+        { name: 'JD analysis', model: '[SCORING MODEL]', out: '1,200', min: '50' },
+        { name: 'Extraction (free)', model: '[EXTRACTION MODEL]', out: '3,000', min: '0' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

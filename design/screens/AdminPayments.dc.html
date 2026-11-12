@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payments · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1050px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="payments" min-height="986px" hint-size="248px,986px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Payments and refunds</h1>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{tiles}}" as="k" hint-placeholder-count="4">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{k.label}}</span>
+          <span style="font: 600 20px 'JetBrains Mono', monospace">{{k.value}}</span>
+          <span style="font-size: 12px; color: {{t.text2}}">{{k.sub}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <div style="flex: 999 1 520px; min-width: 0; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+          <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 12.5px">
+            <thead><tr style="background: {{t.surface2}}; text-align: left">
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Payment</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">User</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Amount</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Method</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+              <tr style="border-top: 1px solid {{t.border}}; background: {{r.bg}}">
+                <td style="padding: 10px 14px"><button type="button" onClick="{{r.pick}}" style="border: 0; background: transparent; padding: 0; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 1px"><span style="font: 600 12px 'JetBrains Mono', monospace; color: {{t.link}}">{{r.id}}</span><span style="font-size: 11px; color: {{t.text2}}">{{r.at}}</span></button></td>
+                <td style="padding: 10px 8px">{{r.user}}</td>
+                <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.amt}}</td>
+                <td style="padding: 10px 8px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{r.sBg}}; color: {{r.sFg}}">{{r.status}}</span></td>
+                <td style="padding: 10px 14px; color: {{t.text2}}">{{r.method}}</td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+
+        <aside aria-label="Payment detail" style="flex: 1 1 300px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><strong style="font: 600 14px 'JetBrains Mono', monospace">{{sel.id}}</strong><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{sel.sBg}}; color: {{sel.sFg}}">{{sel.status}}</span></div>
+          <sc-for list="{{sel.facts}}" as="f" hint-placeholder-count="6">
+          <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 13px"><span style="color: {{t.text2}}">{{f.k}}</span><span style="font-family: 'JetBrains Mono', monospace; text-align: right">{{f.v}}</span></div>
+          </sc-for>
+          <div style="border-top: 1px solid {{t.border}}; padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+            <strong style="font-size: 13px">Webhook events</strong>
+            <sc-for list="{{sel.events}}" as="e" hint-placeholder-count="2">
+            <div style="display: flex; justify-content: space-between; font: 500 12px 'JetBrains Mono', monospace"><span>{{e.name}}</span><span style="color: {{e.color}}">{{e.result}}</span></div>
+            </sc-for>
+          </div>
+          <sc-if value="{{sel.refundable}}" hint-placeholder-val="{{ true }}">
+            <div style="border-top: 1px solid {{t.border}}; padding-top: 12px; display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 12px; line-height: 1.5; color: {{t.text2}}">Refund allowed only for unused purchased credits within [REFUND WINDOW]. Credits are debited before the Razorpay refund is issued.</span>
+              <button type="button" style="font: 700 13px Inter, sans-serif; height: 38px; border-radius: 6px; border: 1px solid {{t.crit}}; background: transparent; color: {{t.crit}}">Refund unused credits</button>
+            </div>
+          </sc-if>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { sel: 0 }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311',selBg:'#0E2339'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA',selBg:'#F1F6FC'};
+    const sc = { Captured: [t.goodBg, t.good], Failed: [t.critBg, t.crit], Refunded: [t.warnBg, t.warn], Pending: [t.infoBg, t.info] };
+    const P = [
+      ['pay_QZ19aB7xYt', '18:40', 'Asha Rao', 'Captured', 'UPI', '+10,000', [['payment.captured', 'credited'], ['payment.captured', 'duplicate · ignored']], true],
+      ['pay_PX81kLm2', '17:38', 'Asha Rao', 'Captured', 'UPI', '+10,000', [['payment.captured', 'credited']], true],
+      ['pay_PW77hQa1', '16:22', 'Rahul N.', 'Captured', 'Card', '+10,000', [['payment.captured', 'credited']], true],
+      ['pay_PV02mNx9', '16:01', 'Sneha R.', 'Failed', 'Netbanking', '0', [['payment.failed', 'no credit']], false],
+      ['pay_PU55cTr4', '15:48', 'Karan V.', 'Pending', 'UPI', 'not yet', [], false],
+      ['pay_PT11zYw3', '15:10', 'Vikram P.', 'Refunded', 'Card', '−10,000 (refund)', [['payment.captured', 'credited'], ['refund.processed', 'debited']], false],
+      ['pay_PS90qLe7', '14:20', 'Meera J.', 'Captured', 'UPI', '+10,000', [['payment.captured', 'credited']], true]
+    ];
+    const sel = this.state.sel;
+    const rows = P.map(([id, at, user, status, method], i) => {
+      const [sBg, sFg] = sc[status];
+      return { id, at: '12 Nov ' + at, user, amt: '₹500', status, method, sBg, sFg, bg: i === sel ? t.selBg : 'transparent', pick: () => this.setState({ sel: i }) };
+    });
+    const p = P[sel];
+    const [sBg, sFg] = sc[p[3]];
+    const selObj = {
+      id: p[0], status: p[3], sBg, sFg, refundable: p[7],
+      facts: [
+        { k: 'User', v: p[2] }, { k: 'Amount', v: '₹500.00 · 50,000 paise' }, { k: 'Order', v: 'order_' + p[0].slice(4, 10) },
+        { k: 'Method', v: p[4] }, { k: 'Credits', v: p[5] }, { k: 'Time', v: '12 Nov ' + p[1] }
+      ],
+      events: p[6].map(([name, result]) => ({ name, result, color: result.indexOf('duplicate') !== -1 ? t.warn : (result.indexOf('no') === 0 ? t.text2 : t.good) }))
+    };
+    return {
+      dark, t, rows, sel: selObj,
+      tiles: [
+        { label: 'Collected', value: '₹2,06,000', sub: '412 payments' },
+        { label: 'Failed', value: '23', sub: 'No credits granted' },
+        { label: 'Pending', value: '1', sub: 'Waiting for webhook' },
+        { label: 'Refunds', value: '₹1,500', sub: '3 refunds' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

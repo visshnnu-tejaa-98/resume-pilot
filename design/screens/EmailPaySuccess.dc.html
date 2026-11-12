@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · Recharge successful</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 1120px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> Payment received: 10,000 credits added</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> ₹500 paid via UPI. Your new balance is 19,770 credits.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> Razorpay payment.captured (once per payment) · transactional</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="Payment receipt" hint-size="600px,80px"></dc-import>
+    <div style="padding: 36px 40px 40px; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; gap: 16px; align-items: center">
+        <span style="width: 52px; height: 52px; flex: none; border-radius: 999px; background: {{t.goodBg}}; display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 26px">Payment successful</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Thanks, Asha. Your wallet is topped up.</span>
+        </div>
+      </div>
+      <div style="background: {{t.navy}}; color: #F2F5F9; border-radius: 10px; padding: 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: #A9B8C9">Credits added</span><span style="font: 600 30px 'JetBrains Mono', monospace; color: #FFB547">+10,000</span></div>
+        <div style="display: flex; flex-direction: column; gap: 4px; text-align: right"><span style="font-size: 13px; color: #A9B8C9">New balance</span><span style="font: 600 22px 'JetBrains Mono', monospace">19,770</span></div>
+      </div>
+      <div style="border: 1px solid {{t.border}}; border-radius: 10px; overflow: hidden">
+        <div style="padding: 12px 18px; background: {{t.soft}}; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Receipt</div>
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+        <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid {{t.border}}; font-size: 14px"><span style="color: {{t.text2}}">{{r.k}}</span><span style="font-family: 'JetBrains Mono', monospace; font-weight: {{r.w}}; text-align: right">{{r.v}}</span></div>
+        </sc-for>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap">
+        <a href="#" style="text-decoration: none; padding: 14px 24px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px">Tailor a resume</a>
+        <a href="#" style="text-decoration: none; padding: 13px 20px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px">Download invoice</a>
+      </div>
+      <p style="margin: 0; font-size: 12px; line-height: 1.6; color: {{t.text2}}">[GST DETAILS: GSTIN, tax breakup, invoice number]. Unused purchased credits can be refunded within [REFUND WINDOW].</p>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ false }}" hint-size="600px,200px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',soft:'#1A2636',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',accent:'#FF9F1C',onAccent:'#0A1119',good:'#4CC38A',goodBg:'#10291C',navy:'#060B12'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',soft:'#F4F6F8',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',accent:'#FF9900',onAccent:'#0F1B2A',good:'#1B7A43',goodBg:'#E3F4EA',navy:'#0F1B2A'};
+    const rows = [['Amount paid', '₹500.00', 700], ['Pack', '10,000 credits', 500], ['Method', 'UPI', 500], ['Payment ID', 'pay_QZ19aB7xYt', 500], ['Invoice no.', '[INVOICE NO.]', 500], ['Date', '12 Nov 2026, 6:40 pm IST', 500]].map(([k, v, w]) => ({ k, v, w }));
+    return { dark, t, rows };
+  }
+}
+</script>
+</body>
+</html>

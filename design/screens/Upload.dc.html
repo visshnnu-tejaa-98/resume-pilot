@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upload resume · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 950px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="upload" min-height="886px" hint-size="248px,886px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1080px">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 760px">
+        <sc-for list="{{route}}" as="r" hint-placeholder-count="5">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div style="display: flex; align-items: center">
+            <span style="width: 28px; height: 28px; flex: none; box-sizing: border-box; border-radius: 999px; display: flex; align-items: center; justify-content: center; font: 600 12px 'JetBrains Mono', monospace; background: {{r.bg}}; color: {{r.fg}}; border: 2px solid {{r.ring}}">{{r.n}}</span>
+            <span style="flex: 1; border-top: 2px dashed {{r.line}}; margin: 0 6px"></span>
+          </div>
+          <span style="font-size: 13px; font-weight: {{r.weight}}; color: {{r.color}}">{{r.label}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Upload your resume</h1>
+        <span style="font-size: 15px; color: {{t.text2}}">We'll read it and turn it into sections you can check and edit. Uploading is free.</span>
+      </div>
+
+      <label for="up-file" style="cursor: pointer; border: 2px dashed {{t.link}}; border-radius: 14px; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; background: {{t.dropBg}}">
+        <span style="width: 64px; height: 64px; border-radius: 16px; background: {{t.surface}}; border: 1px solid {{t.border}}; display: flex; align-items: center; justify-content: center">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{t.link}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        </span>
+        <strong style="font-size: 18px">Drag your resume here, or <span style="color: {{t.link}}">choose a file</span></strong>
+        <span style="font-size: 14px; color: {{t.text2}}">PDF, DOCX, LaTeX (.tex), PNG or JPG · up to 10 MB · up to 5 pages or images</span>
+        <input id="up-file" type="file" accept=".pdf,.docx,.tex,.png,.jpg,.jpeg" multiple style="position: absolute; width: 1px; height: 1px; opacity: 0">
+      </label>
+
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px 16px; display: flex; gap: 14px; align-items: center">
+          <span style="width: 36px; height: 44px; flex: none; border-radius: 4px; background: {{t.surface2}}; display: flex; align-items: center; justify-content: center; font: 600 10px 'JetBrains Mono', monospace; color: {{t.text2}}">PDF</span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 14px"><strong>asha-rao-resume-2026.pdf</strong><span style="font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">1.2 MB · 2 pages</span></div>
+            <div style="height: 6px; border-radius: 999px; background: {{t.surface2}}"><div style="height: 6px; width: 72%; border-radius: 999px; background: {{t.link}}"></div></div>
+            <span style="font-size: 13px; color: {{t.text2}}">Reading text and sections… 72%</span>
+          </div>
+          <button type="button" aria-label="Cancel upload" style="width: 36px; height: 36px; border-radius: 6px; border: 0; background: transparent; color: {{t.text2}}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+        <div role="alert" style="background: {{t.critBg}}; border: 1px solid {{t.critLine}}; border-radius: 10px; padding: 14px 16px; display: flex; gap: 14px; align-items: center">
+          <span style="width: 36px; height: 44px; flex: none; border-radius: 4px; background: {{t.surface}}; display: flex; align-items: center; justify-content: center; font: 600 10px 'JetBrains Mono', monospace; color: {{t.text2}}">JPG</span>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+            <strong style="font-size: 14px">resume-photo.jpg</strong>
+            <span style="font-size: 13px; color: {{t.crit}}; font-weight: 500">This photo is too blurry to read. Try a sharper photo in good light, or upload the PDF.</span>
+          </div>
+          <button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}">Replace</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px">
+        <sc-for list="{{notes}}" as="n" hint-placeholder-count="3">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+          <strong style="font-size: 14px">{{n.h}}</strong>
+          <span style="font-size: 13px; line-height: 1.55; color: {{t.text2}}">{{n.p}}</span>
+        </div>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":950}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',crit:'#FF8A7E',critBg:'#341311',critLine:'#6A2620',dropBg:'#0E1D2E'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',crit:'#B42318',critBg:'#FDECEA',critLine:'#F4C1BC',dropBg:'#F1F6FC'};
+    const steps = ['Upload', 'Review', 'Job description', 'Generate', 'Score'];
+    const route = steps.map((label, i) => ({
+      n: String(i + 1), label,
+      bg: i === 0 ? t.accent : t.surface, fg: i === 0 ? t.onAccent : t.text2, ring: i === 0 ? t.accent : t.borderStrong,
+      line: i === steps.length - 1 ? 'transparent' : t.borderStrong, weight: i === 0 ? 600 : 500, color: i === 0 ? t.text : t.text2
+    }));
+    return {
+      dark, t, route,
+      notes: [
+        { h: 'Your original stays safe', p: 'Tailored versions are always separate copies. AI never changes your original.' },
+        { h: 'Scanned or photo?', p: 'We read it with OCR. A clear, well-lit photo gives the best result.' },
+        { h: 'Private by default', p: 'Files are stored privately and deleted after 30 days. Your structured resume stays until you delete it.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

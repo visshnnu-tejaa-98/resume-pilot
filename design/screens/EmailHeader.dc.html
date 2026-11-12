@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email header</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 600px; height: 80px; box-sizing: border-box; background: {{bar}}; border-bottom: 3px solid #FF9900; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; font-family: Inter, Arial, sans-serif; color: #F2F5F9">
+  <span style="display: flex; align-items: center; gap: 10px">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+    <span style="font-family: 'Space Grotesk', Arial, sans-serif; font-size: 19px; font-weight: 700">Resume<span style="color: #FF9900">Pilot</span></span>
+  </span>
+  <span style="font-size: 12px; color: #A9B8C9">{{tag}}</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"tag":{"editor":"text","default":""},"$preview":{"width":600,"height":80}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    return { bar: dark ? '#060B12' : '#0F1B2A', tag: this.props.tag ?? '' };
+  }
+}
+</script>
+</body>
+</html>

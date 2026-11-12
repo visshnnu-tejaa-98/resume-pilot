@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Generating · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 900px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="generate" min-height="836px" hint-size="248px,836px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 56px 32px; display: flex; justify-content: center">
+      <div style="width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center">
+          <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{headColor}}">{{eyebrow}}</span>
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 32px; letter-spacing: -0.01em">{{title}}</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">Umbrella Health · Frontend Developer · from your original</span>
+        </div>
+
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 8px 24px; box-shadow: {{t.shadow}}">
+          <sc-for list="{{steps}}" as="s" hint-placeholder-count="5">
+          <div style="display: flex; gap: 16px">
+            <div style="display: flex; flex-direction: column; align-items: center; padding-top: 16px">
+              <span style="width: 26px; height: 26px; flex: none; box-sizing: border-box; border-radius: 999px; display: flex; align-items: center; justify-content: center; background: {{s.bg}}; border: 2px solid {{s.ring}}; color: {{s.fg}}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="{{s.icon}}"></path></svg>
+              </span>
+              <span style="flex: 1; min-height: 12px; border-left: 2px dashed {{s.line}}; margin-top: 4px"></span>
+            </div>
+            <div style="flex: 1; display: flex; justify-content: space-between; gap: 12px; padding: 18px 0 14px">
+              <div style="display: flex; flex-direction: column; gap: 3px"><strong style="font-size: 15px; color: {{s.color}}">{{s.label}}</strong><span style="font-size: 13px; color: {{t.text2}}">{{s.sub}}</span></div>
+              <span style="font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}; white-space: nowrap">{{s.time}}</span>
+            </div>
+          </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{isRunning}}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 12px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}">
+            <span style="font-size: 14px"><strong style="font-family: 'JetBrains Mono', monospace">640</strong> credits on hold. You'll only be charged what's used.</span>
+            <a href="Dashboard.dc.html" style="font-size: 14px; font-weight: 600; color: {{t.link}}">Leave and notify me</a>
+          </div>
+        </sc-if>
+        <sc-if value="{{isDone}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div role="status" style="display: flex; gap: 12px; padding: 16px 18px; border-radius: 12px; background: {{t.goodBg}}; border: 1px solid {{t.goodLine}}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{t.good}}" stroke-width="2.4" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+              <span style="font-size: 14px; line-height: 1.5"><strong>591 credits used</strong> of 640 estimated. 49 returned to your wallet. Every fact matched your original.</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center">
+              <a href="Editor.dc.html" style="text-decoration: none; height: 46px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Open in editor</a>
+              <a href="AtsReport.dc.html" style="text-decoration: none; height: 46px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px; display: flex; align-items: center">Get ATS score</a>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{isFailed}}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 16px">
+            <div role="alert" style="display: flex; gap: 12px; padding: 16px 18px; border-radius: 12px; background: {{t.critBg}}; border: 1px solid {{t.critLine}}">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{t.crit}}" stroke-width="2.2" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="9"></circle><path d="M9 9l6 6M15 9l-6 6"></path></svg>
+              <span style="font-size: 14px; line-height: 1.5"><strong>Generation didn't finish.</strong> All 640 held credits were released, so you weren't charged.</span>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center">
+              <a href="Generate.dc.html" style="text-decoration: none; height: 46px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Try again</a>
+              <a href="Contact.dc.html" style="text-decoration: none; height: 46px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px; display: flex; align-items: center">Contact support</a>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"status":{"editor":"enum","options":["running","done","failed"],"default":"running"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const status = this.props.status ?? 'running';
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',accentText:'#FFB547',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',goodLine:'#1E5236',warnBg:'#30220C',warnLine:'#5E4216',crit:'#FF8A7E',critBg:'#341311',critLine:'#6A2620',shadow:'0 1px 2px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',accentText:'#A85E00',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',goodLine:'#B5DFC5',warnBg:'#FFF1DC',warnLine:'#F2CF98',crit:'#B42318',critBg:'#FDECEA',critLine:'#F4C1BC',shadow:'0 1px 2px rgba(15,27,42,0.06), 0 6px 18px rgba(15,27,42,0.06)'};
+    const raw = [
+      ['Analysing the job description', '14 requirements found · 9 required, 5 preferred', '0:06'],
+      ['Matching your experience', 'Finding the bullets and projects that fit best', '0:09'],
+      ['Tailoring your resume', 'Summary, bullets, skills order and projects', '0:21'],
+      ['Checking every fact', 'Companies, titles, dates, skills and numbers vs your original', ''],
+      ['Saving a new version', 'Your original stays unchanged', '']
+    ];
+    const at = status === 'done' ? 5 : (status === 'failed' ? 3 : 2);
+    const steps = raw.map(([label, sub, time], i) => {
+      const done = i < at, cur = i === at && status === 'running', fail = i === at && status === 'failed';
+      return {
+        label, sub, time: done ? time : (cur ? 'now' : ''),
+        bg: done ? t.link : (fail ? t.critBg : t.surface),
+        ring: done ? t.link : (cur ? t.accent : (fail ? t.crit : t.borderStrong)),
+        fg: done ? '#FFFFFF' : (cur ? t.accentText : (fail ? t.crit : t.borderStrong)),
+        icon: done ? 'M5 12l5 5 9-10' : (fail ? 'M7 7l10 10M17 7 7 17' : (cur ? 'M12 7v5l3 2' : 'M12 12h.01')),
+        line: i === raw.length - 1 ? 'transparent' : (done ? t.link : t.borderStrong),
+        color: (done || cur || fail) ? t.text : t.text2
+      };
+    });
+    return {
+      dark, t, steps,
+      isRunning: status === 'running', isDone: status === 'done', isFailed: status === 'failed',
+      eyebrow: status === 'done' ? 'COMPLETE · 0:48' : (status === 'failed' ? 'STOPPED · NO CHARGE' : 'IN PROGRESS · USUALLY UNDER A MINUTE'),
+      headColor: status === 'failed' ? t.crit : (status === 'done' ? t.good : t.accentText),
+      title: status === 'done' ? 'Your tailored resume is ready' : (status === 'failed' ? 'Something went wrong' : 'Tailoring your resume')
+    };
+  }
+}
+</script>
+</body>
+</html>

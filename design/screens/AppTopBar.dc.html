@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App top bar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<header style="background: {{bar}}; border-bottom: 1px solid {{line}}; color: #F2F5F9; font-family: Inter, system-ui, sans-serif">
+  <div style="min-height: 64px; padding: 0 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+    <a href="Dashboard.dc.html" aria-label="Resume Pilot dashboard" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #F2F5F9">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700">Resume<span style="color: #FF9900">Pilot</span></span>
+    </a>
+    <label style="flex: 1 1 260px; max-width: 420px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 6px; background: {{field}}; border: 1px solid #33475E; color: #A9B8C9">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</span>
+      <input type="search" placeholder="Search resumes and jobs" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #F2F5F9; font: 400 14px Inter, sans-serif; outline: none">
+    </label>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px">
+      <a href="Wallet.dc.html" aria-label="Wallet balance" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; background: #1B2A3D; border: 1px solid #33475E; color: #F2F5F9; text-decoration: none; font: 600 14px 'JetBrains Mono', monospace">
+        <span style="width: 8px; height: 8px; border-radius: 999px; background: #FF9900"></span>{{balance}} credits
+      </a>
+      <a href="Wallet.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 6px; background: #FF9900; color: #0F1B2A; text-decoration: none; font-weight: 700; font-size: 14px">Add money</a>
+      <a href="Settings.dc.html" aria-label="Account: Asha Rao" style="width: 36px; height: 36px; border-radius: 999px; background: #33475E; color: #F2F5F9; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 13px; font-weight: 600">AR</a>
+    </div>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"balance":{"editor":"text","default":"9,770"},"$preview":{"width":1440,"height":64}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    return {
+      balance: this.props.balance ?? '9,770',
+      bar: dark ? '#060B12' : '#0F1B2A', line: dark ? '#1A2636' : '#22344A', field: dark ? '#0D1620' : '#16243A'
+    };
+  }
+}
+</script>
+</body>
+</html>

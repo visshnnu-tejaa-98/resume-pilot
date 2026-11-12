@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI jobs · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1050px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="aijobs" min-height="986px" hint-size="248px,986px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">AI jobs and logs</h1>
+        <div style="display: flex; gap: 8px; font-size: 13px">
+          <span style="padding: 6px 10px; border-radius: 6px; background: {{t.surface}}; border: 1px solid {{t.border}}">Queue: <strong style="font-family: 'JetBrains Mono', monospace">4 running · 0 waiting</strong></span>
+          <span style="padding: 6px 10px; border-radius: 6px; background: {{t.surface}}; border: 1px solid {{t.border}}">p95 generation: <strong style="font-family: 'JetBrains Mono', monospace">52 s</strong></span>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+        <div role="tablist" aria-label="Status" style="display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: {{t.surface2}}">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+          <button type="button" role="tab" aria-selected="{{f.sel}}" onClick="{{f.pick}}" style="font: {{f.weight}} 13px Inter, sans-serif; height: 30px; padding: 0 12px; border-radius: 6px; border: 0; cursor: pointer; background: {{f.bg}}; color: {{f.color}}">{{f.label}}</button>
+          </sc-for>
+        </div>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Type<select style="font: 500 13px Inter, sans-serif; height: 36px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All types</option><option>Extraction</option><option>JD analysis</option><option>Generation</option><option>ATS score</option></select></label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: {{t.text2}}">Model<select style="font: 500 13px Inter, sans-serif; height: 36px; padding: 0 8px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}"><option>All models</option><option>[GENERATION MODEL]</option><option>[SCORING MODEL]</option></select></label>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <table style="width: 100%; min-width: 1000px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Job</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Type</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">User</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Status</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Tokens in / out</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">AI cost</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Credits est / charged</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Time</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Fact check</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+            <tr style="border-top: 1px solid {{t.border}}; background: {{r.rowBg}}">
+              <td style="padding: 10px 14px"><div style="display: flex; flex-direction: column; gap: 1px"><a href="AdminAiJobDetail.dc.html" style="font: 600 12px 'JetBrains Mono', monospace; color: {{t.link}}">{{r.id}}</a><span style="font-size: 11px; color: {{t.text2}}">{{r.when}}</span></div></td>
+              <td style="padding: 10px 8px">{{r.type}}</td>
+              <td style="padding: 10px 8px; color: {{t.text2}}">{{r.user}}</td>
+              <td style="padding: 10px 8px"><span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; background: {{r.sBg}}; color: {{r.sFg}}">{{r.status}}</span></td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.tokens}}</td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.cost}}</td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{r.credits}}</td>
+              <td style="padding: 10px 8px; text-align: right; font-family: 'JetBrains Mono', monospace; color: {{t.text2}}">{{r.dur}}</td>
+              <td style="padding: 10px 14px; font-size: 12px; font-weight: 600; color: {{r.fcColor}}">{{r.fc}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <span style="font-size: 12px; color: {{t.text2}}">Failed jobs always show 0 charged. Rows with a fact-check violation are tinted.</span>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { f: 'all' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311',rowWarn:'#1E1A10'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA',rowWarn:'#FFFAF0'};
+    const f = this.state.f;
+    const filters = [['all', 'All'], ['running', 'Running'], ['failed', 'Failed'], ['violations', 'Fact-check issues']].map(([id, label]) => ({
+      label, sel: id === f ? 'true' : 'false', weight: id === f ? 600 : 500, bg: id === f ? t.surface : 'transparent', color: id === f ? t.text : t.text2, pick: () => this.setState({ f: id })
+    }));
+    const sc = { Succeeded: [t.goodBg, t.good], Failed: [t.critBg, t.crit], Running: [t.infoBg, t.info], Retried: [t.warnBg, t.warn] };
+    const raw = [
+      ['job_8f3a', '18:31', 'Generation', 'Rahul N.', 'Running', '6,102 / —', '—', '640 / held', '0:21', '—'],
+      ['job_8f21', '18:14', 'ATS score', 'Asha Rao', 'Succeeded', '3,210 / 690', '₹1.48', '150 / 148', '7.8 s', '—'],
+      ['job_8f1c', '18:12', 'Generation', 'Asha Rao', 'Succeeded', '7,840 / 2,010', '₹5.82', '640 / 582', '48.2 s', 'Passed'],
+      ['job_8f02', '18:05', 'Generation', 'Meera J.', 'Retried', '8,120 / 4,230', '₹6.62', '700 / 662', '1:31', '1 violation, fixed on retry'],
+      ['job_8e90', '17:58', 'Generation', 'Asha Rao', 'Failed', '7,800 / 1,120', '₹4.20', '640 / 0', '61.0 s', 'Timed out'],
+      ['job_8e8a', '17:57', 'JD analysis', 'Asha Rao', 'Succeeded', '2,940 / 610', '₹1.08', '120 / 108', '6.1 s', '—'],
+      ['job_8e51', '17:40', 'Generation', 'test.user.441', 'Failed', '7,300 / 2,600', '₹6.40', '620 / 0', '1:44', '2 violations after retry'],
+      ['job_8e33', '17:22', 'Extraction', 'Priya S.', 'Succeeded', '2,880 / 1,540', '₹0.86', 'free', '12.9 s', '—'],
+      ['job_8e10', '17:05', 'ATS score', 'Rahul N.', 'Succeeded', '3,380 / 710', '₹1.41', '150 / 141', '8.4 s', '—']
+    ];
+    const rows = raw.map(([id, when, type, user, status, tokens, cost, credits, dur, fc]) => {
+      const [sBg, sFg] = sc[status];
+      const issue = fc.indexOf('violation') !== -1;
+      return { id, when: '12 Nov ' + when, type, user, status, tokens, cost, credits, dur, fc, sBg, sFg,
+        fcColor: issue ? (status === 'Failed' ? t.crit : t.warn) : (fc === 'Passed' ? t.good : t.text2), rowBg: issue ? t.rowWarn : 'transparent' };
+    });
+    return { dark, t, filters, rows };
+  }
+}
+</script>
+</body>
+</html>

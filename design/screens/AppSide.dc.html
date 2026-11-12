@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App sidebar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<aside style="width: 248px; min-height: {{minH}}; box-sizing: border-box; background: {{bg}}; border-right: 1px solid {{line}}; padding: 20px 12px; display: flex; flex-direction: column; gap: 24px; font-family: Inter, system-ui, sans-serif; color: {{text}}">
+  <a href="Generate.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: 6px; background: #FF9900; color: #0F1B2A; text-decoration: none; font-weight: 700; font-size: 15px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Tailor a resume
+  </a>
+  <nav aria-label="Workspace" style="display: flex; flex-direction: column; gap: 2px">
+    <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{muted}}; padding: 0 12px 8px">Workspace</span>
+    <sc-for list="{{work}}" as="i" hint-placeholder-count="5">
+    <a href="{{i.href}}" aria-current="{{i.current}}" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: {{i.weight}}; color: {{i.color}}; background: {{i.bg}}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{i.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>{{i.label}}
+    </a>
+    </sc-for>
+  </nav>
+  <nav aria-label="Account" style="display: flex; flex-direction: column; gap: 2px">
+    <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: {{muted}}; padding: 0 12px 8px">Account</span>
+    <sc-for list="{{acct}}" as="i" hint-placeholder-count="3">
+    <a href="{{i.href}}" aria-current="{{i.current}}" style="display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 12px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: {{i.weight}}; color: {{i.color}}; background: {{i.bg}}">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{i.icon}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{i.d}}"></path></svg>{{i.label}}
+    </a>
+    </sc-for>
+  </nav>
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px; border-top: 1px solid {{line}}; padding-top: 12px">
+    <a href="FAQ.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 6px; text-decoration: none; font-size: 14px; color: {{text2}}">Help and FAQ</a>
+    <a href="Landing.dc.html" style="display: flex; align-items: center; height: 36px; padding: 0 12px; border-radius: 6px; text-decoration: none; font-size: 14px; color: {{text2}}">Sign out</a>
+  </div>
+</aside>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"active":{"editor":"enum","options":["dashboard","resumes","upload","generate","jobs","wallet","referrals","settings","none"],"default":"dashboard"},"minHeight":{"editor":"text","default":"900px"},"$preview":{"width":248,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const active = this.props.active ?? 'dashboard';
+    const c = dark
+      ? { bg: '#0D1620', line: '#26364A', text: '#E8EEF5', text2: '#A3B3C5', muted: '#8193A8', on: '#1A2636', onText: '#FFFFFF', icon: '#A3B3C5', iconOn: '#FFB547' }
+      : { bg: '#FFFFFF', line: '#D6DDE6', text: '#0F1B2A', text2: '#4B5A6B', muted: '#5E6E80', on: '#EAEEF3', onText: '#0F1B2A', icon: '#4B5A6B', iconOn: '#A85E00' };
+    const mk = ([id, label, href, d]) => {
+      const on = id === active;
+      return { label, href, d, current: on ? 'page' : 'false', weight: on ? 600 : 500, color: on ? c.onText : c.text2, bg: on ? c.on : 'transparent', icon: on ? c.iconOn : c.icon };
+    };
+    const work = [
+      ['dashboard', 'Dashboard', 'Dashboard.dc.html', 'M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z'],
+      ['resumes', 'My resumes', 'MyResumes.dc.html', 'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6'],
+      ['upload', 'Upload resume', 'Upload.dc.html', 'M12 16V4M6 10l6-6 6 6M4 16v4h16v-4'],
+      ['generate', 'Generate', 'Generate.dc.html', 'M3 11.5 21 4l-7 17-3-7-8-2.5z'],
+      ['jobs', 'Job descriptions', 'Jobs.dc.html', 'M4 8h16v11H4zM9 8V5h6v3M4 13h16']
+    ].map(mk);
+    const acct = [
+      ['wallet', 'Wallet', 'Wallet.dc.html', 'M3 7h18v13H3zM16 13.5h2M5 7l11-3 1 3'],
+      ['referrals', 'Referrals', 'Referrals.dc.html', 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 2.7-5 6-5s6 2 6 5M16 5a3 3 0 0 1 0 6M21 20c0-2.5-1.5-4.2-4-4.8'],
+      ['settings', 'Settings', 'Settings.dc.html', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1']
+    ].map(mk);
+    return Object.assign({}, c, { work, acct, minH: this.props.minHeight ?? '900px' });
+  }
+}
+</script>
+</body>
+</html>

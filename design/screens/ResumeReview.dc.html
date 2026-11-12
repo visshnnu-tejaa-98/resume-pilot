@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review resume · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1600px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="resumes" min-height="1536px" hint-size="248px,1536px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1192px">
+      <nav aria-label="Breadcrumb" style="display: flex; gap: 8px; font-size: 14px; color: {{t.text2}}"><a href="MyResumes.dc.html" style="color: {{t.link}}">My resumes</a><span>/</span><span style="color: {{t.text}}">Asha Rao · Original</span></nav>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px">Review your resume</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">This is your original. Fix anything we read wrong; tailored versions are built from it.</span>
+        </div>
+        <span style="font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">2 fields to check</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+        <nav aria-label="Sections" style="flex: 1 1 200px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 2px">
+          <sc-for list="{{sections}}" as="s" hint-placeholder-count="8">
+          <a href="#{{s.id}}" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 38px; padding: 0 10px; border-radius: 6px; text-decoration: none; font-size: 14px; color: {{t.text}}; background: {{s.bg}}">
+            <span style="display: flex; align-items: center; gap: 8px"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="color: {{t.borderStrong}}"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>{{s.label}}</span>
+            <span style="font-size: 12px; font-weight: 600; color: {{s.badgeFg}}">{{s.badge}}</span>
+          </a>
+          </sc-for>
+          <button type="button" style="margin-top: 6px; font: 600 13px Inter, sans-serif; height: 36px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; background: transparent; color: {{t.link}}">+ Add custom section</button>
+          <span style="font-size: 12px; color: {{t.text2}}; padding: 6px 10px 4px">Drag to reorder sections</span>
+        </nav>
+
+        <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+          <section id="personal" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Personal information</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px">
+              <sc-for list="{{personal}}" as="f" hint-placeholder-count="6">
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">{{f.label}}
+                <input type="text" value="{{f.value}}" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+              </label>
+              </sc-for>
+            </div>
+          </section>
+
+          <section id="summary" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Professional summary</h2>
+            <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="rv-sum">Professional summary</label>
+            <textarea id="rv-sum" rows="3" style="font: 400 14px/1.6 Inter, sans-serif; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}; resize: vertical">Frontend engineer with 5 years of experience building React and TypeScript products, design systems and fast, accessible web apps.</textarea>
+          </section>
+
+          <section id="work" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+            <div style="display: flex; justify-content: space-between; align-items: center"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Work experience</h2><button type="button" style="font: 600 13px Inter, sans-serif; height: 34px; padding: 0 12px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: transparent; color: {{t.text}}">+ Add role</button></div>
+            <div style="border: 1px solid {{t.border}}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; justify-content: space-between; align-items: center"><strong style="font-size: 15px">Globex · Software Engineer</strong><span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">Check start date</span></div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Company<input type="text" value="Globex" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Designation<input type="text" value="Software Engineer" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Start<input type="month" value="2021-01" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 2px solid {{t.warnLine}}; background: {{t.warnBg}}; color: {{t.text}}"><span style="font-size: 12px; font-weight: 500; color: {{t.warn}}">Only "2021" was found</span></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">End<input type="month" value="2023-06" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <span style="font-size: 13px; font-weight: 600">Bullets</span>
+                <sc-for list="{{bullets}}" as="b" hint-placeholder-count="3">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="flex: none; color: {{t.borderStrong}}"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>
+                  <input type="text" value="{{b.text}}" aria-label="Bullet {{b.n}}" style="flex: 1; min-width: 0; font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}">
+                  <span style="font-size: 12px; padding: 3px 8px; border-radius: 6px; background: {{t.surface2}}; color: {{t.text2}}; white-space: nowrap">{{b.kind}}</span>
+                </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center">
+              <div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 15px">Northwind · Frontend Engineer</strong><span style="font-size: 13px; color: {{t.text2}}">Jul 2023 – Present · 4 bullets</span></div>
+              <button type="button" style="font: 600 13px Inter, sans-serif; border: 0; background: transparent; color: {{t.link}}">Expand</button>
+            </div>
+          </section>
+
+          <section id="skills" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Skills</h2>
+            <sc-for list="{{skills}}" as="g" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 13px; font-weight: 600; color: {{t.text2}}">{{g.cat}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{g.items}}" as="s" hint-placeholder-count="5">
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; padding: 6px 8px 6px 10px; border-radius: 6px; background: {{t.surface2}}">{{s}}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="{{t.text2}}" stroke-width="3" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></span>
+                </sc-for>
+                <button type="button" style="font: 600 13px Inter, sans-serif; padding: 5px 10px; border-radius: 6px; border: 1px dashed {{t.borderStrong}}; background: transparent; color: {{t.link}}">+ Add</button>
+              </div>
+            </div>
+            </sc-for>
+          </section>
+
+          <section id="education" style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Education</h2><span style="font-size: 13px; color: {{t.text2}}">B.Tech, Computer Science · 1 entry · grade scale needs a check</span></div>
+            <button type="button" style="font: 600 13px Inter, sans-serif; border: 0; background: transparent; color: {{t.link}}">Expand</button>
+          </section>
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px 22px; display: flex; justify-content: space-between; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Projects and certifications</h2><span style="font-size: 13px; color: {{t.text2}}">3 projects · 1 certification</span></div>
+            <button type="button" style="font: 600 13px Inter, sans-serif; border: 0; background: transparent; color: {{t.link}}">Expand</button>
+          </section>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 16px 20px; border-radius: 12px; background: {{t.hero}}; color: #F2F5F9">
+            <span style="font-size: 14px; color: #C3CFDC">Saved 2 minutes ago · 2 fields still to check</span>
+            <div style="display: flex; gap: 10px">
+              <button type="button" style="font: 600 14px Inter, sans-serif; height: 42px; padding: 0 16px; border-radius: 6px; border: 1px solid #4A5F78; background: transparent; color: #F2F5F9">Save</button>
+              <a href="JobNew.dc.html" style="text-decoration: none; height: 42px; padding: 0 18px; border-radius: 6px; background: #FF9900; color: #0F1B2A; font-weight: 700; font-size: 14px; display: flex; align-items: center">Continue to job description</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',link:'#5AABFF',good:'#4CC38A',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216',hero:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',link:'#0A6BCB',good:'#1B7A43',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98',hero:'#0F1B2A'};
+    const sec = [['personal','Personal info','6',''],['summary','Summary','1',''],['work','Work experience','2','1 to check'],['skills','Skills','12',''],['education','Education','1','1 to check'],['projects','Projects','3',''],['certs','Certifications','1','']];
+    return {
+      dark, t,
+      sections: sec.map(([id, label, n, warn], i) => ({ id, label, badge: warn || n, badgeFg: warn ? t.warn : t.text2, bg: i === 2 ? t.surface2 : 'transparent' })),
+      personal: [['First name','Asha'],['Last name','Rao'],['Email','asha.rao@example.com'],['Phone','+91 98xxx xxx21'],['Location','Bengaluru, India'],['LinkedIn','linkedin.com/in/asharao']].map(([label, value]) => ({ label, value })),
+      bullets: [
+        ['Built the checkout UI in React, used by every Globex web customer.', 'Achievement'],
+        ['Maintained the shared component library and its docs.', 'Responsibility'],
+        ['Worked with design to roll out a new type scale.', 'Responsibility']
+      ].map(([text, kind], i) => ({ text, kind, n: String(i + 1) })),
+      skills: [
+        { cat: 'Languages and frameworks', items: ['React', 'TypeScript', 'JavaScript', 'Next.js', 'HTML', 'CSS'] },
+        { cat: 'Tools', items: ['Git', 'Jest', 'Storybook', 'Figma', 'Webpack', 'Playwright'] }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Account suspended · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 700px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="background: {{t.hero}}; border-bottom: 1px solid #22344A">
+    <div style="padding: 0 20px; height: 64px; display: flex; align-items: center; gap: 10px; color: #F2F5F9">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700">Resume<span style="color: #FF9900">Pilot</span></span>
+    </div>
+  </header>
+  <main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px">
+    <div style="width: 100%; max-width: 520px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 16px; padding: 36px; display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center">
+      <span style="width: 60px; height: 60px; border-radius: 999px; background: {{t.warnBg}}; display: flex; align-items: center; justify-content: center">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+      </span>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Your account is on hold</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{t.text2}}">We've paused access while we look into something on your account. Your resumes and credits are safe and haven't been changed.</p>
+      <p style="margin: 0; font-size: 14px; line-height: 1.6; color: {{t.text2}}">Reason: [REASON SHOWN TO USER]</p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 4px">
+        <a href="Contact.dc.html" style="text-decoration: none; height: 46px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Contact support</a>
+        <a href="Landing.dc.html" style="text-decoration: none; height: 46px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px; display: flex; align-items: center">Sign out</a>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',warn:'#F5B54A',warnBg:'#30220C',hero:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',warn:'#8F4D00',warnBg:'#FFF1DC',hero:'#0F1B2A'};
+    return { dark, t };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email · Promo code</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 680px; min-height: 1080px; box-sizing: border-box; background: {{t.outer}}; padding: 24px 40px; font-family: Inter, Arial, sans-serif; color: {{t.text}}; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; flex-direction: column; gap: 3px; font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">
+    <span><strong style="color: {{t.text}}">Subject:</strong> A gift for you, Asha: 1,000 free credits</span>
+    <span><strong style="color: {{t.text}}">Preheader:</strong> Use your code before 31 Mar 2027.</span>
+    <span><strong style="color: {{t.text}}">Trigger:</strong> admin campaign to a chosen audience · marketing</span>
+  </div>
+  <div style="width: 600px; background: {{t.card}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow: hidden">
+    <dc-import name="EmailHeader" dark="{{dark}}" tag="Just for you" hint-size="600px,80px"></dc-import>
+    <div style="background: {{t.navy}}; color: #F2F5F9; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; position: relative; overflow: hidden">
+      <svg width="600" height="200" viewBox="0 0 600 200" aria-hidden="true" style="position: absolute; left: 0; bottom: 0; opacity: 0.45"><path d="M-10 190 C 160 190, 220 60, 360 70 S 560 30, 610 14" fill="none" stroke="#FF9900" stroke-width="2" stroke-dasharray="8 10"></path></svg>
+      <span style="position: relative; font-size: 14px; color: #C3CFDC">[SEGMENT REASON, e.g. Thanks for tailoring 3 resumes with us]</span>
+      <span style="position: relative; font-family: 'Space Grotesk', Arial, sans-serif; font-size: 34px; font-weight: 700; line-height: 1.1">1,000 free credits</span>
+      <span style="position: relative; font: 700 30px 'JetBrains Mono', monospace; letter-spacing: 0.1em; padding: 12px 22px; border-radius: 8px; border: 2px dashed #FF9900; color: #FFB547">ASHA-K7Q2</span>
+      <span style="position: relative; font-size: 13px; color: #A9B8C9">Valid until 31 Mar 2027 · for your account only</span>
+    </div>
+    <div style="padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 20px">
+      <p style="margin: 0; font-size: 15px; line-height: 1.7; color: {{t.text2}}">Use these credits to tailor your resume for your next few applications and check each one's ATS score before you send it.</p>
+      <a href="#" style="align-self: center; text-decoration: none; padding: 14px 28px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 16px">Add 1,000 credits</a>
+      <div style="border-top: 1px solid {{t.border}}; padding-top: 16px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.6; color: {{t.text2}}">
+        <span>• This code is personal and can be used once. It works even if you've already used EARLYBIRD or a referral code.</span>
+        <span>• Credits never expire once added. The code itself expires on 31 Mar 2027.</span>
+      </div>
+    </div>
+  </div>
+  <dc-import name="EmailFooter" dark="{{dark}}" marketing="{{ true }}" hint-size="600px,220px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":680,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {outer:'#05090E',card:'#111B27',text:'#E8EEF5',text2:'#A3B3C5',border:'#26364A',accent:'#FF9F1C',onAccent:'#0A1119',navy:'#060B12'}
+                   : {outer:'#E9EDF2',card:'#FFFFFF',text:'#0F1B2A',text2:'#4B5A6B',border:'#D6DDE6',accent:'#FF9900',onAccent:'#0F1B2A',navy:'#0F1B2A'};
+    return { dark, t };
+  }
+}
+</script>
+</body>
+</html>

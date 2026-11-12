@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App settings · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1100px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="settings" min-height="1036px" hint-size="248px,1036px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1080px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">App settings</h1>
+        <button type="button" style="font: 700 13px Inter, sans-serif; height: 38px; padding: 0 16px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Save changes</button>
+      </div>
+      <sc-if value="{{maint}}" hint-placeholder-val="{{ false }}">
+        <div role="alert" style="display: flex; gap: 10px; padding: 12px 14px; border-radius: 8px; background: {{t.critBg}}; border: 1px solid {{t.critLine}}; font-size: 13px"><strong style="color: {{t.crit}}">Maintenance mode is on.</strong><span>Users see a maintenance page; new AI jobs are paused and active holds are released.</span></div>
+      </sc-if>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 16px; align-items: start">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">{{g.title}}</h2>
+          <sc-for list="{{g.fields}}" as="f" hint-placeholder-count="3">
+          <label style="display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px">
+            <span style="display: flex; flex-direction: column; gap: 2px"><strong>{{f.label}}</strong><span style="font-size: 12px; color: {{t.text2}}">{{f.help}}</span></span>
+            <span style="display: flex; align-items: center; gap: 6px"><input type="text" value="{{f.value}}" style="width: 96px; text-align: right; font: 600 13px 'JetBrains Mono', monospace; height: 36px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"><span style="width: 52px; font-size: 12px; color: {{t.text2}}">{{f.unit}}</span></span>
+          </label>
+          </sc-for>
+        </section>
+        </sc-for>
+
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Switches</h2>
+          <sc-for list="{{flags}}" as="f" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px">
+            <span style="display: flex; flex-direction: column; gap: 2px"><strong>{{f.label}}</strong><span style="font-size: 12px; color: {{t.text2}}">{{f.help}}</span></span>
+            <button type="button" role="switch" aria-checked="{{f.onStr}}" aria-label="{{f.label}}" onClick="{{f.toggle}}" style="width: 40px; height: 24px; flex: none; box-sizing: border-box; border-radius: 999px; padding: 2px; border: 0; cursor: pointer; display: flex; justify-content: {{f.justify}}; background: {{f.track}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span></button>
+          </div>
+          </sc-for>
+        </section>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px"><h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Admins</h2><button type="button" style="font: 600 13px Inter, sans-serif; border: 0; background: transparent; color: {{t.link}}">+ Invite admin</button></div>
+        <table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px">
+          <tbody>
+            <sc-for list="{{admins}}" as="a" hint-placeholder-count="3">
+            <tr style="border-top: 1px solid {{t.border}}"><td style="padding: 11px 16px; font-weight: 600">{{a.name}}</td><td style="padding: 11px 8px; color: {{t.text2}}">{{a.email}}</td><td style="padding: 11px 8px">{{a.role}}</td><td style="padding: 11px 16px; text-align: right; color: {{t.text2}}">{{a.last}}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { flags: { maint: false, signups: true, linkedin: true, referrals: true } }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',crit:'#FF8A7E',critBg:'#341311',critLine:'#6A2620'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',crit:'#B42318',critBg:'#FDECEA',critLine:'#F4C1BC'};
+    const F = this.state.flags;
+    const mk = (id, label, help, danger) => {
+      const on = F[id];
+      return { label, help, onStr: on ? 'true' : 'false', justify: on ? 'flex-end' : 'flex-start', track: on ? (danger ? t.crit : t.good) : t.borderStrong,
+        toggle: () => this.setState({ flags: Object.assign({}, F, { [id]: !on }) }) };
+    };
+    const fld = (label, help, value, unit) => ({ label, help, value, unit });
+    return {
+      dark, t, maint: F.maint,
+      groups: [
+        { title: 'Uploads and job descriptions', fields: [fld('Max file size', 'Per upload', '10', 'MB'), fld('Max pages or images', 'Per upload', '5', 'pages'), fld('Job description max', 'Characters', '30,000', 'chars'), fld('Job description min', 'Characters', '200', 'chars')] },
+        { title: 'Rate limits', fields: [fld('AI actions', 'Per user', '10', '/ min'), fld('Uploads', 'Per user', '20', '/ day'), fld('Code attempts', 'Per user', '5', '/ hour')] },
+        { title: 'Retention', fields: [fld('Uploaded files', 'Then deleted from ImageKit', '30', 'days'), fld('Deleted versions', 'Restorable for', '30', 'days'), fld('OCR confidence floor', 'Below this, upload is rejected', '60', '%')] }
+      ],
+      flags: [
+        mk('maint', 'Maintenance mode', 'Pause the app for all users', true),
+        mk('signups', 'New sign-ups', 'Allow new accounts', false),
+        mk('linkedin', 'LinkedIn sign-in', 'Show LinkedIn on sign-in pages', false),
+        mk('referrals', 'Referral codes', 'Allow referral codes to be applied', false)
+      ],
+      admins: [
+        { name: 'Ravi K.', email: 'ra***@[COMPANY DOMAIN]', role: 'Owner', last: 'Active now' },
+        { name: 'Anita R.', email: 'an***@[COMPANY DOMAIN]', role: 'Support', last: '2 hours ago' },
+        { name: 'Ops bot', email: 'system', role: 'Automation', last: '12 Nov 12:02' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

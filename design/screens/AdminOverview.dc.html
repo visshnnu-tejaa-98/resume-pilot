@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin overview · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1300px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="overview" min-height="1236px" hint-size="248px,1236px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 20px; max-width: 1192px">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Overview</h1>
+          <span style="font: 600 11px 'JetBrains Mono', monospace; padding: 3px 8px; border-radius: 4px; background: {{t.surface2}}; color: {{t.text2}}">SAMPLE DATA</span>
+        </div>
+        <div role="tablist" aria-label="Period" style="display: flex; gap: 4px; padding: 4px; border-radius: 8px; background: {{t.surface2}}">
+          <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+          <button type="button" role="tab" aria-selected="{{p.sel}}" onClick="{{p.pick}}" style="font: {{p.weight}} 13px Inter, sans-serif; height: 30px; padding: 0 12px; border-radius: 6px; border: 0; cursor: pointer; background: {{p.bg}}; color: {{p.color}}">{{p.label}}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{kpis}}" as="k" hint-placeholder-count="6">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: {{t.text2}}">{{k.label}}</span>
+          <span style="font: 600 24px 'JetBrains Mono', monospace">{{k.value}}</span>
+          <span style="font-size: 12px; color: {{k.subColor}}">{{k.sub}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr)); gap: 16px; align-items: start">
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; grid-column: span 2">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Failures stay under 3% of AI actions</h2>
+            <span style="display: flex; gap: 14px; font-size: 12px; color: {{t.text2}}">
+              <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{t.link}}"></span>Succeeded</span>
+              <span style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{t.accent}}"></span>Failed (no charge)</span>
+            </span>
+          </div>
+          <svg viewBox="0 0 700 220" width="100%" role="img" aria-label="AI actions per day for the last 14 days, succeeded and failed">
+            <sc-for list="{{grid}}" as="g" hint-placeholder-count="4">
+              <line x1="40" x2="690" y1="{{g.y}}" y2="{{g.y}}" stroke="{{t.border}}"></line>
+              <text x="32" y="{{g.ty}}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="{{t.text2}}">{{g.label}}</text>
+            </sc-for>
+            <sc-for list="{{bars}}" as="b" hint-placeholder-count="14">
+              <rect x="{{b.x}}" y="{{b.ys}}" width="30" height="{{b.hs}}" rx="3" fill="{{t.link}}"></rect>
+              <rect x="{{b.x}}" y="{{b.yf}}" width="30" height="{{b.hf}}" rx="2" fill="{{t.accent}}"></rect>
+              <text x="{{b.cx}}" y="214" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="{{t.text2}}">{{b.label}}</text>
+            </sc-for>
+          </svg>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; display: flex; flex-direction: column">
+          <h2 style="margin: 0; padding: 16px 18px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px; display: flex; justify-content: space-between">Needs attention <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.crit}}">4</span></h2>
+          <sc-for list="{{alerts}}" as="a" hint-placeholder-count="4">
+          <a href="{{a.href}}" style="text-decoration: none; color: {{t.text}}; display: flex; gap: 12px; padding: 12px 18px; border-top: 1px solid {{t.border}}">
+            <span style="width: 8px; height: 8px; flex: none; margin-top: 6px; border-radius: 999px; background: {{a.dot}}"></span>
+            <span style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 14px">{{a.h}}</strong><span style="font-size: 12px; color: {{t.text2}}">{{a.p}}</span></span>
+          </a>
+          </sc-for>
+        </section>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <div style="padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">Unit economics by action</h2>
+          <span style="font-size: 12px; color: {{t.text2}}">1 credit = ₹0.05 · markup 5.0× · pricing config v3</span>
+        </div>
+        <table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px">
+          <thead><tr style="background: {{t.surface2}}; text-align: right">
+            <th scope="col" style="padding: 10px 18px; text-align: left; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Action</th>
+            <th scope="col" style="padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Runs</th>
+            <th scope="col" style="padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Avg tokens</th>
+            <th scope="col" style="padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Avg AI cost</th>
+            <th scope="col" style="padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Avg credits</th>
+            <th scope="col" style="padding: 10px 12px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Credit value</th>
+            <th scope="col" style="padding: 10px 18px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Margin</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{econ}}" as="e" hint-placeholder-count="4">
+            <tr style="border-top: 1px solid {{t.border}}; text-align: right; font-family: 'JetBrains Mono', monospace">
+              <td style="padding: 12px 18px; text-align: left; font-family: Inter, sans-serif; font-weight: 600">{{e.name}}</td>
+              <td style="padding: 12px">{{e.runs}}</td><td style="padding: 12px">{{e.tokens}}</td><td style="padding: 12px">{{e.cost}}</td>
+              <td style="padding: 12px">{{e.credits}}</td><td style="padding: 12px">{{e.value}}</td>
+              <td style="padding: 12px 18px; font-weight: 600; color: {{e.mColor}}">{{e.margin}}</td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { period: '14d' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',link:'#5AABFF',good:'#4CC38A',warn:'#F5B54A',crit:'#FF8A7E'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',accent:'#E08600',link:'#0A6BCB',good:'#1B7A43',warn:'#8F4D00',crit:'#B42318'};
+    const period = this.state.period;
+    const periods = [['7d', '7 days'], ['14d', '14 days'], ['30d', '30 days']].map(([id, label]) => ({
+      label, sel: id === period ? 'true' : 'false', weight: id === period ? 600 : 500, bg: id === period ? t.surface : 'transparent', color: id === period ? t.text : t.text2,
+      pick: () => this.setState({ period: id })
+    }));
+    const data = [[212,5],[240,6],[198,4],[265,9],[281,7],[150,3],[132,2],[290,8],[312,7],[305,10],[296,6],[330,9],[188,4],[171,3]];
+    const max = 360, top = 10, base = 196, h = base - top;
+    const days = ['30 Oct','31','1 Nov','2','3','4','5','6','7','8','9','10','11','12'];
+    const bars = data.map(([s, f], i) => {
+      const hs = s / max * h, hf = f / max * h, x = 48 + i * 46;
+      return { x, cx: x + 15, ys: base - hs, hs, yf: base - hs - hf - 1, hf: Math.max(hf, 2), label: days[i] };
+    });
+    const grid = [0, 120, 240, 360].map((v) => ({ y: base - v / max * h, ty: base - v / max * h + 3, label: String(v) }));
+    return {
+      dark, t, periods, bars, grid,
+      kpis: [
+        { label: 'Users', value: '1,284', sub: '+96 this period', subColor: t.good },
+        { label: 'Paying users', value: '412', sub: '32% of users', subColor: t.text2 },
+        { label: 'AI actions', value: '3,453', sub: '2.4% failed, 0 charged', subColor: t.text2 },
+        { label: 'Top-up revenue', value: '₹2.06L', sub: '412 × ₹500', subColor: t.text2 },
+        { label: 'AI cost', value: '₹13,940', sub: '6.8% of revenue', subColor: t.good },
+        { label: 'Outstanding credits', value: '3.1M', sub: '≈ ₹1.55L liability', subColor: t.warn }
+      ],
+      alerts: [
+        { h: '3 fact-check violations', p: 'Generations retried; 1 failed after retry', dot: t.crit, href: 'AdminAiJobs.dc.html' },
+        { h: 'Webhook delivered twice', p: 'pay_QZ19aB7xYt · credited once (idempotent)', dot: t.warn, href: 'AdminPayments.dc.html' },
+        { h: '2 referral clusters flagged', p: '6 sign-ups from one device in 1 hour', dot: t.warn, href: 'AdminCoupons.dc.html' },
+        { h: 'EARLYBIRD at 81% of limit', p: '4,050 of 5,000 redemptions', dot: t.link, href: 'AdminCoupons.dc.html' }
+      ],
+      econ: [
+        { name: 'Resume generation', runs: '1,018', tokens: '9,820', cost: '₹5.60', credits: '560', value: '₹28.00', margin: '80%', mColor: t.good },
+        { name: 'ATS score', runs: '1,092', tokens: '3,940', cost: '₹1.40', credits: '140', value: '₹7.00', margin: '80%', mColor: t.good },
+        { name: 'JD analysis', runs: '512', tokens: '2,860', cost: '₹1.10', credits: '110', value: '₹5.50', margin: '80%', mColor: t.good },
+        { name: 'Extraction (free)', runs: '831', tokens: '3,120', cost: '₹0.90', credits: '0', value: '₹0.00', margin: 'platform cost', mColor: t.warn }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

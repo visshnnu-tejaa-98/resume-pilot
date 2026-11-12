@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How it works · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif">
+  <dc-import name="SiteNav" dark="{{dark}}" active="how" hint-size="100%,72px"></dc-import>
+
+  <section style="background: {{t.hero}}; color: #F2F5F9">
+    <div style="max-width: 1280px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; gap: 28px">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #FFB547">How it works</span>
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: clamp(36px, 5vw, 56px); line-height: 1.05; letter-spacing: -0.025em; max-width: 860px; text-wrap: balance">Five stops from the resume you have to the one the job wants.</h1>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px; max-width: 980px">
+        <sc-for list="{{route}}" as="r" hint-placeholder-count="5">
+        <a href="#{{r.id}}" style="text-decoration: none; color: #F2F5F9; display: flex; flex-direction: column; gap: 10px">
+          <span style="display: flex; align-items: center; gap: 8px">
+            <span style="width: 32px; height: 32px; flex: none; border-radius: 999px; background: {{r.bg}}; color: {{r.fg}}; display: flex; align-items: center; justify-content: center; font: 600 13px 'JetBrains Mono', monospace">{{r.n}}</span>
+            <span style="flex: 1; border-top: 2px dashed {{r.line}}"></span>
+          </span>
+          <span style="font-size: 15px; font-weight: 600">{{r.label}}</span>
+        </a>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 Upload -->
+  <section id="upload" style="max-width: 1280px; margin: 0 auto; padding: 88px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 56px; align-items: center">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">STOP 01 · FREE</span>
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">Upload the resume you already have</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.7; color: {{t.text2}}">PDF, Word, LaTeX source or a photo. Scanned pages are read with OCR. Up to 10 MB and 5 pages. You don't need to compile LaTeX or retype anything.</p>
+    </div>
+    <div style="border: 2px dashed {{t.borderStrong}}; border-radius: 14px; padding: 44px 28px; display: flex; flex-direction: column; align-items: center; gap: 12px; background: {{t.surface}}; text-align: center">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="{{t.link}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+      <strong style="font-size: 17px">Drop your resume here, or <span style="color: {{t.link}}">browse</span></strong>
+      <span style="font-size: 14px; color: {{t.text2}}">.pdf · .docx · .tex · .png · .jpg</span>
+    </div>
+  </section>
+
+  <!-- 2 Review -->
+  <section id="review" style="max-width: 1280px; margin: 0 auto; padding: 88px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 56px; align-items: center">
+    <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: {{t.shadow}}">
+      <div style="display: flex; justify-content: space-between; align-items: center"><strong style="font-size: 15px">Work experience · Globex</strong><span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">1 field to check</span></div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Designation<input type="text" value="Software Engineer" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Start date<input type="text" value="2021" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 2px solid {{t.warnLine}}; background: {{t.warnBg}}; color: {{t.text}}"><span style="font-size: 12px; font-weight: 500; color: {{t.warn}}">Only the year was found. Add the month?</span></label>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">STOP 02 · FREE</span>
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">Check what we read</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.7; color: {{t.text2}}">Your resume becomes structured sections you can edit. Anything we weren't sure about, like a missing month or an unclear company name, is highlighted so you can fix it before tailoring.</p>
+    </div>
+  </section>
+
+  <!-- 3 JD -->
+  <section id="job" style="max-width: 1280px; margin: 0 auto; padding: 88px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 56px; align-items: center">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">STOP 03 · FREE</span>
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">Paste the job description</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.7; color: {{t.text2}}">Paste the full posting, up to 30,000 characters, and add the company and role if you like. Saved jobs can be reused for more versions or scores.</p>
+    </div>
+    <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 12px; box-shadow: {{t.shadow}}">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Company<input type="text" value="Acme Corp" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Job title<input type="text" value="Frontend Engineer" style="font: 400 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Job description
+        <textarea rows="4" style="font: 400 14px/1.5 Inter, sans-serif; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}; resize: none">We're hiring a Frontend Engineer with 4+ years of React and TypeScript to build our design system…</textarea>
+      </label>
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <span style="font: 500 13px 'JetBrains Mono', monospace; color: {{t.text2}}">12,480 / 30,000</span>
+        <span style="height: 40px; padding: 0 18px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">Proceed</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 Generate -->
+  <section id="generate" style="max-width: 1280px; margin: 0 auto; padding: 88px 24px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 56px; align-items: center">
+    <div style="background: {{t.scrim}}; border-radius: 14px; padding: 28px; display: flex; justify-content: center">
+      <div style="width: 100%; max-width: 420px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; box-shadow: {{t.shadowLg}}; display: flex; flex-direction: column">
+        <div style="padding: 18px 22px 0; display: flex; flex-direction: column; gap: 4px"><strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px">Generate tailored resume?</strong><span style="font-size: 13px; color: {{t.text2}}">Acme Corp · Frontend Engineer</span></div>
+        <div style="padding: 16px 22px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+          <div style="display: flex; justify-content: space-between"><span>Estimate</span><span style="font-family: 'JetBrains Mono', monospace; font-weight: 600">up to 640</span></div>
+          <div style="display: flex; justify-content: space-between; color: {{t.text2}}"><span>Balance after</span><span style="font-family: 'JetBrains Mono', monospace">10,500 → 9,860</span></div>
+        </div>
+        <div style="padding: 14px 22px; border-top: 1px solid {{t.border}}; display: flex; justify-content: flex-end; gap: 10px">
+          <span style="height: 40px; padding: 0 14px; color: {{t.link}}; font-weight: 600; font-size: 14px; display: flex; align-items: center">Cancel</span>
+          <span style="height: 40px; padding: 0 16px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 14px; display: flex; align-items: center">Confirm and generate</span>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">STOP 04 · CREDITS</span>
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">Confirm, then generate</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.7; color: {{t.text2}}">After you click Proceed, you see exactly what will run and the most it can cost. Nothing is charged until you confirm. We tailor your summary, bullets, skills order and projects to the role, then check every fact against your original.</p>
+    </div>
+  </section>
+
+  <!-- 5 Score -->
+  <section id="score" style="max-width: 1280px; margin: 0 auto; padding: 88px 24px 96px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 56px; align-items: center">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span style="font: 600 13px 'JetBrains Mono', monospace; color: {{t.accentText}}">STOP 05 · SCORING USES CREDITS</span>
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">Score, polish, download</h2>
+      <p style="margin: 0; font-size: 17px; line-height: 1.7; color: {{t.text2}}">Run an ATS score whenever you're ready, then edit anything by hand in the side-by-side editor. Edited the resume? Re-score it. Pick one of five ATS-friendly templates and download a PDF. Editing, templates and downloads are free.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px">
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+        <svg width="104" height="104" viewBox="0 0 120 120" role="img" aria-label="ATS score 82 out of 100"><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.surface2}}" stroke-width="12"></circle><circle cx="60" cy="60" r="48" fill="none" stroke="{{t.accent}}" stroke-width="12" stroke-linecap="round" stroke-dasharray="247.3 301.6" transform="rotate(-90 60 60)"></circle><text x="60" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="30" font-weight="600" fill="{{t.text}}">82</text></svg>
+        <span style="font-size: 13px; color: {{t.text2}}">Estimated ATS score</span>
+      </div>
+      <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 13px; font-weight: 600">Templates</span>
+        <sc-for list="{{templates}}" as="tp" hint-placeholder-count="5">
+        <span style="display: flex; justify-content: space-between; font-size: 14px; padding: 6px 10px; border-radius: 6px; background: {{tp.bg}}; border: 1px solid {{tp.line}}"><span>{{tp.name}}</span><span style="font-size: 12px; color: {{t.text2}}">{{tp.tag}}</span></span>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rules -->
+  <section style="background: {{t.surface}}; border-top: 1px solid {{t.border}}; border-bottom: 1px solid {{t.border}}">
+    <div style="max-width: 1080px; margin: 0 auto; padding: 80px 24px; display: flex; flex-direction: column; gap: 24px">
+      <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 34px; letter-spacing: -0.02em">What the AI can and can't change</h2>
+      <div style="overflow-x: auto; border: 1px solid {{t.border}}; border-radius: 12px">
+        <table style="width: 100%; min-width: 600px; border-collapse: collapse; font-size: 15px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 14px 18px; width: 50%; color: {{t.good}}">Allowed</th>
+            <th scope="col" style="padding: 14px 18px; color: {{t.text2}}">Never allowed</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{rules}}" as="r" hint-placeholder-count="5">
+            <tr style="border-top: 1px solid {{t.border}}"><td style="padding: 14px 18px">{{r.yes}}</td><td style="padding: 14px 18px">{{r.no}}</td></tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{t.text2}}">Instructions hidden inside a job post or resume are treated as text, never followed. Manual edits you make yourself are always accepted.</p>
+    </div>
+  </section>
+
+  <section style="max-width: 1280px; margin: 0 auto; padding: 80px 24px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: space-between">
+    <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 32px; letter-spacing: -0.02em">Ready for stop one?</h2>
+    <a href="SignUp.dc.html" style="text-decoration: none; height: 52px; padding: 0 26px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 17px; display: flex; align-items: center">Upload your resume free</a>
+  </section>
+
+  <dc-import name="SiteFooter" dark="{{dark}}" hint-size="100%,340px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":2700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {
+      bg: '#0A1119', surface: '#111B27', surface2: '#1A2636', inputBg: '#0D1620', border: '#26364A', borderStrong: '#4A5F78',
+      text: '#E8EEF5', text2: '#A3B3C5', accent: '#FF9F1C', onAccent: '#0A1119', accentText: '#FFB547', accentTint: '#2E2210',
+      link: '#5AABFF', good: '#4CC38A', warn: '#F5B54A', warnBg: '#30220C', warnLine: '#5E4216', hero: '#060B12',
+      scrim: 'rgba(0,0,0,0.5)', shadow: '0 1px 2px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.35)', shadowLg: '0 12px 40px rgba(0,0,0,0.55)'
+    } : {
+      bg: '#F4F6F8', surface: '#FFFFFF', surface2: '#EAEEF3', inputBg: '#FFFFFF', border: '#D6DDE6', borderStrong: '#9AA8B8',
+      text: '#0F1B2A', text2: '#4B5A6B', accent: '#FF9900', onAccent: '#0F1B2A', accentText: '#A85E00', accentTint: '#FFF4E2',
+      link: '#0A6BCB', good: '#1B7A43', warn: '#8F4D00', warnBg: '#FFF1DC', warnLine: '#F2CF98', hero: '#0F1B2A',
+      scrim: 'rgba(15,27,42,0.45)', shadow: '0 1px 2px rgba(15,27,42,0.06), 0 12px 32px rgba(15,27,42,0.08)', shadowLg: '0 12px 40px rgba(15,27,42,0.22)'
+    };
+    const labels = [['upload', 'Upload'], ['review', 'Review'], ['job', 'Add the job'], ['generate', 'Generate'], ['score', 'Score and download']];
+    const route = labels.map(([id, label], i) => ({ id, label, n: String(i + 1), bg: i === 3 ? '#FF9900' : '#1B2A3D', fg: i === 3 ? '#0F1B2A' : '#F2F5F9', line: i === labels.length - 1 ? 'transparent' : '#4A5F78' }));
+    const templates = [['Classic', 'Default'], ['Modern', ''], ['Minimal', ''], ['Professional', ''], ['Technical', '']].map(([name, tag], i) => ({ name, tag, bg: i === 0 ? t.accentTint : 'transparent', line: i === 0 ? t.accent : t.border }));
+    return {
+      dark, t, route, templates,
+      rules: [
+        { yes: 'Rewrite your summary using your facts', no: 'Add, remove or rename companies, titles or degrees' },
+        { yes: 'Rephrase and reorder bullets', no: 'Change any date' },
+        { yes: 'Choose which bullets and projects to show', no: 'Add skills, tools or certifications you didn’t list' },
+        { yes: 'Reorder sections and skills', no: 'Add numbers or metrics that aren’t in your resume' },
+        { yes: 'Use the job’s wording for skills you have', no: 'Claim experience or years you don’t have' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Templates · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;family=Source+Serif+4:wght@600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 950px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="templates" min-height="886px" hint-size="248px,886px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Templates</h1>
+        <span style="font-size: 13px; color: {{t.text2}}">All templates are single-column, A4, selectable text. Disabled templates stay on existing versions but can't be newly picked.</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px">
+        <sc-for list="{{tpls}}" as="p" hint-placeholder-count="5">
+        <article style="background: {{t.surface}}; border: {{p.border}}; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column">
+          <div style="background: {{t.surface2}}; padding: 16px; display: flex; justify-content: center">
+            <div aria-hidden="true" style="width: 120px; aspect-ratio: 210 / 297; background: #FFFFFF; box-shadow: 0 4px 14px rgba(0,0,0,0.15); padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; align-items: {{p.align}}; opacity: {{p.opacity}}">
+              <span style="font-family: {{p.font}}; font-size: 9px; font-weight: 700; color: #0F1B2A">Asha Rao</span>
+              <span style="width: 70%; height: 2px; background: #C9D1DB"></span>
+              <span style="align-self: stretch; height: 3px; margin-top: 4px; background: {{p.rule}}"></span>
+              <span style="align-self: stretch; height: 2px; background: #E1E6EC"></span>
+              <span style="align-self: stretch; height: 2px; width: 85%; background: #E1E6EC"></span>
+              <span style="align-self: stretch; height: 3px; margin-top: 4px; background: {{p.rule}}"></span>
+              <span style="align-self: stretch; height: 2px; background: #E1E6EC"></span>
+              <span style="align-self: stretch; height: 2px; background: #E1E6EC"></span>
+              <span style="align-self: stretch; height: 2px; width: 70%; background: #E1E6EC"></span>
+            </div>
+          </div>
+          <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; justify-content: space-between; align-items: center"><strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">{{p.name}}</strong><span style="font-size: 11px; font-weight: 700; color: {{t.accentText}}">{{p.defaultTag}}</span></div>
+            <span style="font-size: 12px; color: {{t.text2}}">Used by {{p.used}} versions · export test {{p.test}}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid {{t.border}}; padding-top: 10px">
+              <span style="font-size: 13px; font-weight: 600">Enabled</span>
+              <button type="button" role="switch" aria-checked="{{p.onStr}}" aria-label="Enable {{p.name}}" onClick="{{p.toggle}}" style="width: 40px; height: 24px; box-sizing: border-box; border-radius: 999px; padding: 2px; border: 0; cursor: pointer; display: flex; justify-content: {{p.justify}}; background: {{p.track}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span></button>
+            </div>
+            <div style="display: flex; gap: 12px; font-size: 13px; font-weight: 600">
+              <a href="Preview.dc.html" style="color: {{t.link}}">Preview</a>
+              <button type="button" onClick="{{p.makeDefault}}" style="border: 0; background: transparent; padding: 0; font: 600 13px Inter, sans-serif; color: {{p.defaultColor}}; cursor: pointer">{{p.defaultAction}}</button>
+            </div>
+          </div>
+        </article>
+        </sc-for>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":950}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { def: 'Classic', off: {} }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',accentText:'#FFB547',link:'#5AABFF',good:'#4CC38A'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',accentText:'#A85E00',link:'#0A6BCB',good:'#1B7A43'};
+    const { def, off } = this.state;
+    const raw = [
+      ['Classic', "'Source Serif 4', serif", '#0F1B2A', 'center', '1,840'],
+      ['Modern', "'Space Grotesk', sans-serif", '#0A5BAD', 'flex-start', '1,112'],
+      ['Minimal', 'Inter, sans-serif', '#C9D1DB', 'flex-start', '402'],
+      ['Professional', "'Source Serif 4', serif", '#9AA8B8', 'flex-start', '688'],
+      ['Technical', "'JetBrains Mono', monospace", '#5E6E80', 'flex-start', '951']
+    ];
+    const tpls = raw.map(([name, font, rule, align, used]) => {
+      const on = !off[name], isDef = name === def;
+      return {
+        name, font, rule, align, used, test: 'passed 12 Nov',
+        border: isDef ? '2px solid ' + t.accent : '1px solid ' + t.border,
+        defaultTag: isDef ? 'DEFAULT' : '', opacity: on ? 1 : 0.4,
+        onStr: on ? 'true' : 'false', justify: on ? 'flex-end' : 'flex-start', track: on ? t.good : t.borderStrong,
+        toggle: () => { if (!isDef) this.setState({ off: Object.assign({}, off, { [name]: on }) }); },
+        defaultAction: isDef ? 'Default template' : 'Make default', defaultColor: isDef ? t.text2 : t.link,
+        makeDefault: () => { if (on) this.setState({ def: name }); }
+      };
+    });
+    return { dark, t, tpls };
+  }
+}
+</script>
+</body>
+</html>

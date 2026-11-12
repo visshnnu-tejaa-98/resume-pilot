@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin top bar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<header style="background: {{bar}}; border-bottom: 2px solid #FF9900; color: #F2F5F9; font-family: Inter, system-ui, sans-serif">
+  <div style="min-height: 62px; padding: 0 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px">
+    <a href="AdminOverview.dc.html" aria-label="Resume Pilot admin" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #F2F5F9">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#FF9900"></rect><path d="M6.5 14.8 21 8l-4.6 13.2-2.7-4.9-7.2-1.5Z" fill="#0F1B2A"></path></svg>
+      <span style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 19px; font-weight: 700">Resume<span style="color: #FF9900">Pilot</span></span>
+      <span style="font: 700 11px 'JetBrains Mono', monospace; letter-spacing: 0.1em; padding: 4px 8px; border-radius: 4px; border: 1px solid #FF9900; color: #FFB547">ADMIN</span>
+    </a>
+    <span style="font: 600 12px 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 4px; background: #1B2A3D; color: #A9B8C9">env: production</span>
+    <label style="flex: 1 1 260px; max-width: 460px; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border-radius: 6px; background: {{field}}; border: 1px solid #33475E; color: #A9B8C9">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</span>
+      <input type="search" placeholder="Search users, payment IDs, job IDs" style="flex: 1; min-width: 0; border: 0; background: transparent; color: #F2F5F9; font: 400 14px Inter, sans-serif; outline: none">
+    </label>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 12px">
+      <a href="Dashboard.dc.html" style="font-size: 14px; font-weight: 600; color: #C3CFDC; text-decoration: none">Exit admin</a>
+      <span aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: #FF9900; color: #0F1B2A; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">AD</span>
+    </div>
+  </div>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":64}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    return { bar: dark ? '#060B12' : '#0F1B2A', field: dark ? '#0D1620' : '#16243A' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Payment · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 850px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" balance="{{balance}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="wallet" min-height="786px" hint-size="248px,786px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 64px 32px; display: flex; justify-content: center">
+      <div style="width: 100%; max-width: 520px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 16px; box-shadow: {{t.shadow}}; padding: 36px; display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; align-self: flex-start">
+        <span style="width: 64px; height: 64px; border-radius: 999px; background: {{s.iconBg}}; display: flex; align-items: center; justify-content: center">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="{{s.iconFg}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{s.icon}}"></path></svg>
+        </span>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 28px">{{s.title}}</h1>
+          <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{t.text2}}">{{s.body}}</p>
+        </div>
+        <div style="width: 100%; border-top: 1px solid {{t.border}}; border-bottom: 1px solid {{t.border}}; padding: 16px 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; text-align: left">
+          <div style="display: flex; justify-content: space-between"><span style="color: {{t.text2}}">Amount</span><strong>₹500</strong></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: {{t.text2}}">Credits</span><strong style="font-family: 'JetBrains Mono', monospace; color: {{s.creditColor}}">{{s.credits}}</strong></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: {{t.text2}}">New balance</span><strong style="font-family: 'JetBrains Mono', monospace">{{balance}}</strong></div>
+          <div style="display: flex; justify-content: space-between"><span style="color: {{t.text2}}">Payment ID</span><span style="font-family: 'JetBrains Mono', monospace">pay_QZ19aB7xYt</span></div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center">
+          <a href="{{s.primaryHref}}" style="text-decoration: none; height: 46px; padding: 0 20px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 15px; display: flex; align-items: center">{{s.primary}}</a>
+          <a href="Wallet.dc.html" style="text-decoration: none; height: 46px; padding: 0 18px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 15px; display: flex; align-items: center">Back to wallet</a>
+        </div>
+        <span style="font-size: 13px; color: {{t.text2}}">{{s.foot}}</span>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"status":{"editor":"enum","options":["success","pending","failed"],"default":"success"},"$preview":{"width":1440,"height":850}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const status = this.props.status ?? 'success';
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',good:'#4CC38A',goodBg:'#10291C',info:'#6FB5FF',infoBg:'#0E2339',crit:'#FF8A7E',critBg:'#341311',shadow:'0 1px 2px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',good:'#1B7A43',goodBg:'#E3F4EA',info:'#0A62BA',infoBg:'#E6F0FB',crit:'#B42318',critBg:'#FDECEA',shadow:'0 1px 2px rgba(15,27,42,0.06), 0 6px 18px rgba(15,27,42,0.06)'};
+    const map = {
+      success: { title: '10,000 credits added', body: 'Your payment went through and your wallet is topped up.', credits: '+10,000', creditColor: t.good, iconBg: t.goodBg, iconFg: t.good, icon: 'M5 12l5 5 9-10', primary: 'Tailor a resume', primaryHref: 'Generate.dc.html', foot: 'A receipt has been sent to your email.', bal: '19,770' },
+      pending: { title: 'Confirming your payment', body: 'Razorpay is still confirming this payment. Credits are added automatically, exactly once, as soon as it clears.', credits: 'Pending', creditColor: t.info, iconBg: t.infoBg, iconFg: t.info, icon: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z', primary: 'Go to dashboard', primaryHref: 'Dashboard.dc.html', foot: 'Usually under a minute. You can leave this page.', bal: '9,770' },
+      failed: { title: 'Payment didn’t go through', body: 'No money was taken and no credits were added. Try again or use a different method.', credits: '0', creditColor: t.text2, iconBg: t.critBg, iconFg: t.crit, icon: 'M7 7l10 10M17 7 7 17', primary: 'Try again', primaryHref: 'Wallet.dc.html', foot: 'If money left your account, contact support with the payment ID.', bal: '9,770' }
+    };
+    const s = map[status];
+    return { dark, t, s, balance: s.bal };
+  }
+}
+</script>
+</body>
+</html>

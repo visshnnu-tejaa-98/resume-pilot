@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1100px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AppTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AppSide" dark="{{dark}}" active="dashboard" min-height="1036px" hint-size="248px,1036px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 32px; display: flex; flex-direction: column; gap: 28px; max-width: 1192px">
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; justify-content: space-between">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 30px; letter-spacing: -0.01em">Good evening, Asha</h1>
+          <span style="font-size: 15px; color: {{t.text2}}">You have 3 tailored resumes and 1 score that needs a refresh.</span>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <a href="Upload.dc.html" style="text-decoration: none; height: 42px; padding: 0 16px; border-radius: 6px; border: 1px solid {{t.text}}; color: {{t.text}}; font-weight: 600; font-size: 14px; display: flex; align-items: center">Upload resume</a>
+          <a href="Generate.dc.html" style="text-decoration: none; height: 42px; padding: 0 18px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 14px; display: flex; align-items: center">Tailor for a new job</a>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 16px">
+        <div style="background: {{t.hero}}; color: #F2F5F9; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 13px; color: #A9B8C9">Credit balance</span>
+          <span style="font: 600 30px 'JetBrains Mono', monospace">9,770</span>
+          <a href="Wallet.dc.html" style="font-size: 13px; font-weight: 600; color: #FFB547">Add money</a>
+        </div>
+        <sc-for list="{{stats}}" as="s" hint-placeholder-count="3">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 13px; color: {{t.text2}}">{{s.label}}</span>
+          <span style="font: 600 30px 'JetBrains Mono', monospace">{{s.value}}</span>
+          <span style="font-size: 13px; color: {{t.text2}}">{{s.sub}}</span>
+        </div>
+        </sc-for>
+      </div>
+
+      <div role="status" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 10px; background: {{t.warnBg}}; border: 1px solid {{t.warnLine}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{t.warn}}" stroke-width="2" aria-hidden="true"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17v.01"></path></svg>
+        <span style="flex: 1 1 300px; font-size: 14px"><strong>Globex · UI Engineer II</strong> was edited after its last score. Re-score to see where it stands now.</span>
+        <a href="AtsReport.dc.html" style="font-size: 14px; font-weight: 700; color: {{t.link}}">Re-score</a>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: 24px; align-items: start">
+        <section style="display: flex; flex-direction: column; gap: 14px; grid-column: span 2">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 20px">Recent versions</h2>
+            <a href="MyResumes.dc.html" style="font-size: 14px; font-weight: 600; color: {{t.link}}">View all</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 14px">
+            <sc-for list="{{versions}}" as="v" hint-placeholder-count="4">
+            <a href="{{v.href}}" style="text-decoration: none; color: {{t.text}}; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: {{t.shadow}}">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+                <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                  <strong style="font-family: 'Space Grotesk', Inter, sans-serif; font-size: 17px">{{v.company}}</strong>
+                  <span style="font-size: 13px; color: {{t.text2}}">{{v.role}}</span>
+                </div>
+                <span style="font: 600 13px 'JetBrains Mono', monospace; padding: 4px 8px; border-radius: 6px; background: {{v.scoreBg}}; color: {{v.scoreFg}}; white-space: nowrap">{{v.score}}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 12px; color: {{t.text2}}"><span>{{v.template}}</span><span>{{v.when}}</span></div>
+            </a>
+            </sc-for>
+          </div>
+        </section>
+        <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; display: flex; flex-direction: column">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid {{t.border}}">
+            <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 18px">Credit activity</h2>
+            <a href="Wallet.dc.html" style="font-size: 13px; font-weight: 600; color: {{t.link}}">History</a>
+          </div>
+          <sc-for list="{{activity}}" as="a" hint-placeholder-count="5">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 18px; border-top: 1px solid {{a.line}}">
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 14px">{{a.what}}</span><span style="font-size: 12px; color: {{t.text2}}">{{a.when}}</span></div>
+            <span style="font: 600 14px 'JetBrains Mono', monospace; color: {{a.color}}; white-space: nowrap">{{a.amt}}</span>
+          </div>
+          </sc-for>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',border:'#26364A',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',goodBg:'#10291C',warn:'#F5B54A',warnBg:'#30220C',warnLine:'#5E4216',hero:'#060B12',shadow:'0 1px 2px rgba(0,0,0,0.4), 0 6px 18px rgba(0,0,0,0.3)'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',border:'#D6DDE6',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',goodBg:'#E3F4EA',warn:'#8F4D00',warnBg:'#FFF1DC',warnLine:'#F2CF98',hero:'#0F1B2A',shadow:'0 1px 2px rgba(15,27,42,0.06), 0 6px 18px rgba(15,27,42,0.06)'};
+    const v = (company, role, score, kind, template, when, href) => ({
+      company, role, score, template, when, href,
+      scoreBg: kind === 'good' ? t.goodBg : (kind === 'warn' ? t.warnBg : t.surface2),
+      scoreFg: kind === 'good' ? t.good : (kind === 'warn' ? t.warn : t.text2)
+    });
+    const act = [
+      ['Generation · Acme Corp', 'Today, 6:12 pm', '−582', t.text],
+      ['ATS score · Acme Corp', 'Today, 6:14 pm', '−148', t.text],
+      ['Coupon EARLYBIRD', 'Today, 5:40 pm', '+500', t.good],
+      ['Wallet top-up · ₹500', 'Today, 5:38 pm', '+10,000', t.good]
+    ].map(([what, when, amt, color], i) => ({ what, when, amt, color, line: i === 0 ? 'transparent' : t.border }));
+    return {
+      dark, t,
+      stats: [
+        { label: 'Tailored versions', value: '3', sub: 'From 1 original resume' },
+        { label: 'Best ATS score', value: '82', sub: 'Acme Corp · Frontend Engineer' },
+        { label: 'Saved jobs', value: '3', sub: 'Reusable for new versions' }
+      ],
+      versions: [
+        v('Acme Corp', 'Frontend Engineer', '82', 'good', 'Modern template', 'Today', 'Editor.dc.html'),
+        v('Initech', 'Senior React Developer', '77', 'good', 'Technical template', 'Yesterday', 'Editor.dc.html'),
+        v('Globex', 'UI Engineer II', '64 · outdated', 'warn', 'Classic template', '3 days ago', 'Editor.dc.html'),
+        v('Asha Rao · Original', 'Uploaded from PDF', 'Not scored', 'none', 'Classic template', '4 days ago', 'ResumeReview.dc.html')
+      ],
+      activity: act
+    };
+  }
+}
+</script>
+</body>
+</html>

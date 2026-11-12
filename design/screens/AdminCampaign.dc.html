@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New campaign · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="position: relative; min-height: 1350px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="campaigns" min-height="1286px" hint-size="248px,1286px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <a href="AdminEmails.dc.html" style="font-size: 13px; font-weight: 600; color: {{t.link}}">← Email templates</a>
+        <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">New campaign</h1>
+        <span style="font-size: 13px; color: {{t.text2}}">Marketing email to a chosen group. Users who opted out of marketing are always left out.</span>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <strong style="font-size: 15px"><span style="font-family: 'JetBrains Mono', monospace; color: {{t.accentText}}">01</span> Template</strong>
+            <div role="radiogroup" aria-label="Template" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 10px">
+              <sc-for list="{{templates}}" as="m" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{m.checked}}" onClick="{{m.pick}}" style="text-align: left; cursor: pointer; padding: 14px; border-radius: 8px; border: 2px solid {{m.ring}}; background: {{m.bg}}; color: {{t.text}}; display: flex; flex-direction: column; gap: 4px; font-family: Inter, sans-serif">
+                <strong style="font-size: 14px">{{m.name}}</strong>
+                <span style="font-size: 12.5px; line-height: 1.5; color: {{t.text2}}">{{m.desc}}</span>
+              </button>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap">
+              <strong style="font-size: 15px"><span style="font-family: 'JetBrains Mono', monospace; color: {{t.accentText}}">02</span> Audience</strong>
+              <span style="font-size: 12px; color: {{t.text2}}">All selected rules must match</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+              <label style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; border: 1px solid {{f.ring}}; background: {{f.bg}}; cursor: pointer; font-size: 13.5px">
+                <input type="checkbox" checked="{{f.on}}" onInput="{{f.toggle}}" style="width: 16px; height: 16px; accent-color: {{t.accent}}; margin: 0">
+                <span style="flex: 1">{{f.label}}</span>
+                <span style="font: 500 12px 'JetBrains Mono', monospace; color: {{t.text2}}">{{f.n}} users</span>
+              </label>
+              </sc-for>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 8px; background: {{t.navy}}; color: #F2F5F9">
+              <span style="font-size: 13px; color: #C3CFDC">Will receive</span>
+              <span style="display: flex; align-items: baseline; gap: 8px"><span style="font: 600 24px 'JetBrains Mono', monospace; color: #FFB547">{{count}}</span><span style="font-size: 12px; color: #A9B8C9">users · {{excluded}} opted out, left out</span></span>
+            </div>
+          </section>
+
+          <sc-if value="{{isPromo}}" hint-placeholder-val="{{ true }}">
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <strong style="font-size: 15px"><span style="font-family: 'JetBrains Mono', monospace; color: {{t.accentText}}">03</span> Gift code</strong>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{t.text2}}">Credits per user<input value="1000" style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px 'JetBrains Mono', monospace"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{t.text2}}">Code expires<input value="31 Mar 2027" style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px 'JetBrains Mono', monospace"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{t.text2}}">Code prefix<input value="FIRSTNAME-" style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px 'JetBrains Mono', monospace"></label>
+            </div>
+            <span style="font-size: 12.5px; line-height: 1.55; color: {{t.text2}}">One single-use code per recipient, tied to their account. Credit cost if every code is used: <strong style="font-family: 'JetBrains Mono', monospace; color: {{t.text}}">{{liability}}</strong> credits (₹{{liabilityRs}} at ₹0.05 each).</span>
+          </section>
+          </sc-if>
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <strong style="font-size: 15px"><span style="font-family: 'JetBrains Mono', monospace; color: {{t.accentText}}">{{msgNo}}</span> Message</strong>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{t.text2}}">Subject<input value="{{subject}}" style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px Inter, sans-serif"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: {{t.text2}}">Preheader<input value="{{preheader}}" style="height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px Inter, sans-serif"></label>
+            <span style="font-size: 12px; color: {{t.text2}}">Merge fields: <span style="font-family: 'JetBrains Mono', monospace">{first_name} {code} {credits} {expiry}</span></span>
+          </section>
+
+          <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+            <strong style="font-size: 15px"><span style="font-family: 'JetBrains Mono', monospace; color: {{t.accentText}}">{{sendNo}}</span> When</strong>
+            <div role="radiogroup" aria-label="When to send" style="display: flex; gap: 8px; flex-wrap: wrap">
+              <sc-for list="{{whenOpts}}" as="w" hint-placeholder-count="2">
+              <button type="button" role="radio" aria-checked="{{w.checked}}" onClick="{{w.pick}}" style="height: 36px; padding: 0 14px; border-radius: 6px; cursor: pointer; font: 600 13px Inter, sans-serif; border: 1px solid {{w.ring}}; background: {{w.bg}}; color: {{w.fg}}">{{w.label}}</button>
+              </sc-for>
+            </div>
+            <sc-if value="{{scheduled}}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 12px; flex-wrap: wrap">
+                <input value="18 Nov 2026" aria-label="Date" style="width: 160px; height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px 'JetBrains Mono', monospace">
+                <input value="10:00 IST" aria-label="Time" style="width: 120px; height: 38px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.surface}}; color: {{t.text}}; font: 500 14px 'JetBrains Mono', monospace">
+              </div>
+            </sc-if>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid {{t.border}}; padding-top: 14px">
+              <button type="button" onClick="{{sendTest}}" style="height: 40px; padding: 0 16px; border-radius: 6px; cursor: pointer; font: 600 13px Inter, sans-serif; border: 1px solid {{t.text}}; background: transparent; color: {{t.text}}">Send test to me</button>
+              <button type="button" onClick="{{openConfirm}}" style="height: 40px; padding: 0 18px; border-radius: 6px; cursor: pointer; font: 700 13px Inter, sans-serif; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">{{primaryLabel}}</button>
+            </div>
+          </section>
+        </div>
+
+        <aside style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; justify-content: space-between; align-items: center"><strong style="font-size: 15px">Preview</strong><a href="{{previewHref}}" style="font-size: 13px; font-weight: 600; color: {{t.link}}">Open full size</a></div>
+          <div style="background: {{t.outer}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+            <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 12px">
+              <strong style="font-size: 13px">{{subject}}</strong>
+              <span style="color: {{t.text2}}">{{preheader}}</span>
+            </div>
+            <div style="border-radius: 8px; overflow: hidden; border: 1px solid {{t.border}}; background: {{t.surface}}">
+              <div style="height: 44px; background: #0F1B2A; border-bottom: 3px solid #FF9900; display: flex; align-items: center; padding: 0 14px; gap: 8px">
+                <span style="width: 18px; height: 18px; border-radius: 4px; background: #FF9900"></span><span style="font: 700 13px 'Space Grotesk', sans-serif; color: #F2F5F9">Resume Pilot</span>
+              </div>
+              <sc-if value="{{isPromo}}" hint-placeholder-val="{{ true }}">
+                <div style="background: #0F1B2A; color: #F2F5F9; padding: 22px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+                  <span style="font: 700 20px 'Space Grotesk', sans-serif">1,000 free credits</span>
+                  <span style="font: 700 16px 'JetBrains Mono', monospace; letter-spacing: 0.08em; padding: 6px 12px; border-radius: 6px; border: 2px dashed #FF9900; color: #FFB547">ASHA-K7Q2</span>
+                  <span style="font-size: 11px; color: #A9B8C9">Valid until 31 Mar 2027</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{isFeatures}}" hint-placeholder-val="{{ false }}">
+                <div style="padding: 18px 16px; display: flex; flex-direction: column; gap: 10px">
+                  <span style="font: 700 17px 'Space Grotesk', sans-serif">Three new ways to get your resume interview-ready</span>
+                  <sc-for list="{{featureLines}}" as="l" hint-placeholder-count="3"><span style="font-size: 12.5px; color: {{t.text2}}; padding-top: 8px; border-top: 1px solid {{t.border}}">{{l}}</span></sc-for>
+                </div>
+              </sc-if>
+              <div style="padding: 14px 16px 18px; display: flex; justify-content: center"><span style="padding: 9px 16px; border-radius: 6px; background: {{t.accent}}; color: {{t.onAccent}}; font-weight: 700; font-size: 12.5px">{{ctaLabel}}</span></div>
+            </div>
+            <span style="font-size: 11.5px; color: {{t.text2}}; text-align: center">Shown with sample user Asha Rao</span>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <sc-if value="{{toast}}" hint-placeholder-val="{{ false }}">
+    <div role="status" style="position: absolute; right: 28px; bottom: 28px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 8px; background: #0F1B2A; color: #F2F5F9; box-shadow: 0 12px 30px rgba(0,0,0,0.3); font-size: 13px"><span style="width: 8px; height: 8px; border-radius: 999px; background: #4CC38A"></span>{{toastText}}</div>
+  </sc-if>
+
+  <sc-if value="{{confirm}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; background: rgba(5,9,14,0.6); display: flex; align-items: flex-start; justify-content: center; padding-top: 220px">
+      <div role="dialog" aria-modal="true" aria-labelledby="cmp-confirm" style="width: min(460px, calc(100% - 32px)); box-sizing: border-box; background: {{t.surface}}; color: {{t.text}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.35)">
+        <h2 id="cmp-confirm" style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 20px">{{confirmTitle}}</h2>
+        <div style="border: 1px solid {{t.border}}; border-radius: 8px; overflow: hidden">
+          <sc-for list="{{summary}}" as="s" hint-placeholder-count="4">
+          <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid {{s.line}}; font-size: 13px"><span style="color: {{t.text2}}">{{s.k}}</span><span style="font-family: 'JetBrains Mono', monospace; text-align: right">{{s.v}}</span></div>
+          </sc-for>
+        </div>
+        <span style="font-size: 12.5px; line-height: 1.55; color: {{t.text2}}">This can't be unsent. It's written to the audit log under your name.</span>
+        <div style="display: flex; justify-content: flex-end; gap: 10px">
+          <button type="button" onClick="{{closeConfirm}}" style="height: 38px; padding: 0 14px; border-radius: 6px; cursor: pointer; font: 600 13px Inter, sans-serif; border: 1px solid {{t.borderStrong}}; background: transparent; color: {{t.text}}">Cancel</button>
+          <button type="button" onClick="{{doSend}}" style="height: 38px; padding: 0 16px; border-radius: 6px; cursor: pointer; font: 700 13px Inter, sans-serif; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">{{primaryLabel}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"showDialog":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tpl: 'promo', on: { active: true, gen3: true }, when: 'now', confirm: null, toast: '' }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',outer:'#05090E',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',accentText:'#FFB547',accentSoft:'#2A1E0C',link:'#5AABFF',navy:'#060B12'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',outer:'#E9EDF2',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',accentText:'#A85E00',accentSoft:'#FFF4E3',link:'#0A6BCB',navy:'#0F1B2A'};
+    const s = this.state;
+    const isPromo = s.tpl === 'promo';
+    const F = [
+      ['active', 'Signed in within the last 60 days', 1840, 0.62],
+      ['gen3', 'Tailored 3 or more resumes', 612, 0.46],
+      ['inactive', 'No sign-in for 30+ days', 1290, 0.38],
+      ['never', 'Never topped up the wallet', 2150, 0.55],
+      ['joined', 'Joined after 1 Oct 2026', 960, 0.7]
+    ];
+    const total = 3420;
+    let count = total;
+    F.forEach(([id, , n, share]) => { if (s.on[id]) count = Math.round(count * share); });
+    const anyOn = F.some(([id]) => s.on[id]);
+    if (!anyOn) count = total;
+    const excluded = Math.round(count * 0.07);
+    const send = count - excluded;
+    const fmt = (n) => n.toLocaleString('en-IN');
+    const filters = F.map(([id, label, n]) => {
+      const on = !!s.on[id];
+      return { label, n: fmt(n), on, ring: on ? t.accent : t.border, bg: on ? t.accentSoft : 'transparent',
+        toggle: () => this.setState({ on: Object.assign({}, s.on, { [id]: !on }) }) };
+    });
+    const templates = [
+      ['promo', 'Promo code', 'Personal single-use gift code with credits.'],
+      ['features', 'New features', 'Product update with up to three highlights.']
+    ].map(([id, name, desc]) => {
+      const on = s.tpl === id;
+      return { name, desc, checked: on ? 'true' : 'false', ring: on ? t.accent : t.border, bg: on ? t.accentSoft : t.surface, pick: () => this.setState({ tpl: id }) };
+    });
+    const whenOpts = [['now', 'Send now'], ['later', 'Schedule']].map(([id, label]) => {
+      const on = s.when === id;
+      return { label, checked: on ? 'true' : 'false', ring: on ? t.text : t.borderStrong, bg: on ? t.text : 'transparent', fg: on ? t.surface : t.text, pick: () => this.setState({ when: id }) };
+    });
+    const scheduled = s.when === 'later';
+    const primaryLabel = scheduled ? 'Schedule campaign' : `Send to ${fmt(send)} users`;
+    const confirm = s.confirm === true || (s.confirm === null && (this.props.showDialog ?? false));
+    const liability = send * 1000;
+    const subject = isPromo ? 'A gift for you, {first_name}: {credits} free credits' : 'New in Resume Pilot: compare scores, re-score after edits, invite friends';
+    const preheader = isPromo ? 'Use your code before {expiry}.' : 'Three updates to help you send stronger applications.';
+    const summary = [
+      ['Template', isPromo ? 'Promo code' : 'New features'],
+      ['Recipients', fmt(send)],
+      ['When', scheduled ? '18 Nov 2026, 10:00 IST' : 'Now'],
+      ...(isPromo ? [['Credits if all used', fmt(liability)]] : [])
+    ].map(([k, v], i) => ({ k, v, line: i === 0 ? 'transparent' : t.border }));
+    return {
+      dark, t, templates, filters, whenOpts, scheduled, isPromo, isFeatures: !isPromo,
+      count: fmt(send), excluded: fmt(excluded),
+      liability: fmt(liability), liabilityRs: fmt(liability * 0.05),
+      msgNo: isPromo ? '04' : '03', sendNo: isPromo ? '05' : '04',
+      subject, preheader, primaryLabel,
+      previewHref: isPromo ? 'EmailPromo.dc.html' : 'EmailNewFeatures.dc.html',
+      ctaLabel: isPromo ? 'Add 1,000 credits' : 'Open Resume Pilot',
+      featureLines: ['Compare original vs tailored', 'Re-score after your edits', 'Invite friends, they get 500 credits'],
+      confirm, confirmTitle: scheduled ? 'Schedule this campaign?' : 'Send this campaign now?', summary,
+      openConfirm: () => this.setState({ confirm: true }),
+      closeConfirm: () => this.setState({ confirm: false }),
+      doSend: () => this.setState({ confirm: false, toast: scheduled ? 'Campaign scheduled for 18 Nov, 10:00 IST' : `Sending to ${fmt(send)} users. Track it in the email log.` }),
+      sendTest: () => this.setState({ toast: 'Test sent to your admin email' }),
+      toast: !!s.toast, toastText: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

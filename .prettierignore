@@ -1,0 +1,16 @@
+node_modules
+.next
+dist
+build
+out
+.turbo
+coverage
+pnpm-lock.yaml
+
+# reference design exports, not production code
+design/
+
+# project docs with their own formatting
+prd.md
+claude.md
+tasks/

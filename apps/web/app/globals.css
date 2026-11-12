@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* Design tokens from design/README.md — swap/extend when the real
+   Tailwind theme + shadcn/ui setup lands (tasks/todo/m8-editor-templates). */
+:root {
+  --color-background: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-text: #0f1b2a;
+  --color-text-secondary: #4b5a6b;
+  --color-accent: #ff9900;
+  --color-link: #0a6bcb;
+  --color-hero-navy: #0f1b2a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0a1119;
+    --color-surface: #111b27;
+    --color-text: #e8eef5;
+    --color-text-secondary: #a3b3c5;
+    --color-accent: #ff9f1c;
+    --color-link: #5aabff;
+    --color-hero-navy: #060b12;
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}

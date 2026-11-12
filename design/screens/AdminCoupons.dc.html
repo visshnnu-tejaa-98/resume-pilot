@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coupons · Admin · Resume Pilot</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="min-height: 1100px; background: {{t.bg}}; color: {{t.text}}; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column">
+  <dc-import name="AdminTopBar" dark="{{dark}}" hint-size="100%,64px"></dc-import>
+  <div style="flex: 1; display: flex; flex-wrap: wrap">
+    <dc-import name="AdminSide" dark="{{dark}}" active="coupons" min-height="1036px" hint-size="248px,1036px"></dc-import>
+    <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 18px; max-width: 1192px">
+      <h1 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 26px">Coupons and referrals</h1>
+      <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start">
+        <section style="flex: 999 1 520px; min-width: 0; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+          <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">Coupons</h2>
+          <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 12.5px">
+            <thead><tr style="background: {{t.surface2}}; text-align: left">
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Code</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Credits</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Redemptions</th>
+              <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Expires</th>
+              <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Active</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{coupons}}" as="c" hint-placeholder-count="3">
+              <tr style="border-top: 1px solid {{t.border}}">
+                <td style="padding: 12px 14px; font: 700 13px 'JetBrains Mono', monospace; letter-spacing: 0.04em">{{c.code}}</td>
+                <td style="padding: 12px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{c.credits}}</td>
+                <td style="padding: 12px 8px; min-width: 160px"><div style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'JetBrains Mono', monospace">{{c.used}}</span><div style="height: 6px; border-radius: 999px; background: {{t.surface2}}"><div style="height: 6px; border-radius: 999px; width: {{c.pct}}; background: {{c.bar}}"></div></div></div></td>
+                <td style="padding: 12px 8px; color: {{t.text2}}">{{c.exp}}</td>
+                <td style="padding: 12px 14px"><button type="button" role="switch" aria-checked="{{c.onStr}}" aria-label="Toggle {{c.code}}" onClick="{{c.toggle}}" style="width: 40px; height: 24px; box-sizing: border-box; border-radius: 999px; padding: 2px; border: 0; cursor: pointer; display: flex; justify-content: {{c.justify}}; background: {{c.track}}"><span style="width: 20px; height: 20px; border-radius: 999px; background: #FFFFFF"></span></button></td>
+              </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </section>
+        <form aria-label="Create coupon" style="flex: 1 1 280px; background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px">New coupon</h2>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Code<input type="text" placeholder="DIWALI26" style="font: 600 14px 'JetBrains Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Credits<input type="number" value="500" style="font: 500 14px 'JetBrains Mono', monospace; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Max uses<input type="number" placeholder="No limit" style="font: 500 14px 'JetBrains Mono', monospace; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Expires<input type="date" style="font: 500 14px Inter, sans-serif; height: 40px; box-sizing: border-box; padding: 0 10px; border-radius: 6px; border: 1px solid {{t.borderStrong}}; background: {{t.inputBg}}; color: {{t.text}}"></label>
+          <span style="font-size: 12px; color: {{t.text2}}">Codes are case-insensitive. Each account can use one code ever.</span>
+          <button type="button" style="font: 700 14px Inter, sans-serif; height: 40px; border-radius: 6px; border: 0; background: {{t.accent}}; color: {{t.onAccent}}">Create coupon</button>
+        </form>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: 12px">
+        <sc-for list="{{refStats}}" as="s" hint-placeholder-count="4">
+        <div style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">{{s.label}}</span><span style="font: 600 20px 'JetBrains Mono', monospace">{{s.value}}</span></div>
+        </sc-for>
+      </div>
+
+      <section style="background: {{t.surface}}; border: 1px solid {{t.border}}; border-radius: 12px; overflow-x: auto">
+        <h2 style="margin: 0; padding: 14px 16px; font-family: 'Space Grotesk', Inter, sans-serif; font-size: 16px; display: flex; gap: 10px; align-items: center">Flagged referrals <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: {{t.warnBg}}; color: {{t.warn}}">2 to review</span></h2>
+        <table style="width: 100%; min-width: 720px; border-collapse: collapse; font-size: 12.5px">
+          <thead><tr style="background: {{t.surface2}}; text-align: left">
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Referral code</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Owner</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}">Signal</th>
+            <th scope="col" style="padding: 10px 8px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Sign-ups</th>
+            <th scope="col" style="padding: 10px 14px; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: {{t.text2}}; text-align: right">Actions</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{flags}}" as="f" hint-placeholder-count="2">
+            <tr style="border-top: 1px solid {{t.border}}">
+              <td style="padding: 12px 14px; font: 700 12px 'JetBrains Mono', monospace">{{f.code}}</td>
+              <td style="padding: 12px 8px">{{f.owner}}</td>
+              <td style="padding: 12px 8px; color: {{t.warn}}; font-weight: 600">{{f.signal}}</td>
+              <td style="padding: 12px 8px; text-align: right; font-family: 'JetBrains Mono', monospace">{{f.n}}</td>
+              <td style="padding: 12px 14px; text-align: right; white-space: nowrap"><a href="AdminUsers.dc.html" style="font-weight: 600; color: {{t.link}}">Review accounts</a></td>
+            </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"dark":{"editor":"boolean","default":false},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { off: { LAUNCHTEST: true } }; }
+  renderVals() {
+    const dark = this.props.dark ?? false;
+    const t = dark ? {bg:'#0A1119',surface:'#111B27',surface2:'#1A2636',inputBg:'#0D1620',border:'#26364A',borderStrong:'#4A5F78',text:'#E8EEF5',text2:'#A3B3C5',accent:'#FF9F1C',onAccent:'#0A1119',link:'#5AABFF',good:'#4CC38A',warn:'#F5B54A',warnBg:'#30220C'}
+                   : {bg:'#F4F6F8',surface:'#FFFFFF',surface2:'#EAEEF3',inputBg:'#FFFFFF',border:'#D6DDE6',borderStrong:'#9AA8B8',text:'#0F1B2A',text2:'#4B5A6B',accent:'#FF9900',onAccent:'#0F1B2A',link:'#0A6BCB',good:'#1B7A43',warn:'#8F4D00',warnBg:'#FFF1DC'};
+    const off = this.state.off;
+    const C = [['EARLYBIRD', '500', 4050, 5000, '31 Dec 2026'], ['COLLEGE26', '1,000', 112, 500, '31 Mar 2027'], ['LAUNCHTEST', '10,000', 3, 3, 'Expired']];
+    const coupons = C.map(([code, credits, used, max, exp]) => {
+      const on = !off[code], p = used / max;
+      return { code, credits, exp, used: used.toLocaleString('en-IN') + ' / ' + max.toLocaleString('en-IN'), pct: Math.round(p * 100) + '%', bar: p >= 0.8 ? t.warn : t.link,
+        onStr: on ? 'true' : 'false', justify: on ? 'flex-end' : 'flex-start', track: on ? t.good : t.borderStrong,
+        toggle: () => this.setState({ off: Object.assign({}, off, { [code]: on }) }) };
+    });
+    return {
+      dark, t, coupons,
+      refStats: [{ label: 'Referral sign-ups', value: '1,108' }, { label: 'Credits granted', value: '554k' }, { label: 'Active referrers', value: '286' }, { label: 'Flagged', value: '2' }],
+      flags: [
+        { code: 'RP-QQ81M', owner: 'test.user.441', signal: '6 sign-ups from 1 device in 1 hour', n: '6' },
+        { code: 'RP-ZK20P', owner: 'Ankit G.', signal: '9 sign-ups, all disposable email domains', n: '9' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
