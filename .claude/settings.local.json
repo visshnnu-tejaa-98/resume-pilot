@@ -19,7 +19,8 @@
       "Bash(docker stop *)",
       "Bash(docker compose *)",
       "Bash(lsof -nP -iTCP:5432 -sTCP:LISTEN)",
-      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:55432/resume_pilot\" pnpm turbo test --force --filter=@resume-pilot/web)"
+      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:55432/resume_pilot\" pnpm turbo test --force --filter=@resume-pilot/web)",
+      "Bash(pnpm install *)"
     ]
   }
 }

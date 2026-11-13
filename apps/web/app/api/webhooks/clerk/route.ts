@@ -1,4 +1,5 @@
 import { createUserFromClerkWebhook } from "@resume-pilot/services";
+import { sendWelcomeEmail } from "@resume-pilot/emails";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Webhook, type WebhookRequiredHeaders } from "svix";
 import { getDb } from "@/server/db";
@@ -10,6 +11,7 @@ interface ClerkWebhookEvent {
 
 interface ClerkUserCreatedData {
   id: string;
+  first_name: string | null;
   email_addresses: Array<{ id: string; email_address: string }>;
   primary_email_address_id: string | null;
 }
@@ -89,6 +91,18 @@ export async function POST(req: Request) {
       });
     } catch (err) {
       console.error("[clerk-webhook] failed to mirror role into Clerk metadata:", err);
+    }
+
+    // Best-effort — SES SMTP may not be configured yet (tasks/todo/m11-email),
+    // so a send failure here never blocks the webhook from succeeding.
+    try {
+      await sendWelcomeEmail({
+        to: email,
+        firstName: event.data.first_name?.trim() || "there",
+        uploadUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/dashboard`,
+      });
+    } catch (err) {
+      console.error("[clerk-webhook] failed to send welcome email:", err);
     }
   }
 
