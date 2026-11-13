@@ -1,5 +1,5 @@
 import { boolean, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { resumeVersions } from "./resumes.js";
+import { resumeVersions } from "./resumes";
 
 /** The 5 Phase-1 templates — prd.md §10.2. */
 export const resumeTemplates = pgTable(

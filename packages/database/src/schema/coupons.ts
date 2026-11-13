@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { boolean, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { codeTypeEnum, referrerStatusEnum } from "./enums.js";
-import { users } from "./users.js";
+import { codeTypeEnum, referrerStatusEnum } from "./enums";
+import { users } from "./users";
 
 /** Admin-created codes — prd.md §2.1. Code matching is case-insensitive. */
 export const coupons = pgTable(

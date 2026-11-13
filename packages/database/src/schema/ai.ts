@@ -8,10 +8,10 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { aiJobStatusEnum, aiJobTypeEnum, atsReportStatusEnum } from "./enums.js";
-import { jobDescriptions } from "./job-descriptions.js";
-import { resumeVersions } from "./resumes.js";
-import { users } from "./users.js";
+import { aiJobStatusEnum, aiJobTypeEnum, atsReportStatusEnum } from "./enums";
+import { jobDescriptions } from "./job-descriptions";
+import { resumeVersions } from "./resumes";
+import { users } from "./users";
 
 /** Every AI action — prd.md §14.3, charged per §3.2. */
 export const aiJobs = pgTable(

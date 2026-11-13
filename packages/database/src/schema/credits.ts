@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
 import { bigint, check, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { aiJobs } from "./ai.js";
-import { creditHoldStatusEnum, creditLedgerTypeEnum } from "./enums.js";
-import { users } from "./users.js";
+import { aiJobs } from "./ai";
+import { creditHoldStatusEnum, creditLedgerTypeEnum } from "./enums";
+import { users } from "./users";
 
 /**
  * One wallet per user — cached balance, kept in sync with

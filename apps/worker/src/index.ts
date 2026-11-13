@@ -1,6 +1,5 @@
 import { Worker, type Job } from "bullmq";
 import IORedis from "ioredis";
-import { packageName as servicesPackageName } from "@resume-pilot/services";
 
 export const REDIS_URL = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 
@@ -38,7 +37,7 @@ export function createWorker(): Worker {
 }
 
 function main() {
-  console.log(`[worker] starting (${servicesPackageName} loaded)`);
+  console.log("[worker] starting");
   const worker = createWorker();
   console.log(`[worker] listening on queue "${QUEUE_NAME}"`);
 

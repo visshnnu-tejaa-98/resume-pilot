@@ -15,3 +15,7 @@ minimumReleaseAgeExclude:
   - bullmq@6.7.5
   - prettier@3.10.1
   - turbo@2.11.11
+  - "@clerk/backend@3.28.0"
+  - "@clerk/nextjs@7.9.26"
+  - "@clerk/react@6.18.7"
+  - "@clerk/shared@4.45.0"

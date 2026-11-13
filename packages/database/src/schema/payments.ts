@@ -1,7 +1,7 @@
 import { integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { paymentStatusEnum } from "./enums.js";
-import { creditPackages } from "./pricing.js";
-import { users } from "./users.js";
+import { paymentStatusEnum } from "./enums";
+import { creditPackages } from "./pricing";
+import { users } from "./users";
 
 /** Razorpay orders and payments — prd.md §11.1, §11.3. */
 export const payments = pgTable(

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import * as schema from "./schema/index.js";
+import * as schema from "./schema/index";
 
 const connectionString = process.env.DATABASE_URL;
 

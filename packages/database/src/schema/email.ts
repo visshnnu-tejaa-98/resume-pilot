@@ -13,8 +13,8 @@ import {
   emailCampaignStatusEnum,
   emailMessageStatusEnum,
   emailSuppressionReasonEnum,
-} from "./enums.js";
-import { users } from "./users.js";
+} from "./enums";
+import { users } from "./users";
 
 /** Per-user switches, Settings -> Notifications — prd.md §13.5. */
 export const emailPreferences = pgTable(

@@ -1,26 +1,43 @@
 @import "tailwindcss";
 
-/* Design tokens from design/README.md — swap/extend when the real
-   Tailwind theme + shadcn/ui setup lands (tasks/todo/m8-editor-templates). */
+/* Design tokens from design/README.md and the design/screens/*.dc.html
+   mockups — swap/extend when the real Tailwind theme + shadcn/ui setup
+   lands (tasks/todo/m8-editor-templates). */
 :root {
   --color-background: #f4f6f8;
   --color-surface: #ffffff;
+  --color-input-bg: #ffffff;
+  --color-border: #d6dde6;
+  --color-border-strong: #9aa8b8;
   --color-text: #0f1b2a;
   --color-text-secondary: #4b5a6b;
   --color-accent: #ff9900;
+  --color-on-accent: #0f1b2a;
+  --color-accent-tint: #fff4e2;
+  --color-accent-line: #c77700;
   --color-link: #0a6bcb;
   --color-hero-navy: #0f1b2a;
+  --color-hero-text-secondary: #a9b8c9;
+  --color-hero-muted: #8fa1b5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --color-background: #0a1119;
     --color-surface: #111b27;
+    --color-input-bg: #0d1620;
+    --color-border: #26364a;
+    --color-border-strong: #4a5f78;
     --color-text: #e8eef5;
     --color-text-secondary: #a3b3c5;
     --color-accent: #ff9f1c;
+    --color-on-accent: #0a1119;
+    --color-accent-tint: #2e2210;
+    --color-accent-line: #c9801c;
     --color-link: #5aabff;
     --color-hero-navy: #060b12;
+    --color-hero-text-secondary: #a9b8c9;
+    --color-hero-muted: #8fa1b5;
   }
 }
 

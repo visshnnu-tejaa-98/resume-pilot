@@ -6,15 +6,21 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@clerk/nextjs": "7.9.26",
+    "@resume-pilot/database": "workspace:*",
+    "@resume-pilot/services": "workspace:*",
     "@resume-pilot/trpc": "workspace:*",
     "@trpc/client": "11.28.0",
     "@trpc/server": "11.28.0",
+    "drizzle-orm": "0.45.4",
     "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "svix": "2.10.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -23,6 +29,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "tailwindcss": "4.3.5",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
   }
 }

@@ -7,10 +7,10 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { resumeFormatEnum, resumeStatusEnum, resumeVersionKindEnum } from "./enums.js";
-import { jobDescriptions } from "./job-descriptions.js";
-import { resumeTemplates } from "./files.js";
-import { users } from "./users.js";
+import { resumeFormatEnum, resumeStatusEnum, resumeVersionKindEnum } from "./enums";
+import { jobDescriptions } from "./job-descriptions";
+import { resumeTemplates } from "./files";
+import { users } from "./users";
 
 export const resumes = pgTable(
   "resumes",

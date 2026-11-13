@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -11,8 +12,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>{children}</body>
-    </html>
+    // No `appearance` prop: the app renders fully custom UI against
+    // Clerk's headless hooks (useSignIn/useSignUp) — see
+    // app/sign-in/page.tsx and app/sign-up/page.tsx — so there's no
+    // Clerk-rendered component left to theme. ClerkProvider is still
+    // required: it's what makes the hooks and `auth()` work at all.
+    <ClerkProvider>
+      <html lang="en" className={inter.variable}>
+        <body style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }
