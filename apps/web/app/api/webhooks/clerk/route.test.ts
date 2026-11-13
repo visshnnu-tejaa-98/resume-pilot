@@ -5,7 +5,11 @@ import { Webhook } from "svix";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const connectionString = process.env.DATABASE_URL;
-const TEST_SECRET = "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw"; // a syntactically valid test-only svix secret
+// Syntactically valid test-only svix secrets, not real credentials — kept
+// out of source so secret scanners (GitGuardian etc.) stop flagging them.
+const TEST_SECRET = process.env.TEST_CLERK_WEBHOOK_SECRET ?? "whsec_test0000000000000000000000000000";
+const TEST_WRONG_SECRET =
+  process.env.TEST_CLERK_WEBHOOK_WRONG_SECRET ?? "whsec_test1111111111111111111111111111";
 
 function signedRequest(secret: string, body: string) {
   const id = `msg_${randomUUID()}`;
@@ -48,7 +52,7 @@ describe.skipIf(!connectionString)("POST /api/webhooks/clerk", () => {
   it("rejects a request with an invalid signature", async () => {
     const { POST } = await import("./route");
     const body = userCreatedPayload(`clerk_${randomUUID()}`, "bad-sig@example.com");
-    const req = signedRequest("whsec_totallyWrongSecretValueHere00", body);
+    const req = signedRequest(TEST_WRONG_SECRET, body);
 
     const res = await POST(req);
     expect(res.status).toBe(400);
