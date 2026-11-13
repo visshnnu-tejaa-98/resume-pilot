@@ -5,7 +5,13 @@
       "Bash(docker rm *)",
       "Bash(docker run *)",
       "Bash(docker exec *)",
-      "Bash(kill -9 84247 84253)"
+      "Bash(kill -9 84247 84253)",
+      "Bash(aws --version)",
+      "Bash(aws sts *)",
+      "Bash(node -e \"console.log\\(require\\('aws-cdk-lib/package.json'\\)?.version\\)\")",
+      "Bash(npm view *)",
+      "Bash(pnpm synth *)",
+      "Bash(pnpm format *)"
     ]
   }
 }

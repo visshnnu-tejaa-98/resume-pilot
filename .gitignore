@@ -11,6 +11,10 @@ out/
 # turbo
 .turbo/
 
+# cdk
+infra/cdk.out/
+cdk.context.json
+
 # env
 .env
 .env.local

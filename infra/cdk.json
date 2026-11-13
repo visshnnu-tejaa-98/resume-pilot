@@ -1,0 +1,53 @@
+{
+  "app": "npx tsx bin/infra.ts",
+  "watch": {
+    "include": ["**"],
+    "exclude": [
+      "README.md",
+      "cdk*.json",
+      "**/*.d.ts",
+      "**/*.js",
+      "tsconfig.json",
+      "package*.json",
+      "node_modules",
+      "test"
+    ]
+  },
+  "context": {
+    "@aws-cdk/aws-lambda:recognizeLayerVersion": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws"],
+    "@aws-cdk/core:defaultCrossStackReferences": "strong",
+
+    "resumePilot:region": "ap-south-1",
+    "resumePilot:maxAzs": 2,
+    "resumePilot:natGateways": 1,
+
+    "resumePilot:db:instanceClass": "t3",
+    "resumePilot:db:instanceSize": "micro",
+    "resumePilot:db:allocatedStorageGb": 20,
+    "resumePilot:db:multiAz": false,
+    "resumePilot:db:deletionProtection": false,
+
+    "resumePilot:redis:engine": "valkey",
+    "resumePilot:redis:nodeType": "cache.t4g.micro",
+    "resumePilot:redis:numCacheNodes": 1,
+
+    "resumePilot:ecs:web:cpu": 512,
+    "resumePilot:ecs:web:memoryMiB": 1024,
+    "resumePilot:ecs:web:desiredCount": 1,
+    "resumePilot:ecs:web:minCount": 1,
+    "resumePilot:ecs:web:maxCount": 3,
+
+    "resumePilot:ecs:worker:cpu": 512,
+    "resumePilot:ecs:worker:memoryMiB": 1024,
+    "resumePilot:ecs:worker:desiredCount": 1,
+    "resumePilot:ecs:worker:minCount": 1,
+    "resumePilot:ecs:worker:maxCount": 5,
+
+    "resumePilot:useBootstrapImage": true,
+    "resumePilot:imageTag": "latest",
+
+    "resumePilot:alarmEmail": ""
+  }
+}
