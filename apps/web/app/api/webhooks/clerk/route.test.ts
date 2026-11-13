@@ -1,15 +1,21 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { createDatabase, users, type Database } from "@resume-pilot/database";
 import { eq } from "drizzle-orm";
 import { Webhook } from "svix";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const connectionString = process.env.DATABASE_URL;
-// Syntactically valid test-only svix secrets, not real credentials — kept
-// out of source so secret scanners (GitGuardian etc.) stop flagging them.
-const TEST_SECRET = process.env.TEST_CLERK_WEBHOOK_SECRET ?? "whsec_test0000000000000000000000000000";
-const TEST_WRONG_SECRET =
-  process.env.TEST_CLERK_WEBHOOK_WRONG_SECRET ?? "whsec_test1111111111111111111111111111";
+
+// Read from .env.local (gitignored) when set, else generated fresh each
+// run — a hardcoded "whsec_..."-shaped literal in tracked source trips
+// secret scanners (GitGuardian etc.) even when it's fake, since they
+// match on prefix pattern, not validity.
+function randomTestSecret(): string {
+  return `whsec_${randomBytes(24).toString("base64")}`;
+}
+
+const TEST_SECRET = process.env.TEST_CLERK_WEBHOOK_SECRET ?? randomTestSecret();
+const TEST_WRONG_SECRET = process.env.TEST_CLERK_WEBHOOK_WRONG_SECRET ?? randomTestSecret();
 
 function signedRequest(secret: string, body: string) {
   const id = `msg_${randomUUID()}`;
