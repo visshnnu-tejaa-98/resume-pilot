@@ -11,7 +11,14 @@
       "Bash(node -e \"console.log\\(require\\('aws-cdk-lib/package.json'\\)?.version\\)\")",
       "Bash(npm view *)",
       "Bash(pnpm synth *)",
-      "Bash(pnpm format *)"
+      "Bash(pnpm format *)",
+      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:15432/resume_pilot\" npx tsx src/seed.ts)",
+      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:15432/resume_pilot\" npx vitest run)",
+      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:15432/resume_pilot\" pnpm --filter @resume-pilot/database test)",
+      "Bash(DATABASE_URL=\"postgres://postgres:postgres@localhost:15432/resume_pilot\" pnpm turbo test --force)",
+      "Bash(docker stop *)",
+      "Bash(docker compose *)",
+      "Bash(lsof -nP -iTCP:5432 -sTCP:LISTEN)"
     ]
   }
 }
