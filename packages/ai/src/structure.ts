@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { callStructuredOutput, StructuringError, wrapData, type ResponsesClient, type StructureUsage } from "./responses";
 import {
   fromStructuredOutput,
   resumeResponseFormat,
@@ -38,41 +39,10 @@ Rules:
 - Sections that don't fit the standard ones (Awards, Publications, Volunteering, Languages, Talks…) go in customSections, using the resume's own heading as the title.
 - Split the name into firstName and lastName.`;
 
-/** The slice of the OpenAI SDK this uses — lets tests pass a fake. */
-export interface ResponsesClient {
-  responses: {
-    create(
-      params: OpenAI.Responses.ResponseCreateParamsNonStreaming,
-    ): Promise<OpenAI.Responses.Response>;
-  };
-}
-
 export function createOpenAIClient(env: NodeJS.ProcessEnv = process.env): OpenAI {
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
   return new OpenAI({ apiKey, timeout: 120_000, maxRetries: 2 });
-}
-
-export type StructuringFailure =
-  "refused" | "incomplete" | "invalid_output" | "api_error" | "config_error";
-
-export class StructuringError extends Error {
-  constructor(
-    readonly kind: StructuringFailure,
-    message: string,
-    /** Worth retrying (transient API trouble, a one-off bad generation). */
-    readonly retryable: boolean,
-    options?: { cause?: unknown },
-  ) {
-    super(message, options);
-    this.name = "StructuringError";
-  }
-}
-
-export interface StructureUsage {
-  inputTokens: number;
-  outputTokens: number;
-  cachedInputTokens: number;
 }
 
 export interface StructureResult {
@@ -84,8 +54,7 @@ export interface StructureResult {
 
 /** Stops a resume from closing the data block early. */
 export function wrapResumeText(rawText: string): string {
-  const safe = rawText.replace(/<\s*\/?\s*resume_text\s*>/gi, "[resume_text tag removed]");
-  return `<resume_text>\n${safe}\n</resume_text>`;
+  return wrapData("resume_text", rawText);
 }
 
 export async function structureResume(
@@ -94,64 +63,13 @@ export async function structureResume(
 ): Promise<StructureResult> {
   const model = input.model ?? DEFAULT_EXTRACTION_MODEL;
 
-  let response: OpenAI.Responses.Response;
-  try {
-    response = await client.responses.create({
-      model,
-      instructions: EXTRACTION_INSTRUCTIONS,
-      input: [{ role: "user", content: wrapResumeText(input.rawText) }],
-      text: { format: resumeResponseFormat() },
-      max_output_tokens: EXTRACTION_MAX_OUTPUT_TOKENS,
-      store: false,
-    });
-  } catch (err) {
-    const status = (err as { status?: number }).status;
-    // 400/401/403/404 mean our request or key is wrong: retrying won't help.
-    const config = status !== undefined && [400, 401, 403, 404, 422].includes(status);
-    throw new StructuringError(
-      config ? "config_error" : "api_error",
-      `OpenAI request failed${status ? ` (HTTP ${status})` : ""}: ${(err as Error).message}`,
-      !config,
-      { cause: err },
-    );
-  }
-
-  const usage: StructureUsage = {
-    inputTokens: response.usage?.input_tokens ?? 0,
-    outputTokens: response.usage?.output_tokens ?? 0,
-    cachedInputTokens: response.usage?.input_tokens_details?.cached_tokens ?? 0,
-  };
-
-  // A refusal arrives as a content part of type "refusal" on a message.
-  let refusal: { refusal?: string } | undefined;
-  for (const item of response.output ?? []) {
-    const parts =
-      "content" in item && Array.isArray(item.content) ? (item.content as unknown[]) : [];
-    const found = parts.find((c) => (c as { type?: string }).type === "refusal");
-    if (found) {
-      refusal = found as { refusal?: string };
-      break;
-    }
-  }
-  if (refusal) {
-    throw new StructuringError("refused", `Model refused: ${refusal.refusal ?? ""}`.trim(), false);
-  }
-  if (response.status === "incomplete") {
-    // Usually max_output_tokens; a resume within limits shouldn't hit it,
-    // so it's not worth retrying with the same budget.
-    throw new StructuringError(
-      "incomplete",
-      `Model output incomplete: ${response.incomplete_details?.reason ?? "unknown"}`,
-      false,
-    );
-  }
-
-  let json: unknown;
-  try {
-    json = JSON.parse(response.output_text);
-  } catch (err) {
-    throw new StructuringError("invalid_output", "Model output is not JSON", true, { cause: err });
-  }
+  const { json, usage } = await callStructuredOutput(client, {
+    model,
+    instructions: EXTRACTION_INSTRUCTIONS,
+    input: wrapResumeText(input.rawText),
+    format: resumeResponseFormat(),
+    maxOutputTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+  });
 
   try {
     return {
@@ -168,3 +86,5 @@ export async function structureResume(
     throw err;
   }
 }
+
+export { StructuringError, type ResponsesClient, type StructureUsage, type StructuringFailure } from "./responses";

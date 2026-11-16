@@ -25,7 +25,7 @@ import {
  * string length keywords.
  */
 
-type JsonSchema = Record<string, unknown> & {
+export type JsonSchema = Record<string, unknown> & {
   type?: string | string[];
   properties?: Record<string, JsonSchema>;
   required?: string[];
@@ -44,7 +44,7 @@ function nullable(s: JsonSchema): JsonSchema {
   return isNullable(s) ? s : { anyOf: [s, { type: "null" }] };
 }
 
-function strictify(node: JsonSchema, dropProperties: ReadonlySet<string>): JsonSchema {
+export function strictify(node: JsonSchema, dropProperties: ReadonlySet<string> = new Set()): JsonSchema {
   const out: JsonSchema = {};
   for (const [key, value] of Object.entries(node)) {
     if (!DROP_KEYWORDS.includes(key)) out[key] = value;

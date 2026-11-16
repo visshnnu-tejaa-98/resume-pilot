@@ -12,9 +12,11 @@ import { createUserFromClerkWebhook, grantCredits } from "@resume-pilot/services
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 const extractionAdd = vi.hoisted(() => vi.fn());
+const aiAdd = vi.hoisted(() => vi.fn());
 vi.mock("@resume-pilot/queue", async (orig) => ({
   ...(await orig<typeof import("@resume-pilot/queue")>()),
   getExtractionQueue: () => ({ add: extractionAdd, getJob: async () => undefined }),
+  getAiQueue: () => ({ add: aiAdd, getJob: async () => undefined }),
 }));
 
 vi.mock("@resume-pilot/storage", async (orig) => {
@@ -418,5 +420,58 @@ describe.skipIf(!connectionString)("appRouter.jds (real DB)", () => {
     const revised = await a.jds.revise({ jdId: jd.id, text: JD + "Remote OK." });
     expect(revised.id).not.toBe(jd.id);
     expect((await a.jds.get({ jdId: jd.id })).text).toBe(JD.trim());
+  });
+});
+
+describe.skipIf(!connectionString)("appRouter.jds analysis (real DB)", () => {
+  let db: Database;
+  const userIds: string[] = [];
+  const JD = "We are hiring a Frontend Engineer with 4+ years of React and TypeScript to build our design system. ".repeat(4);
+
+  async function signedIn(balance: number) {
+    const clerkUserId = `clerk_${randomUUID()}`;
+    const { userId } = await createUserFromClerkWebhook(db, { clerkUserId, email: `jda-trpc-${randomUUID()}@example.com` });
+    userIds.push(userId);
+    if (balance) await grantCredits(db, { userId, credits: balance, type: "purchase", sourceType: "payment", sourceId: randomUUID(), note: "test" });
+    const caller = appRouter.createCaller(createContext({ db, userId: clerkUserId }));
+    const jd = await caller.jds.create({ text: JD, companyName: "Acme", jobTitle: "FE", postingUrl: "" });
+    return { caller, jdId: jd.id };
+  }
+
+  beforeAll(() => {
+    db = createDatabase(connectionString ?? "");
+  });
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, userIds));
+    await db.$client.end();
+  });
+
+  it("estimate → analyze places one hold and queues exactly one job, even on double submit", async () => {
+    aiAdd.mockReset().mockResolvedValue(undefined);
+    const { caller, jdId } = await signedIn(50_000);
+    const est = await caller.jds.estimateAnalysis({ jdId });
+    if (est.cached) throw new Error("unexpected cache");
+    const [a, b] = await Promise.all([caller.jds.analyze({ jdId, confirmedCredits: est.credits }), caller.jds.analyze({ jdId, confirmedCredits: est.credits })]);
+    expect(a.status === "running" && b.status === "running" && a.aiJobId === b.aiJobId).toBe(true);
+    expect((await caller.wallet()).held).toBe(est.credits);
+    expect((await caller.jds.analysis({ jdId })).state).toBe("running");
+  });
+
+  it("a queue failure releases the hold and tells the user they weren't charged", async () => {
+    aiAdd.mockReset().mockRejectedValue(new Error("redis down"));
+    const { caller, jdId } = await signedIn(50_000);
+    const est = await caller.jds.estimateAnalysis({ jdId });
+    if (est.cached) throw new Error("unexpected cache");
+    await expect(caller.jds.analyze({ jdId, confirmedCredits: est.credits })).rejects.toThrow("weren't charged");
+    expect((await caller.wallet()).held).toBe(0);
+  });
+
+  it("maps insufficient balance and a changed estimate to clear errors", async () => {
+    aiAdd.mockReset().mockResolvedValue(undefined);
+    const poor = await signedIn(0);
+    const est = await poor.caller.jds.estimateAnalysis({ jdId: poor.jdId });
+    if (est.cached) throw new Error("unexpected cache");
+    await expect(poor.caller.jds.analyze({ jdId: poor.jdId, confirmedCredits: est.credits })).rejects.toMatchObject({ code: "PRECONDITION_FAILED" });
+    await expect(poor.caller.jds.analyze({ jdId: poor.jdId, confirmedCredits: 1 })).rejects.toMatchObject({ code: "CONFLICT" });
   });
 });

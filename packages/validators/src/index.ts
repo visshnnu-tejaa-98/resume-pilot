@@ -17,3 +17,4 @@ export * from "./wallet";
 
 export * from "./codes";
 export * from "./jd";
+export * from "./jd-analysis";

@@ -39,9 +39,15 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueExtraction, enqueueStructuring, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueueExtraction, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import {
+  estimateJdAnalysis,
+  getJdAnalysisStatus,
+  InsufficientCreditsError,
+  JdAnalysisEstimateChangedError,
+  releaseHold,
+  startJdAnalysis,
   adminAdjustCredits,
   adminSetEmailTemplateEnabled,
   adminSetResumeTemplateActive,
@@ -72,6 +78,12 @@ function toTRPCError(err: unknown): never {
     err instanceof RetryExtractionError
   ) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
+  }
+  if (err instanceof InsufficientCreditsError) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Not enough credits. Add money to your wallet to continue.", cause: err });
+  }
+  if (err instanceof JdAnalysisEstimateChangedError) {
+    throw new TRPCError({ code: "CONFLICT", message: err.message, cause: err });
   }
   // Admin service guards (missing reason, unknown target, self-suspend) and ledger floor.
   if (err instanceof RangeError || err instanceof NegativeBalanceError) {
@@ -257,6 +269,39 @@ export const appRouter = router({
       .mutation(({ ctx, input }) =>
         reviseJobDescription(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError),
       ),
+
+    /** JD analysis (prd.md §7.2): cached result, run in progress, or last failure. Free. */
+    analysis: authProcedure
+      .input(z.object({ jdId: z.uuid() }))
+      .query(({ ctx, input }) => getJdAnalysisStatus(ctx.db, { userId: ctx.user.id, jdId: input.jdId }).catch(toTRPCError)),
+
+    /** Step 1 of estimate → hold → capture. `cached` = already analysed, nothing to pay. */
+    estimateAnalysis: authProcedure
+      .input(z.object({ jdId: z.uuid() }))
+      .query(async ({ ctx, input }) => {
+        const r = await estimateJdAnalysis(ctx.db, { userId: ctx.user.id, jdId: input.jdId }).catch(toTRPCError);
+        return r.cached ? { cached: true as const } : { cached: false as const, credits: r.estimate.credits };
+      }),
+
+    /**
+     * Step 3: the user confirmed `confirmedCredits`. Places (or reuses) the
+     * hold and queues the run. Never holds more than the confirmed amount;
+     * an analysed JD returns `cached` without charging.
+     */
+    analyze: authProcedure
+      .input(z.object({ jdId: z.uuid(), confirmedCredits: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const r = await startJdAnalysis(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError);
+        if (r.status === "cached") return r;
+        try {
+          // Idempotent per aiJobId, so re-enqueueing an in-flight run is harmless.
+          await enqueueJdAnalysis(getAiQueue(), { aiJobId: r.aiJobId, jdId: input.jdId });
+        } catch (err) {
+          if (r.created) await releaseHold(ctx.db, { aiJobId: r.aiJobId, reason: "could not queue the analysis" });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't start the analysis. You weren't charged; please try again.", cause: err });
+        }
+        return r;
+      }),
   }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */

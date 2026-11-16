@@ -16,6 +16,8 @@ export const QUEUE_NAMES = {
   extraction: "resume-extraction",
   /** Scheduled housekeeping (hold expiry, later: upload cleanup, inactive nudges). */
   maintenance: "maintenance",
+  /** Paid AI actions run under a credit hold (JD analysis; later generation, scoring). */
+  ai: "ai-jobs",
 } as const;
 
 /** Maintenance job names, each run on a schedule by the worker. */
@@ -192,11 +194,43 @@ export async function enqueueExtraction(
   );
 }
 
+// --- Paid AI actions ---------------------------------------------------------
+
+/** JD analysis (prd.md §7.2). The hold already exists; `aiJobId` ties the run to it. */
+export const jdAnalysisJobSchema = z.object({ aiJobId: z.uuid(), jdId: z.uuid() });
+export type JdAnalysisJob = z.infer<typeof jdAnalysisJobSchema>;
+
+/**
+ * Two attempts (one retry after 10 s) for transient model/API errors.
+ * Well inside the 15-minute hold, so the hold can't expire mid-retry
+ * under normal conditions; the sweeper releases it if it somehow does.
+ */
+export const AI_JOB_OPTIONS: JobsOptions = {
+  attempts: 2,
+  backoff: { type: "exponential", delay: 10_000 },
+  removeOnComplete: { age: 7 * 24 * 3600 },
+  removeOnFail: { age: 30 * 24 * 3600 },
+};
+
+export function createAiQueue(connection: IORedis): Queue<JdAnalysisJob> {
+  return new Queue<JdAnalysisJob>(QUEUE_NAMES.ai, { connection });
+}
+
+/** One queue job per AI job (= per hold), so a duplicate enqueue is a no-op. */
+export async function enqueueJdAnalysis(
+  queue: Pick<Queue<JdAnalysisJob>, "add" | "getJob">,
+  job: JdAnalysisJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = jdAnalysisJobSchema.parse(job);
+  return addUniqueJob(queue, "jd-analysis", data, { ...AI_JOB_OPTIONS, jobId: `jd-analysis-${data.aiJobId}` });
+}
+
 // --- Process-wide producers ------------------------------------------------
 
 let producerConnection: IORedis | undefined;
 let transactionalEmailQueue: Queue<TransactionalEmailJob> | undefined;
 let extractionQueue: Queue<ExtractionJob> | undefined;
+let aiQueue: Queue<JdAnalysisJob> | undefined;
 
 /** One Redis connection shared by every producer queue in this process (web app). */
 function producer(): IORedis {
@@ -207,6 +241,11 @@ function producer(): IORedis {
 export function getTransactionalEmailQueue(): Queue<TransactionalEmailJob> {
   transactionalEmailQueue ??= createTransactionalEmailQueue(producer());
   return transactionalEmailQueue;
+}
+
+export function getAiQueue(): Queue<JdAnalysisJob> {
+  aiQueue ??= createAiQueue(producer());
+  return aiQueue;
 }
 
 export function getExtractionQueue(): Queue<ExtractionJob> {

@@ -1,6 +1,7 @@
-import { getJobDescription, JdNotFoundError } from "@resume-pilot/services";
+import { getJdAnalysisStatus, getJobDescription, JdNotFoundError } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { JdAnalysisPanel } from "@/components/jobs/JdAnalysisPanel";
 import { JdForm, JdFormAside } from "@/components/jobs/JdForm";
 import { AppMain, PageHeader } from "@/components/app/PageHeader";
 import { fmtDate } from "@/lib/format";
@@ -19,6 +20,7 @@ export default async function JobPage({ params }: { params: Promise<{ jdId: stri
     if (err instanceof JdNotFoundError) notFound();
     throw err;
   });
+  const analysis = await getJdAnalysisStatus(getDb(), { userId: user.id, jdId: jd.id });
 
   return (
     <AppMain className="gap-6">
@@ -27,6 +29,7 @@ export default async function JobPage({ params }: { params: Promise<{ jdId: stri
         title={[jd.companyName, jd.jobTitle].filter(Boolean).join(" · ") || "Job description"}
         subtitle={`Saved ${fmtDate(jd.createdAt)}. Edits are saved as a new job.`}
       />
+      <JdAnalysisPanel jdId={jd.id} initial={analysis} />
       <div className="flex flex-wrap items-start gap-6">
         <JdForm
           jdId={jd.id}

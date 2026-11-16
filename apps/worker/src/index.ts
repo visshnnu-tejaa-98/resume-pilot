@@ -6,6 +6,8 @@ import {
   enqueueStructuring,
   extractionJobSchema,
   getExtractionQueue,
+  jdAnalysisJobSchema,
+  type JdAnalysisJob,
   MAINTENANCE_JOBS,
   QUEUE_NAMES,
   registerMaintenanceSchedules,
@@ -15,6 +17,7 @@ import {
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
 import {
+  analyzeJobDescription,
   createOpenAIClient,
   structureResume,
   StructuringError,
@@ -28,7 +31,9 @@ import {
   expireStaleHolds,
   findWalletMismatches,
   processExtraction,
+  processJdAnalysis,
   processStructuring,
+  type JdAnalyzeFn,
   processTransactionalEmail,
   type ExtractionDeps,
   type StructuringDeps,
@@ -257,6 +262,42 @@ export function createExtractionWorker(db: Database): Worker {
   return worker;
 }
 
+/** Turns an AI-queue job into a processJdAnalysis call. Exported for tests. */
+export async function handleJdAnalysisJob(
+  job: Pick<Job<JdAnalysisJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database; analyze: JdAnalyzeFn },
+) {
+  const data = jdAnalysisJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processJdAnalysis(deps.db, data, { analyze: deps.analyze, isFinalAttempt });
+}
+
+/**
+ * Paid AI actions (prd.md §3.4): each job runs under a hold placed by the
+ * web app. processJdAnalysis captures on success and releases on failure;
+ * only retryable errors on a non-final attempt reach BullMQ as a throw.
+ */
+export function createAiWorker(db: Database): Worker {
+  const analyze: JdAnalyzeFn = async (input) => {
+    const r = await analyzeJobDescription(getOpenAI(), input);
+    return { analysis: r.analysis, usage: r.usage };
+  };
+  const worker = new Worker<JdAnalysisJob>(
+    QUEUE_NAMES.ai,
+    async (job) => {
+      const outcome = await handleJdAnalysisJob(job, { db, analyze });
+      console.log(`[worker] jd-analysis ${job.data.aiJobId}: ${outcome.status}`);
+      return outcome;
+    },
+    { connection: createRedisConnection(REDIS_URL), concurrency: 4 },
+  );
+  worker.on("failed", (job, err) => {
+    console.error(`[worker] ${job?.name ?? "ai"} ${job?.data.aiJobId} attempt ${job?.attemptsMade} failed:`, err.message);
+  });
+  worker.on("error", (err) => console.error("[worker] ai worker error:", err.message));
+  return worker;
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -271,6 +312,7 @@ async function main() {
     createTransactionalEmailWorker(db, config),
     createMaintenanceWorker(db),
     createExtractionWorker(db),
+    createAiWorker(db),
   ];
 
   const maintenanceConnection = createRedisConnection(REDIS_URL);
@@ -280,7 +322,7 @@ async function main() {
   await maintenanceConnection.quit();
 
   console.log(
-    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction].map((q) => `"${q}"`).join(", ")}`,
+    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction, QUEUE_NAMES.ai].map((q) => `"${q}"`).join(", ")}`,
   );
 
   const shutdown = async () => {

@@ -1,4 +1,5 @@
 import { listJobDescriptions } from "@resume-pilot/services";
+import { jdAnalysisSchema, topKeywords } from "@resume-pilot/validators";
 import type { Metadata } from "next";
 import { JobCard } from "@/components/jobs/JobCard";
 import { AppMain, PageHeader } from "@/components/app/PageHeader";
@@ -36,7 +37,7 @@ export default async function JobsPage() {
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))" }}>
           {jobs.map((j) => (
-            <JobCard key={j.id} job={j} />
+            <JobCard key={j.id} job={{ ...j, keywords: keywordsOf(j.requirements) }} />
           ))}
         </div>
       )}
@@ -45,4 +46,10 @@ export default async function JobsPage() {
       </span>
     </AppMain>
   );
+}
+
+/** Headline keywords from a stored analysis; tolerant of an unexpected shape. */
+function keywordsOf(requirements: unknown): string[] | undefined {
+  const parsed = jdAnalysisSchema.shape.requirements.safeParse(requirements);
+  return parsed.success ? topKeywords({ requirements: parsed.data }, 5) : undefined;
 }

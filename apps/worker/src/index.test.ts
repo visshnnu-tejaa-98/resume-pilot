@@ -12,14 +12,17 @@ vi.mock("@resume-pilot/services", () => ({
   cleanupExpiredUploads,
   processExtraction,
   processStructuring,
+  processJdAnalysis,
 }));
 vi.mock("@resume-pilot/storage", () => ({ getStorage: () => ({ deleteFile: vi.fn() }) }));
 const processExtraction = vi.hoisted(() => vi.fn());
 const processStructuring = vi.hoisted(() => vi.fn());
+const processJdAnalysis = vi.hoisted(() => vi.fn());
 
 const {
   finishEmailJob,
   handleExtractionJob,
+  handleJdAnalysisJob,
   handleStructuringJob,
   handleMaintenanceJob,
   handleTransactionalEmailJob,
@@ -187,5 +190,17 @@ describe("handleStructuringJob", () => {
       structure,
       isFinalAttempt: final,
     });
+  });
+});
+
+describe("handleJdAnalysisJob", () => {
+  it("passes the payload through and flags the final attempt", async () => {
+    const spy = processJdAnalysis.mockReset().mockResolvedValue({ status: "succeeded", creditsCharged: 90 });
+    const data = { aiJobId: "7b0b2f1e-3c4d-4e5f-8a9b-0c1d2e3f4a5b", jdId: "1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d" };
+    const analyze = vi.fn();
+    await handleJdAnalysisJob({ data, attemptsMade: 1, opts: { attempts: 2 } }, { db: {} as never, analyze });
+    expect(spy).toHaveBeenCalledWith({}, data, { analyze, isFinalAttempt: true });
+    await handleJdAnalysisJob({ data, attemptsMade: 0, opts: { attempts: 2 } }, { db: {} as never, analyze });
+    expect(spy).toHaveBeenLastCalledWith({}, data, { analyze, isFinalAttempt: false });
   });
 });

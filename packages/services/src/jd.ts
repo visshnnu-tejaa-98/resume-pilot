@@ -58,6 +58,8 @@ export async function listJobDescriptions(db: Database, userId: string) {
       chars: sql<number>`char_length(btrim(${jobDescriptions.text}))`.mapWith(Number),
       /** Whether the cached JD analysis exists yet (prd.md §7.2). */
       analysed: sql<boolean>`exists (select 1 from ${jdAnalyses} where ${jdAnalyses.jdId} = ${jobDescriptions.id})`.mapWith(Boolean),
+      /** The analysis's requirements (for headline keywords on job cards); null until analysed. */
+      requirements: sql<unknown>`(select ${jdAnalyses.requirements} from ${jdAnalyses} where ${jdAnalyses.jdId} = ${jobDescriptions.id})`,
     })
     .from(jobDescriptions)
     .where(eq(jobDescriptions.userId, userId))
