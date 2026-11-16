@@ -1,7 +1,7 @@
 # Resume Information review screen
 
 **Milestone:** M4 · prd.md §5.3 (step 7), §4.1
-**Status:** todo
+**Status:** testing
 
 ## Scope
 

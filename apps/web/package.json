@@ -18,6 +18,7 @@
     "@resume-pilot/services": "workspace:*",
     "@resume-pilot/storage": "workspace:*",
     "@resume-pilot/trpc": "workspace:*",
+    "@resume-pilot/validators": "workspace:*",
     "@trpc/client": "11.28.0",
     "@trpc/server": "11.28.0",
     "bullmq": "6.7.5",

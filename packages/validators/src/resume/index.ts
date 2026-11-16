@@ -4,3 +4,4 @@ export * from "./ids";
 export * from "./structured-output";
 export * from "./migrate";
 export * from "./flags";
+export * from "./paths";

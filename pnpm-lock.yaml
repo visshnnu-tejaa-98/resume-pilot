@@ -65,6 +65,9 @@ importers:
       '@resume-pilot/trpc':
         specifier: workspace:*
         version: link:../../packages/trpc
+      '@resume-pilot/validators':
+        specifier: workspace:*
+        version: link:../../packages/validators
       '@trpc/client':
         specifier: 11.28.0
         version: 11.28.0(@trpc/server@11.28.0(next@16.4.6(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(typescript@6.0.3))(typescript@6.0.3)

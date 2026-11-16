@@ -9,6 +9,9 @@ import {
   redeemCode,
   ReferralReviewError,
   RetryExtractionError,
+  ReviewError,
+  getGenerationReadiness,
+  saveOriginalReview,
   reviewFlaggedReferral,
   updateCoupon,
   getActivePricingConfig,
@@ -55,6 +58,13 @@ function toTRPCError(err: unknown): never {
     err instanceof RetryExtractionError
   ) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
+  }
+  if (err instanceof ReviewError) {
+    throw new TRPCError({
+      code: err.code === "not_found" ? "NOT_FOUND" : "BAD_REQUEST",
+      message: err.message,
+      cause: err,
+    });
   }
   throw err;
 }
@@ -156,6 +166,30 @@ export const appRouter = router({
         if (!version) throw new TRPCError({ code: "NOT_FOUND" });
         return version;
       }),
+    /**
+     * Save the review screen (prd.md §5.3 step 7, §8.6): edited content
+     * plus the flagged fields the user confirmed as-is. Edits are the
+     * user's own claims; content is validated against schema 2.0.
+     */
+    saveReview: authProcedure
+      .input(
+        z.object({
+          resumeId: z.uuid(),
+          content: z.unknown(),
+          reviewedPaths: z.array(z.string().max(200)).max(500).default([]),
+        }),
+      )
+      .mutation(({ ctx, input }) =>
+        saveOriginalReview(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError),
+      ),
+    /** Whether Generate is unlocked: every `low` field reviewed. */
+    readiness: authProcedure
+      .input(z.object({ resumeId: z.uuid() }))
+      .query(({ ctx, input }) =>
+        getGenerationReadiness(ctx.db, { userId: ctx.user.id, resumeId: input.resumeId }).catch(
+          toTRPCError,
+        ),
+      ),
   }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */

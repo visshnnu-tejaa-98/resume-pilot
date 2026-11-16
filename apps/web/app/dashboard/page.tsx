@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { getWalletSummary } from "@resume-pilot/services";
+import { getWalletSummary, listResumes } from "@resume-pilot/services";
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/server/db";
@@ -25,6 +26,7 @@ export default async function DashboardPage() {
   }
 
   const wallet = await getWalletSummary(getDb(), user.id);
+  const myResumes = await listResumes(getDb(), user.id);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
@@ -44,6 +46,23 @@ export default async function DashboardPage() {
         Balance: <strong>{wallet.balance.toLocaleString()}</strong> credits
       </p>
       <p className="font-mono text-sm">Referral code: {wallet.referralCode}</p>
+      {myResumes.length > 0 && (
+        <ul className="flex flex-col gap-1 text-sm">
+          {myResumes.map((r) => (
+            <li key={r.id}>
+              {r.fileName} · {r.status}
+              {r.status === "ready" && (
+                <>
+                  {" · "}
+                  <Link href={`/resumes/${r.id}/review`} style={{ color: "var(--color-link)" }}>
+                    Review
+                  </Link>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }
