@@ -41,6 +41,13 @@ import {
 } from "@resume-pilot/validators";
 import { enqueueExtraction, enqueueStructuring, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
+import {
+  adminAdjustCredits,
+  adminSetEmailTemplateEnabled,
+  adminSetResumeTemplateActive,
+  adminSetUserStatus,
+  NegativeBalanceError,
+} from "@resume-pilot/services";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { adminProcedure, authProcedure, publicProcedure, router } from "./trpc";
@@ -64,6 +71,10 @@ function toTRPCError(err: unknown): never {
     err instanceof ReferralReviewError ||
     err instanceof RetryExtractionError
   ) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
+  }
+  // Admin service guards (missing reason, unknown target, self-suspend) and ledger floor.
+  if (err instanceof RangeError || err instanceof NegativeBalanceError) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
   }
   if (err instanceof JdNotFoundError) {
@@ -95,6 +106,33 @@ const adminCodesRouter = router({
     .mutation(({ ctx, input }) =>
       reviewFlaggedReferral(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError),
     ),
+});
+
+const reason = z.string().trim().min(3).max(500);
+
+/** Audited admin writes on users, email and resume templates — prd.md §2.2. */
+const adminUsersRouter = router({
+  setStatus: adminProcedure
+    .input(z.object({ userId: z.uuid(), status: z.enum(["active", "suspended"]), reason }))
+    .mutation(({ ctx, input }) => adminSetUserStatus(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  adjustCredits: adminProcedure
+    .input(
+      z.object({
+        userId: z.uuid(),
+        credits: z.number().int().refine((n) => n !== 0, "Enter a non-zero amount").refine((n) => Math.abs(n) <= 1_000_000, "Too large"),
+        reason,
+      }),
+    )
+    .mutation(({ ctx, input }) => adminAdjustCredits(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+});
+
+const adminContentRouter = router({
+  setEmailTemplateEnabled: adminProcedure
+    .input(z.object({ templateKey: z.string().min(1).max(100), enabled: z.boolean(), reason }))
+    .mutation(({ ctx, input }) => adminSetEmailTemplateEnabled(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  setResumeTemplateActive: adminProcedure
+    .input(z.object({ templateId: z.uuid(), active: z.boolean(), reason }))
+    .mutation(({ ctx, input }) => adminSetResumeTemplateActive(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
 });
 
 const adminPricingRouter = router({
@@ -234,6 +272,8 @@ export const appRouter = router({
   admin: router({
     pricing: adminPricingRouter,
     codes: adminCodesRouter,
+    users: adminUsersRouter,
+    content: adminContentRouter,
   }),
 });
 

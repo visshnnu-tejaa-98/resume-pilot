@@ -53,7 +53,7 @@ function NavGroup({ label, items, pathname }: { label: string; items: AppNavItem
  * large screens; an off-canvas drawer below `lg`, opened from the top
  * bar's menu button via the app-shell store.
  */
-export function AppSidebar() {
+export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const open = useAppShellStore((s) => s.sidebarOpen);
@@ -94,6 +94,11 @@ export function AppSidebar() {
         <NavGroup label="Workspace" items={workspaceNav} pathname={pathname} />
         <NavGroup label="Account" items={accountNav} pathname={pathname} />
         <div className="mt-auto flex flex-col gap-0.5 border-t border-border pt-3">
+          {isAdmin ? (
+            <Link href="/admin" className="flex h-9 items-center rounded-md px-3 text-sm font-semibold text-accent-text no-underline hover:bg-surface-2">
+              Admin console
+            </Link>
+          ) : null}
           <Link href={routes.faq} className="flex h-9 items-center rounded-md px-3 text-sm text-text-2 no-underline hover:bg-surface-2">
             Help and FAQ
           </Link>

@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <WalletHydrator balance={wallet.balance} />
       <AppTopBar name={fullName ?? user.email} initialBalance={wallet.balance} />
       <div className="flex flex-1">
-        <AppSidebar />
+        <AppSidebar isAdmin={user.role === "admin"} />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
