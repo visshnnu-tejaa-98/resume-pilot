@@ -42,12 +42,18 @@ export const REDIS_URL = redisUrlFromEnv();
 export interface WorkerConfig {
   appUrl: string;
   launchCouponCode: string;
+  supportEmail?: string;
+  postalAddress?: string;
+  logoUrl?: string;
 }
 
 export function workerConfigFromEnv(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
   return {
     appUrl: env.APP_URL || env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     launchCouponCode: env.LAUNCH_COUPON_CODE || "EARLYBIRD",
+    supportEmail: env.SUPPORT_EMAIL || undefined,
+    postalAddress: env.POSTAL_ADDRESS || undefined,
+    logoUrl: env.EMAIL_LOGO_URL || undefined,
   };
 }
 
@@ -68,6 +74,9 @@ export async function handleTransactionalEmailJob(
     send: deps.send,
     appUrl: deps.config.appUrl,
     launchCouponCode: deps.config.launchCouponCode,
+    supportEmail: deps.config.supportEmail,
+    postalAddress: deps.config.postalAddress,
+    logoUrl: deps.config.logoUrl,
     isFinalAttempt,
   });
 }

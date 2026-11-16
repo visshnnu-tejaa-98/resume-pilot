@@ -1,5 +1,6 @@
 import { adminEmailStats } from "@resume-pilot/services";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { EmailTemplateToggle } from "@/components/admin/EmailTemplateToggle";
 import { adminRoutes } from "@/components/admin/nav";
 import { AdminCard, AdminTable, Kpi, KpiGrid } from "@/components/admin/ui";
@@ -44,7 +45,7 @@ export default async function AdminEmailsPage() {
 
       <div className="flex flex-wrap items-start gap-5">
         <AdminCard className="min-w-0 flex-[999_1_620px] overflow-hidden">
-          <AdminTable head={["Template", "Trigger", "Sent 30d", "Status", "On"]} minWidth={640}>
+          <AdminTable head={["Template", "Trigger", "Sent 30d", "Sending", "On", ""]} minWidth={720}>
             {EMAIL_TEMPLATES.map((t) => {
               const marketing = t.kind === "marketing";
               const enabled = s.enabled[t.key] ?? true;
@@ -60,13 +61,18 @@ export default async function AdminEmailsPage() {
                   </td>
                   <td className="font-mono text-[13px] text-text-2">{t.trigger}</td>
                   <td className="font-mono">{(s.sentByTemplate[t.key] ?? 0).toLocaleString("en-IN")}</td>
-                  <td className="text-[13px]">{t.live ? <span className="text-good">Live</span> : <span className="text-text-2">Not built yet</span>}</td>
+                  <td className="text-[13px]">{t.live ? <span className="text-good">Live</span> : <span className="text-text-2">Template ready</span>}</td>
                   <td>
                     {marketing ? (
                       <EmailTemplateToggle templateKey={t.key} name={t.name} enabled={enabled} />
                     ) : (
                       <span className="text-[13px] font-semibold text-text-2">Always</span>
                     )}
+                  </td>
+                  <td>
+                    <Link href={`${adminRoutes.emails}/preview/${t.key}`} className="text-[13px] font-semibold text-link">
+                      Preview
+                    </Link>
                   </td>
                 </tr>
               );

@@ -1,6 +1,15 @@
 export { EmailFooter } from "./components/EmailFooter";
 export { EmailHeader } from "./components/EmailHeader";
+export { EmailLayout } from "./components/EmailLayout";
+export { buildEmailLinks, PREVIEW_LINKS, type EmailLinks } from "./components/links";
 export { emailTheme, type EmailTheme } from "./components/theme";
+export { EMAIL_PREVIEWS, type EmailPreview } from "./previews";
 export { sendEmail, smtpOptionsFromEnv, type SendEmailInput, type SendEmailResult } from "./send";
-export { PromoEmail, type PromoEmailProps } from "./templates/Promo";
+export { CodeAppliedEmail, codeAppliedEmailSubject, type CodeAppliedEmailProps } from "./templates/CodeApplied";
+export { InactiveNudgeEmail, inactiveNudgeEmailSubject, type InactiveNudgeEmailProps } from "./templates/InactiveNudge";
+export { NewFeaturesEmail, newFeaturesEmailSubject, type FeatureItem, type FeatureVisual, type NewFeaturesEmailProps } from "./templates/NewFeatures";
+export { PaymentFailedEmail, paymentFailedEmailSubject, type PaymentFailedEmailProps } from "./templates/PaymentFailed";
+export { PaymentPendingEmail, paymentPendingEmailSubject, type PaymentPendingEmailProps } from "./templates/PaymentPending";
+export { fmtRupees, PaymentSuccessEmail, paymentSuccessEmailSubject, type PaymentSuccessEmailProps } from "./templates/PaymentSuccess";
+export { PromoEmail, promoEmailSubject, type PromoEmailProps } from "./templates/Promo";
 export { WelcomeEmail, welcomeEmailSubject, type WelcomeEmailProps } from "./templates/Welcome";

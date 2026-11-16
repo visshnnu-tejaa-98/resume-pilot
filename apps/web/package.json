@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/nextjs": "7.9.26",
     "@hookform/resolvers": "5.2.2",
+    "@react-email/render": "2.3.1",
     "@resume-pilot/credits": "workspace:*",
     "@resume-pilot/database": "workspace:*",
     "@resume-pilot/emails": "workspace:*",

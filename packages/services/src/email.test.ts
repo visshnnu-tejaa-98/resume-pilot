@@ -96,7 +96,8 @@ describe.skipIf(!connectionString)("processTransactionalEmail: welcome (real DB)
     const html = await render(call.element);
     expect(html).toContain(couponCode);
     expect(html).toContain("750 free credits");
-    expect(html).toContain("https://app.example.com/dashboard");
+    expect(html).toContain("https://app.example.com/upload");
+    expect(html).toContain("https://app.example.com/wallet");
 
     const row = await messageFor(userId);
     expect(row?.status).toBe("sent");

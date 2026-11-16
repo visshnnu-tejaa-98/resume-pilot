@@ -47,6 +47,9 @@ importers:
       '@hookform/resolvers':
         specifier: 5.2.2
         version: 5.2.2(react-hook-form@7.62.0(react@19.3.1))
+      '@react-email/render':
+        specifier: 2.3.1
+        version: 2.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@resume-pilot/credits':
         specifier: workspace:*
         version: link:../../packages/credits

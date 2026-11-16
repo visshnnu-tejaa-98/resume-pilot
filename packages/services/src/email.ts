@@ -6,7 +6,7 @@ import {
   users,
   type Database,
 } from "@resume-pilot/database";
-import { WelcomeEmail, welcomeEmailSubject, type SendEmailInput } from "@resume-pilot/emails";
+import { buildEmailLinks, WelcomeEmail, welcomeEmailSubject, type SendEmailInput } from "@resume-pilot/emails";
 import { emailIdempotencyKey, type TransactionalEmailJob } from "@resume-pilot/queue";
 import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
 
@@ -31,6 +31,11 @@ export interface EmailProcessContext {
   appUrl: string;
   /** Code shown as the launch gift in the welcome email (prd.md §2.1). */
   launchCouponCode: string;
+  /** Footer contact details and logo (prd.md §16.4 — sender/domain are config). */
+  supportEmail?: string;
+  postalAddress?: string;
+  /** Absolute https URL of a PNG logo; email clients block SVG. */
+  logoUrl?: string;
   /** True on the job's last attempt: a transient failure then marks the row failed. */
   isFinalAttempt: boolean;
 }
@@ -164,7 +169,7 @@ async function processWelcomeEmail(
       return markSkipped("address suppressed (hard bounce)");
 
     const launchCoupon = await activeLaunchCoupon(db, ctx.launchCouponCode);
-    const dashboardUrl = `${ctx.appUrl.replace(/\/$/, "")}/dashboard`;
+    const links = buildEmailLinks(ctx.appUrl, { supportEmail: ctx.supportEmail, address: ctx.postalAddress, logoUrl: ctx.logoUrl });
 
     try {
       const { messageId } = await ctx.send({
@@ -174,9 +179,9 @@ async function processWelcomeEmail(
           firstName,
           launchCoupon,
           referralCredits: REFERRAL_REWARD_CREDITS,
-          uploadUrl: dashboardUrl,
-          // No /wallet page yet; codes are applied from the dashboard for now.
-          walletUrl: dashboardUrl,
+          uploadUrl: links.uploadUrl,
+          walletUrl: links.walletUrl,
+          links,
         }),
       });
 
