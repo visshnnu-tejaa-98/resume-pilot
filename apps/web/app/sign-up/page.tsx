@@ -3,7 +3,7 @@
 import { useSignUp } from "@clerk/nextjs/legacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AuthHeading, FormError, LegalLinks, OAuthButtons, OrDivider, type OAuthStrategy } from "@/components/auth/AuthParts";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/Button";
@@ -35,6 +35,12 @@ export default function SignUpPage() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Referral links are /sign-up?code=XXXX — prefill the code field.
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get("code");
+    if (fromLink) setReferralCode(fromLink.slice(0, 64));
+  }, []);
 
   async function run(fn: () => Promise<void>) {
     if (!isLoaded) return;

@@ -14,6 +14,9 @@ interface DropzoneProps {
   disabled?: boolean;
   /** `bg` sits on a surface card (Welcome); `surface` sits on the page. */
   tone?: "bg" | "surface";
+  /** `large` = the Upload page's tinted, blue-dashed hero zone. */
+  variant?: "default" | "large";
+  title?: ReactNode;
   className?: string;
 }
 
@@ -28,8 +31,11 @@ export function Dropzone({
   busyLabel = "Uploading…",
   disabled,
   tone = "surface",
+  variant = "default",
+  title,
   className,
 }: DropzoneProps) {
+  const large = variant === "large";
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const [over, setOver] = useState(false);
@@ -67,8 +73,11 @@ export function Dropzone({
       onDragLeave={() => setOver(false)}
       onDrop={onDrop}
       className={cn(
-        "flex cursor-pointer flex-col items-center gap-2.5 rounded-xl border-2 border-dashed px-6 py-9 text-center outline-none focus-visible:ring-2 focus-visible:ring-link",
-        over ? "border-link bg-sel-bg" : cn("border-border-strong", tone === "bg" ? "bg-bg" : "bg-surface"),
+        "flex cursor-pointer flex-col items-center border-2 border-dashed px-6 text-center outline-none focus-visible:ring-2 focus-visible:ring-link",
+        large ? "gap-3 rounded-[14px] py-14" : "gap-2.5 rounded-xl py-9",
+        over || large
+          ? cn("border-link bg-sel-bg", over && large && "brightness-95")
+          : cn("border-border-strong", tone === "bg" ? "bg-bg" : "bg-surface"),
         inactive && "cursor-not-allowed opacity-70",
         className,
       )}
@@ -86,15 +95,21 @@ export function Dropzone({
           e.target.value = "";
         }}
       />
-      <UploadIcon size={36} className="text-link" />
-      <strong className="text-base">
-        {busy ? (
-          busyLabel
-        ) : (
-          <>
-            Drop your resume here, or <span className="text-link">browse</span>
-          </>
-        )}
+      {large ? (
+        <span className="flex size-16 items-center justify-center rounded-2xl border border-border bg-surface">
+          <UploadIcon size={30} className="text-link" />
+        </span>
+      ) : (
+        <UploadIcon size={36} className="text-link" />
+      )}
+      <strong className={large ? "text-lg" : "text-base"}>
+        {busy
+          ? busyLabel
+          : (title ?? (
+              <>
+                Drop your resume here, or <span className="text-link">browse</span>
+              </>
+            ))}
       </strong>
       <span id={`${inputId}-caption`} className="text-sm text-text-2">
         {caption}

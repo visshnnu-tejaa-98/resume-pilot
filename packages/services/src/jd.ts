@@ -1,4 +1,4 @@
-import { jobDescriptions, type Database } from "@resume-pilot/database";
+import { jdAnalyses, jobDescriptions, type Database } from "@resume-pilot/database";
 import { jdInputSchema, type JdInput } from "@resume-pilot/validators";
 import { and, desc, eq, sql } from "drizzle-orm";
 
@@ -55,6 +55,9 @@ export async function listJobDescriptions(db: Database, userId: string) {
       postingUrl: jobDescriptions.postingUrl,
       createdAt: jobDescriptions.createdAt,
       preview: sql<string>`left(btrim(${jobDescriptions.text}), 160)`,
+      chars: sql<number>`char_length(btrim(${jobDescriptions.text}))`.mapWith(Number),
+      /** Whether the cached JD analysis exists yet (prd.md §7.2). */
+      analysed: sql<boolean>`exists (select 1 from ${jdAnalyses} where ${jdAnalyses.jdId} = ${jobDescriptions.id})`.mapWith(Boolean),
     })
     .from(jobDescriptions)
     .where(eq(jobDescriptions.userId, userId))

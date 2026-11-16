@@ -52,7 +52,7 @@
   color-scheme: light;
 }
 
-/* Legacy aliases still read via var() by auth-styles.ts / AuthHero */
+/* --color-* aliases for any inline var() styles (kept for compatibility) */
 :root {
   --color-background: var(--rp-bg);
   --color-surface: var(--rp-surface);
@@ -225,4 +225,13 @@ details > summary {
 }
 details > summary::-webkit-details-marker {
   display: none;
+}
+
+/* Indeterminate progress bar (extraction / generation in flight). */
+@keyframes rp-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="rp-indeterminate"] { animation: none !important; width: 100% !important; opacity: 0.5; }
 }

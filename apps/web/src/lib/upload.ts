@@ -32,12 +32,33 @@ export interface UploadResult {
   status: "uploaded" | "failed";
 }
 
-/** POSTs the files to /api/uploads. Throws an Error with the server's message on failure. */
-export async function uploadResume(files: File[]): Promise<UploadResult> {
+/**
+ * POSTs the files to /api/uploads. Uses XHR (not fetch) so callers get
+ * byte-level upload progress (0–1). Abort with `signal`. Throws an Error
+ * carrying the server's message on failure.
+ */
+export function uploadResume(
+  files: File[],
+  opts: { onProgress?: (ratio: number) => void; signal?: AbortSignal } = {},
+): Promise<UploadResult> {
   const body = new FormData();
   for (const f of files) body.append("files", f);
-  const res = await fetch("/api/uploads", { method: "POST", body });
-  const data = (await res.json().catch(() => ({}))) as Partial<UploadResult> & { error?: string };
-  if (!res.ok || !data.resumeId) throw new Error(data.error ?? "Upload failed. Please try again.");
-  return { resumeId: data.resumeId, status: data.status ?? "uploaded" };
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/uploads");
+    xhr.responseType = "json";
+    xhr.upload.onprogress = (e) => e.lengthComputable && opts.onProgress?.(e.loaded / e.total);
+    xhr.onload = () => {
+      const data = (xhr.response ?? {}) as Partial<UploadResult> & { error?: string };
+      if (xhr.status >= 200 && xhr.status < 300 && data.resumeId) {
+        resolve({ resumeId: data.resumeId, status: data.status ?? "uploaded" });
+      } else {
+        reject(new Error(data.error ?? "Upload failed. Please try again."));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error. Check your connection and try again."));
+    xhr.onabort = () => reject(new DOMException("Upload cancelled", "AbortError"));
+    opts.signal?.addEventListener("abort", () => xhr.abort(), { once: true });
+    xhr.send(body);
+  });
 }

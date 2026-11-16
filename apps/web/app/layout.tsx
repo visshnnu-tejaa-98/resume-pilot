@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, JetBrains_Mono, Source_Serif_4, Space_Grotesk } from "next/font/google";
 import { ThemeSync } from "@/components/theme/ThemeSync";
 import { themeBootScript } from "@/stores/theme-store";
 import "./globals.css";
@@ -16,6 +16,9 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["500", "600", "700"],
   variable: "--font-jetbrains-mono",
 });
+
+/** Resume template body/heading face (Classic, Professional). */
+const sourceSerif = Source_Serif_4({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-source-serif" });
 
 export const metadata: Metadata = {
   title: { default: "Resume Pilot", template: "%s · Resume Pilot" },
@@ -36,7 +39,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           mismatches on these two elements, never on their children. */}
       <html
         lang="en"
-        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${sourceSerif.variable}`}
         suppressHydrationWarning
       >
         <head>

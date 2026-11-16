@@ -12,6 +12,28 @@ export const routes = {
   signIn: "/sign-in",
   signUp: "/sign-up",
   dashboard: "/dashboard",
+  welcome: "/welcome",
+  // Signed-in app
+  resumes: "/resumes",
+  upload: "/upload",
+  generate: "/generate",
+  jobs: "/jobs",
+  jobNew: "/jobs/new",
+  wallet: "/wallet",
+  referrals: "/referrals",
+  settings: "/settings",
+} as const;
+
+/** Dynamic app routes. */
+export const appRoutes = {
+  review: (resumeId: string) => `/resumes/${resumeId}/review`,
+  job: (jdId: string) => `/jobs/${jdId}`,
+  version: (versionId: string) => `/versions/${versionId}`,
+  versionPreview: (versionId: string) => `/versions/${versionId}/preview`,
+  versionReport: (versionId: string) => `/versions/${versionId}/report`,
+  versionCompare: (versionId: string) => `/versions/${versionId}/compare`,
+  generation: (jobId: string) => `/generate/${jobId}`,
+  paymentResult: (orderId: string) => `/wallet/payments/${orderId}`,
 } as const;
 
 export const siteNavLinks = [
