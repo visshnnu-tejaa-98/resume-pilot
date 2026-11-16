@@ -13,7 +13,7 @@ Implement the tables from prd.md §14.3 in `packages/database` using Drizzle ORM
 
 ## Done when
 
-- `drizzle-kit generate` + `drizzle-kit migrate` produce a schema matching §14.3 against local RDS/Postgres — **done**, verified against a real Postgres 16 container (see below).
+- `drizzle-kit generate` + `drizzle-kit migrate` produce a schema matching §14.3 against local Postgres — **done**, verified against a real Postgres 16 container (see below).
 - `balance >= 0` check constraint on `credit_accounts` and unique `(source_type, source_id)` on `credit_ledger` are enforced at the DB level, not just app level — **done**, verified by actually trying to violate both (see below).
 
 ## What was built

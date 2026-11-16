@@ -12,7 +12,11 @@ export const QUEUE_NAME = "resume-pilot-jobs";
 
 export function createConnection(): IORedis {
   const connection = new IORedis(REDIS_URL, {
+    // Required by BullMQ for blocking commands.
     maxRetriesPerRequest: null,
+    // Resolve both IPv4 and IPv6. Railway's private network
+    // (*.railway.internal) is IPv6-only, and ioredis defaults to IPv4.
+    family: 0,
   });
   connection.on("error", (err) => {
     console.error("[worker] redis connection error (will retry):", err.message);

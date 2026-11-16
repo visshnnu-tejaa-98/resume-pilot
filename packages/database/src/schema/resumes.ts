@@ -20,6 +20,8 @@ export const resumes = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     fileKey: text("file_key").notNull(),
+    /** ImageKit fileId for the original upload — needed for 30-day deletion (prd.md §5.2). */
+    storageFileId: text("storage_file_id"),
     fileName: text("file_name").notNull(),
     fileFormat: resumeFormatEnum("file_format").notNull(),
     fileHash: text("file_hash").notNull(),

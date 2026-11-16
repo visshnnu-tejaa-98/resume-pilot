@@ -11,7 +11,7 @@
 - PDF: pdfjs-dist for text layer first, fall back to Tesseract.js OCR for scanned pages
 - DOCX: mammoth
 - Images: Tesseract.js OCR, up to 5 images treated as pages of one resume
-- Worker flow: validate → store in S3 → `resumes` row (`status = uploaded`) → extract raw text → any failure shows error + retry, no wallet impact
+- Worker flow: validate → store in ImageKit (`packages/storage`) → `resumes` row (`status = uploaded`) → extract raw text → any failure shows error + retry, no wallet impact
 
 ## Done when
 

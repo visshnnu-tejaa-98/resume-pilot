@@ -82,7 +82,7 @@ export const emailCampaigns = pgTable("email_campaigns", {
  * One row per send — prd.md §13.6. `idempotencyKey` (template key +
  * source id) guarantees every transactional email sends exactly once
  * even under duplicate webhooks or job retries (acceptance criterion
- * 16.2.16). `sesMessageId` is nullable until SES accepts the send.
+ * 16.2.16). `providerMessageId` is nullable until the SMTP server accepts the send.
  */
 export const emailMessages = pgTable(
   "email_messages",
@@ -94,7 +94,7 @@ export const emailMessages = pgTable(
     templateKey: text("template_key").notNull(),
     campaignId: uuid("campaign_id").references(() => emailCampaigns.id),
     status: emailMessageStatusEnum("status").notNull().default("queued"),
-    sesMessageId: text("ses_message_id"),
+    providerMessageId: text("provider_message_id"),
     idempotencyKey: text("idempotency_key").notNull(),
     mergeData: jsonb("merge_data"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -102,20 +102,24 @@ export const emailMessages = pgTable(
   },
   (table) => [
     uniqueIndex("email_messages_idempotency_key_key").on(table.idempotencyKey),
-    uniqueIndex("email_messages_ses_message_id_key").on(table.sesMessageId),
+    uniqueIndex("email_messages_provider_message_id_key").on(table.providerMessageId),
   ],
 );
 
-/** Raw SES events via SNS — prd.md §13.2, §13.6. */
+/**
+ * Raw delivery events (bounces, complaints) — prd.md §13.2, §13.6.
+ * Provider-neutral: plain SMTP reports none on its own, so this stays
+ * empty until a bounce source is wired up.
+ */
 export const emailEvents = pgTable(
   "email_events",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     messageId: uuid("message_id").references(() => emailMessages.id),
-    snsMessageId: text("sns_message_id").notNull(),
+    providerEventId: text("provider_event_id").notNull(),
     eventType: text("event_type").notNull(),
     payload: jsonb("payload").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("email_events_sns_message_id_key").on(table.snsMessageId)],
+  (table) => [uniqueIndex("email_events_provider_event_id_key").on(table.providerEventId)],
 );

@@ -93,7 +93,7 @@ export async function POST(req: Request) {
       console.error("[clerk-webhook] failed to mirror role into Clerk metadata:", err);
     }
 
-    // Best-effort — SES SMTP may not be configured yet (tasks/todo/m11-email),
+    // Best-effort — SMTP may not be configured yet (tasks/todo/m11-email),
     // so a send failure here never blocks the webhook from succeeding.
     try {
       await sendWelcomeEmail({

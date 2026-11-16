@@ -10,7 +10,7 @@
 - Grounding-check violations per 100 generations
 - Revenue: top-ups, refunds
 - Credits: issued (purchased/coupon/referral/admin) vs consumed; outstanding liability
-- Email: sent/delivered/opened/bounced/unsubscribed (last 30 days)
+- Email: sent/failed/hard-bounced/unsubscribed (last 30 days). Delivery and open rates aren't available over plain SMTP (prd.md §13.6)
 - User detail: profile, ledger, payments, AI jobs, versions (metadata only; resume content visible only with logged admin access)
 
 ## Done when

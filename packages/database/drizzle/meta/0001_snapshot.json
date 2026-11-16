@@ -175,12 +175,8 @@
           "name": "resume_versions_resume_id_resumes_id_fk",
           "tableFrom": "resume_versions",
           "tableTo": "resumes",
-          "columnsFrom": [
-            "resume_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["resume_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -188,12 +184,8 @@
           "name": "resume_versions_parent_version_id_resume_versions_id_fk",
           "tableFrom": "resume_versions",
           "tableTo": "resume_versions",
-          "columnsFrom": [
-            "parent_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -201,12 +193,8 @@
           "name": "resume_versions_jd_id_job_descriptions_id_fk",
           "tableFrom": "resume_versions",
           "tableTo": "job_descriptions",
-          "columnsFrom": [
-            "jd_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jd_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -214,12 +202,8 @@
           "name": "resume_versions_template_id_resume_templates_id_fk",
           "tableFrom": "resume_versions",
           "tableTo": "resume_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -323,12 +307,8 @@
           "name": "resumes_user_id_users_id_fk",
           "tableFrom": "resumes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -429,12 +409,8 @@
           "name": "jd_analyses_jd_id_job_descriptions_id_fk",
           "tableFrom": "jd_analyses",
           "tableTo": "job_descriptions",
-          "columnsFrom": [
-            "jd_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jd_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -507,12 +483,8 @@
           "name": "job_descriptions_user_id_users_id_fk",
           "tableFrom": "job_descriptions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -605,12 +577,8 @@
           "name": "generated_files_version_id_resume_versions_id_fk",
           "tableFrom": "generated_files",
           "tableTo": "resume_versions",
-          "columnsFrom": [
-            "version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -618,12 +586,8 @@
           "name": "generated_files_template_id_resume_templates_id_fk",
           "tableFrom": "generated_files",
           "tableTo": "resume_templates",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["template_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -819,12 +783,8 @@
           "name": "ai_jobs_user_id_users_id_fk",
           "tableFrom": "ai_jobs",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -832,12 +792,8 @@
           "name": "ai_jobs_pricing_config_version_pricing_config_version_fk",
           "tableFrom": "ai_jobs",
           "tableTo": "pricing_config",
-          "columnsFrom": [
-            "pricing_config_version"
-          ],
-          "columnsTo": [
-            "version"
-          ],
+          "columnsFrom": ["pricing_config_version"],
+          "columnsTo": ["version"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -951,12 +907,8 @@
           "name": "ats_reports_version_id_resume_versions_id_fk",
           "tableFrom": "ats_reports",
           "tableTo": "resume_versions",
-          "columnsFrom": [
-            "version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -964,12 +916,8 @@
           "name": "ats_reports_jd_id_job_descriptions_id_fk",
           "tableFrom": "ats_reports",
           "tableTo": "job_descriptions",
-          "columnsFrom": [
-            "jd_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["jd_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1176,12 +1124,8 @@
           "name": "pricing_config_created_by_user_id_users_id_fk",
           "tableFrom": "pricing_config",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1270,12 +1214,8 @@
           "name": "credit_accounts_user_id_users_id_fk",
           "tableFrom": "credit_accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1371,12 +1311,8 @@
           "name": "credit_holds_user_id_users_id_fk",
           "tableFrom": "credit_holds",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1384,12 +1320,8 @@
           "name": "credit_holds_ai_job_id_ai_jobs_id_fk",
           "tableFrom": "credit_holds",
           "tableTo": "ai_jobs",
-          "columnsFrom": [
-            "ai_job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ai_job_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1490,12 +1422,8 @@
           "name": "credit_ledger_user_id_users_id_fk",
           "tableFrom": "credit_ledger",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1600,12 +1528,8 @@
           "name": "code_redemptions_user_id_users_id_fk",
           "tableFrom": "code_redemptions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1613,12 +1537,8 @@
           "name": "code_redemptions_coupon_id_coupons_id_fk",
           "tableFrom": "code_redemptions",
           "tableTo": "coupons",
-          "columnsFrom": [
-            "coupon_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["coupon_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1626,12 +1546,8 @@
           "name": "code_redemptions_referral_code_id_referral_codes_id_fk",
           "tableFrom": "code_redemptions",
           "tableTo": "referral_codes",
-          "columnsFrom": [
-            "referral_code_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["referral_code_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1791,12 +1707,8 @@
           "name": "referral_codes_user_id_users_id_fk",
           "tableFrom": "referral_codes",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1872,12 +1784,8 @@
           "name": "payment_events_payment_id_payments_id_fk",
           "tableFrom": "payment_events",
           "tableTo": "payments",
-          "columnsFrom": [
-            "payment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payment_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1995,12 +1903,8 @@
           "name": "payments_user_id_users_id_fk",
           "tableFrom": "payments",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2008,12 +1912,8 @@
           "name": "payments_package_id_credit_packages_id_fk",
           "tableFrom": "payments",
           "tableTo": "credit_packages",
-          "columnsFrom": [
-            "package_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["package_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2085,12 +1985,8 @@
           "name": "audit_logs_admin_user_id_users_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2195,12 +2091,8 @@
           "name": "email_campaigns_created_by_users_id_fk",
           "tableFrom": "email_campaigns",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2276,12 +2168,8 @@
           "name": "email_events_message_id_email_messages_id_fk",
           "tableFrom": "email_events",
           "tableTo": "email_messages",
-          "columnsFrom": [
-            "message_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["message_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2399,12 +2287,8 @@
           "name": "email_messages_user_id_users_id_fk",
           "tableFrom": "email_messages",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2412,12 +2296,8 @@
           "name": "email_messages_campaign_id_email_campaigns_id_fk",
           "tableFrom": "email_messages",
           "tableTo": "email_campaigns",
-          "columnsFrom": [
-            "campaign_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["campaign_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2508,12 +2388,8 @@
           "name": "email_preferences_user_id_users_id_fk",
           "tableFrom": "email_preferences",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2647,46 +2523,27 @@
     "public.ai_job_status": {
       "name": "ai_job_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "running",
-        "succeeded",
-        "failed"
-      ]
+      "values": ["pending", "running", "succeeded", "failed"]
     },
     "public.ai_job_type": {
       "name": "ai_job_type",
       "schema": "public",
-      "values": [
-        "jd_analysis",
-        "generation",
-        "ats_scoring"
-      ]
+      "values": ["jd_analysis", "generation", "ats_scoring"]
     },
     "public.ats_report_status": {
       "name": "ats_report_status",
       "schema": "public",
-      "values": [
-        "current",
-        "outdated"
-      ]
+      "values": ["current", "outdated"]
     },
     "public.code_type": {
       "name": "code_type",
       "schema": "public",
-      "values": [
-        "coupon",
-        "referral"
-      ]
+      "values": ["coupon", "referral"]
     },
     "public.credit_hold_status": {
       "name": "credit_hold_status",
       "schema": "public",
-      "values": [
-        "active",
-        "captured",
-        "released"
-      ]
+      "values": ["active", "captured", "released"]
     },
     "public.credit_ledger_type": {
       "name": "credit_ledger_type",
@@ -2703,13 +2560,7 @@
     "public.email_campaign_status": {
       "name": "email_campaign_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "scheduled",
-        "sending",
-        "sent",
-        "cancelled"
-      ]
+      "values": ["draft", "scheduled", "sending", "sent", "cancelled"]
     },
     "public.email_message_status": {
       "name": "email_message_status",
@@ -2728,76 +2579,42 @@
     "public.email_suppression_reason": {
       "name": "email_suppression_reason",
       "schema": "public",
-      "values": [
-        "hard_bounce",
-        "complaint",
-        "unsubscribe_all"
-      ]
+      "values": ["hard_bounce", "complaint", "unsubscribe_all"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "created",
-        "captured",
-        "failed",
-        "refunded"
-      ]
+      "values": ["created", "captured", "failed", "refunded"]
     },
     "public.referrer_status": {
       "name": "referrer_status",
       "schema": "public",
-      "values": [
-        "granted",
-        "held",
-        "rejected"
-      ]
+      "values": ["granted", "held", "rejected"]
     },
     "public.resume_format": {
       "name": "resume_format",
       "schema": "public",
-      "values": [
-        "tex",
-        "pdf",
-        "docx",
-        "png",
-        "jpg",
-        "jpeg"
-      ]
+      "values": ["tex", "pdf", "docx", "png", "jpg", "jpeg"]
     },
     "public.resume_status": {
       "name": "resume_status",
       "schema": "public",
-      "values": [
-        "uploaded",
-        "processing",
-        "processed",
-        "failed"
-      ]
+      "values": ["uploaded", "processing", "processed", "failed"]
     },
     "public.resume_version_kind": {
       "name": "resume_version_kind",
       "schema": "public",
-      "values": [
-        "original",
-        "generated"
-      ]
+      "values": ["original", "generated"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "user",
-        "admin"
-      ]
+      "values": ["user", "admin"]
     },
     "public.user_status": {
       "name": "user_status",
       "schema": "public",
-      "values": [
-        "active",
-        "suspended"
-      ]
+      "values": ["active", "suspended"]
     }
   },
   "schemas": {},

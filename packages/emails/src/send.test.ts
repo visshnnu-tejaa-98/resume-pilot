@@ -12,10 +12,10 @@ describe("sendEmail", () => {
 
   beforeEach(() => {
     sendMail.mockReset();
-    process.env.SES_SMTP_HOST = "smtp.example.com";
-    process.env.SES_SMTP_PORT = "587";
-    process.env.SES_SMTP_USER = "user";
-    process.env.SES_SMTP_PASSWORD = "pass";
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_PORT = "587";
+    process.env.SMTP_USER = "user";
+    process.env.SMTP_PASSWORD = "pass";
   });
 
   afterEach(() => {
@@ -23,7 +23,7 @@ describe("sendEmail", () => {
     vi.resetModules();
   });
 
-  it("renders html and text and sends via the SES SMTP transport", async () => {
+  it("renders html and text and sends via the SMTP transport", async () => {
     sendMail.mockResolvedValue({ messageId: "msg-1" });
     const { sendEmail } = await import("./send");
 
@@ -45,8 +45,8 @@ describe("sendEmail", () => {
     expect(call.text).toContain("Asha");
   });
 
-  it("throws clearly when SES SMTP env vars are missing", async () => {
-    delete process.env.SES_SMTP_HOST;
+  it("throws clearly when SMTP env vars are missing", async () => {
+    delete process.env.SMTP_HOST;
     const { sendEmail } = await import("./send");
 
     await expect(
@@ -58,6 +58,45 @@ describe("sendEmail", () => {
           uploadUrl: "https://app.resumepilot.app/dashboard",
         }),
       }),
-    ).rejects.toThrow(/SES SMTP is not configured/);
+    ).rejects.toThrow(/SMTP is not configured/);
   });
+});
+
+describe("smtpOptionsFromEnv", () => {
+  const base = { SMTP_HOST: "smtp.example.com", SMTP_USER: "u", SMTP_PASSWORD: "p" };
+
+  it("port 587 uses STARTTLS and requires it, never plaintext", async () => {
+    const { smtpOptionsFromEnv } = await import("./send");
+    const opts = smtpOptionsFromEnv({ ...base, SMTP_PORT: "587" });
+    expect(opts).toMatchObject({ port: 587, secure: false, requireTLS: true });
+  });
+
+  it("port 465 uses implicit TLS", async () => {
+    const { smtpOptionsFromEnv } = await import("./send");
+    const opts = smtpOptionsFromEnv({ ...base, SMTP_PORT: "465" });
+    expect(opts).toMatchObject({ port: 465, secure: true, requireTLS: false });
+  });
+
+  it("sets timeouts well below a webhook timeout", async () => {
+    const { smtpOptionsFromEnv } = await import("./send");
+    const opts = smtpOptionsFromEnv({ ...base, SMTP_PORT: "587" });
+    expect(opts.connectionTimeout).toBeLessThanOrEqual(10_000);
+    expect(opts.greetingTimeout).toBeLessThanOrEqual(10_000);
+    expect(opts.socketTimeout).toBeLessThanOrEqual(20_000);
+  });
+
+  it.each(["abc", "0", "70000", "58.7"])("rejects invalid SMTP_PORT %s", async (port) => {
+    const { smtpOptionsFromEnv } = await import("./send");
+    expect(() => smtpOptionsFromEnv({ ...base, SMTP_PORT: port })).toThrow(/valid port/);
+  });
+
+  it.each(["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD"])(
+    "throws when %s is missing",
+    async (key) => {
+      const { smtpOptionsFromEnv } = await import("./send");
+      const env: Record<string, string> = { ...base, SMTP_PORT: "587" };
+      delete env[key];
+      expect(() => smtpOptionsFromEnv(env)).toThrow(/SMTP is not configured/);
+    },
+  );
 });

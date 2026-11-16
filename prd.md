@@ -1,4 +1,4 @@
-# Resume Pilot — PRD v2.2
+# Resume Pilot — PRD v2.3
 
 Nov 12, 2026 · @Visshnnu Tejaa
 
@@ -7,6 +7,8 @@ Version 2.0 replaces the ₹20-per-generation wallet with a credits model: users
 Version 2.1 adds email (section 13): the emails users receive, admin campaigns, marketing preferences and unsubscribe, the email log, and the admin pages that manage them.
 
 Version 2.2 records decisions on referral rewards (100 credits each to referrer and new user), bonus top-up packs, a 6-month refund window, no GST for now, AWS hosting, S3 instead of ImageKit, Nodemailer for email, and postpones gift codes.
+
+Version 2.3 (Nov 16, 2026) drops AWS entirely: hosting moves to Railway (web, worker, Postgres, Redis), file storage moves to ImageKit, email is Nodemailer over a generic SMTP provider for both transactional and campaign sends (no SES/SNS event pipeline), and observability (Sentry, logs, alarms) is deferred out of Phase 1.
 
 ## 0. What changed from v1.1
 
@@ -18,14 +20,14 @@ Version 2.2 records decisions on referral rewards (100 credits each to referrer 
 | Credit expiry                    | n/a                                    | Credits never expire                                                                                                                    |
 | ATS score                        | Returned by the generation call        | Separate action with its own report; can be re-run after edits; computed by deterministic code from AI-extracted matches                |
 | Original vs generated comparison | Undefined cost                         | Supported; charged as ATS scoring runs                                                                                                  |
-| File storage                     | Unspecified                            | Amazon S3 (private bucket, presigned URLs)                                                                                              |
+| File storage                     | Unspecified                            | ImageKit (private files, short-lived signed URLs) — v2.3                                                                                |
 | API layer                        | Express + tRPC                         | tRPC inside Next.js App Router; separate worker for background jobs                                                                     |
-| PDF                              | React PDF or browser                   | HTML templates for web view; Puppeteer renders the same HTML to PDF, stored in S3                                                       |
+| PDF                              | React PDF or browser                   | HTML templates for web view; Puppeteer renders the same HTML to PDF, stored in ImageKit                                                 |
 | Resume schema                    | Gaps in ids, ordering, metadata        | Schema 2.0 with ids everywhere, section order/visibility, extraction metadata, provenance, parent version                               |
 | Job description                  | No limit                               | Max 30,000 characters                                                                                                                   |
 | Prompt injection                 | Not covered                            | JD and resume text treated as data; facts can never be altered, but if user manually updates, it is acceptable                          |
 | Email (v2.1)                     | Not covered                            | 6 transactional + 2 marketing emails sent with Nodemailer, admin campaigns, preferences, one-click unsubscribe, email log               |
-| Hosting (v2.2)                   | Undecided                              | AWS                                                                                                                                     |
+| Hosting (v2.3)                   | Undecided                              | Railway (v2.2's AWS plan dropped)                                                                                                       |
 
 ## 1. Product overview
 
@@ -200,18 +202,20 @@ The credit balance is visible in the app header on every authenticated page.
 - Duplicate detection by SHA-256 of the file per user.
 - Low-quality images: if Tesseract's average word confidence is below a set threshold (e.g. 60%), the upload is rejected and the user is asked for a clearer file.
 
-### 5.2 Storage (Amazon S3)
+### 5.2 Storage (ImageKit)
 
-- Uploads and generated PDFs are stored in a **private S3 bucket** with Block Public Access on and server-side encryption, under per-user prefixes (`users/<userId>/uploads/`, `users/<userId>/pdfs/`).
-- Files are served only through short-lived presigned GET URLs (5 minutes), generated server-side after an ownership check.
-- The server uploads to S3; the browser never gets write access. The browser sends the file to our API, which validates it, then uploads.
-- Original uploads are kept 30 days, then deleted by an S3 lifecycle rule on the `uploads/` prefix; extracted JSON is kept until the user deletes it.
-- The web app and worker reach S3 through IAM roles, not stored access keys.
+- Uploads and generated PDFs are stored in ImageKit as **private files** (`isPrivateFile: true`), under per-user folders (`/users/<userId>/uploads/`, `/users/<userId>/pdfs/`). File names are random ids, never the user's original file name.
+- Files are served only through short-lived **signed URLs** (5 minutes), generated server-side after an ownership check. Unsigned URLs to private files don't resolve.
+- The server uploads to ImageKit with the private API key; the browser never gets write access or client-side upload tokens. The browser sends the file to our API, which validates it, then uploads.
+- Every stored file records both its path and ImageKit `fileId` (`resumes.storage_file_id`, `generated_files.storage_file_id`), because deletion needs the `fileId`.
+- Original uploads are kept 30 days, then deleted by a **daily worker job** that finds `resumes` rows older than 30 days and deletes their files by `fileId` (ImageKit has no lifecycle rules). Extracted JSON is kept until the user deletes it.
+- The ImageKit private key lives only in server-side environment variables (web and worker), never in client bundles.
+- All ImageKit calls go through `packages/storage`, so swapping providers later touches one package.
 
 ### 5.3 Extraction workflow
 
 1. User uploads; API validates type, size and hash.
-2. File stored in S3; `resumes` row created with status `uploaded`.
+2. File stored in ImageKit; `resumes` row created with status `uploaded`.
 3. Worker gets the raw text: LaTeX parser, DOCX parser, PDF text layer, or Tesseract.js OCR for images and scanned PDFs.
 4. The text is converted to Resume JSON 2.0 (OpenAI Structured Outputs). This step is free to the user; its cost is a platform cost, kept in check by upload rate limits.
 5. Zod validates; confidence flags written to `extractionMeta` (low OCR confidence on a line also flags the fields from it).
@@ -516,7 +520,7 @@ Five templates in Phase 1, all available to every plan: Classic (default), Moder
 - **Web view:** the template's HTML is rendered in the preview pane, scaled to an A4 page frame.
 - **PDF:** the worker renders the same template to an HTML string (server-side), opens it in headless Chromium with Puppeteer, and calls `page.pdf({ format: 'A4', printBackground: true })`.
 - Fonts are self-hosted and loaded in both, so preview and PDF match. Page breaks use CSS `break-inside: avoid` on items.
-- The PDF is uploaded to the private S3 bucket; the user downloads via a presigned URL.
+- The PDF is uploaded to ImageKit as a private file; the user downloads via a short-lived signed URL.
 - PDFs are cached by (version content hash + template id); an unchanged resume reuses the stored PDF.
 - Filename: `Firstname-Lastname-<JobTitle>.pdf`.
 - PDF export is free (no AI).
@@ -598,10 +602,10 @@ Sign-in, email verification and password-reset emails are sent by Clerk, not by 
 1. The event (ledger row, redemption, webhook, scheduler or campaign) enqueues an `email` job on BullMQ with the idempotency key.
 2. The worker checks the user's preferences and the suppression list (marketing only for preferences; both kinds for hard bounces).
 3. The template renders to HTML and plain text with the merge data.
-4. Nodemailer sends it over SMTP to Amazon SES; an `email_messages` row stores the SES message id.
-5. SES sends delivery, bounce, complaint, open and click events through a configuration set to Amazon SNS, which posts to `/api/webhooks/email` (SNS signature verified) to update the status.
+4. Nodemailer sends it over SMTP to the configured provider (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`); an `email_messages` row stores the provider message id and status `sent`.
+5. If the SMTP server rejects the message outright (a 5xx response), the row is marked `failed`, and a permanent recipient rejection adds the address to `email_suppressions` as a hard bounce.
 
-Nodemailer is only the sending library; it doesn't report what happens after a send. Delivery and open status depend on SES events, so the log and dashboard metrics need step 5.
+Plain SMTP only tells us whether the provider **accepted** a message. It doesn't report later delivery, asynchronous bounces, spam complaints, opens or clicks. Phase 1 therefore tracks sent, failed and unsubscribed only. A provider event webhook can be added later without schema changes (`email_events` is provider-neutral).
 
 - Transactional and marketing emails run on separate queues so a large campaign never delays a receipt.
 - Campaign sends are throttled (configurable per minute) to protect sender reputation.
@@ -631,7 +635,7 @@ In Phase 1 an admin can send `new_features` to a chosen group of users. More cam
 
 - Statuses: draft, scheduled, sending, sent, cancelled. A scheduled campaign can be cancelled before it starts.
 - The audience is frozen when sending starts; users who opt out during a send are skipped.
-- Sends are throttled to stay within the SES sending rate.
+- Sends are throttled (configurable per minute) to stay within the SMTP provider's sending limits.
 - "Send test to me" sends the rendered email to the admin's own address with their own merge data.
 
 ### 13.5 Preferences and unsubscribe
@@ -641,21 +645,21 @@ In Phase 1 an admin can send `new_features` to a chosen group of users. More cam
 - Every marketing email has a one-click unsubscribe link (signed token, no sign-in needed) and `List-Unsubscribe` + `List-Unsubscribe-Post` headers, which Gmail and Yahoo expect from bulk senders.
 - The public unsubscribe page confirms the change and lets the user turn individual categories back on or off.
 - Unsubscribes take effect immediately, including for campaigns already sending.
-- A hard bounce suppresses the address for all email; a spam complaint suppresses marketing. Hard bounces on transactional emails are shown on the admin user page.
+- A hard bounce (permanent SMTP rejection) suppresses the address for all email; a spam complaint, once a source for them exists, suppresses marketing. Hard bounces on transactional emails are shown on the admin user page.
 
 ### 13.6 Log, metrics and retention
 
 - Every send is an `email_messages` row: user, template, campaign (if any), status, provider message id, timestamps, merge data (not the rendered body).
 - Admin views show recipients masked (`as***@gmail.com`); the full address is on the user detail page.
-- Open rates are approximate: some mail apps load images automatically, so they're shown as a trend, not exact.
+- Delivery, open and click rates aren't available in Phase 1 (plain SMTP reports none of them).
 - Messages and events are kept for [RETENTION PERIOD], then deleted.
-- The admin dashboard shows sent, delivered, opened, bounced and unsubscribed for the last 30 days, overall and per template.
+- The admin dashboard shows sent, failed, hard-bounced (SMTP rejections) and unsubscribed for the last 30 days, overall and per template.
 
 ### 13.7 Sending domain
 
-- Send from [SENDER EMAIL] on a subdomain (e.g. `mail.<domain>`) through Amazon SES; replies go to [SUPPORT EMAIL].
-- New SES accounts start in the sandbox (only verified recipients, low daily limit); request production access before launch.
-- SPF, DKIM (SES Easy DKIM) and DMARC must be set up and verified before launch; the admin Email templates page shows their status.
+- Send from [SENDER EMAIL] on a subdomain (e.g. `mail.<domain>`) through the chosen SMTP provider; replies go to [SUPPORT EMAIL].
+- Check the provider's sending limits (daily and per-second) before launch and set the campaign throttle below them.
+- SPF, DKIM (per the provider's DNS records) and DMARC must be set up and verified before launch; the admin Email templates page shows their status.
 
 ## 14. Architecture
 
@@ -664,7 +668,7 @@ In Phase 1 an admin can send `new_features` to a chosen group of users. More cam
 | Layer           | Choice                                                                                                                                    |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Web app + API   | Next.js App Router, TypeScript; tRPC mounted at `/api/trpc` via the fetch adapter                                                         |
-| Webhooks        | Next.js route handlers (`/api/webhooks/razorpay`, `/api/webhooks/clerk`, `/api/webhooks/email`) reading the raw body for signature checks |
+| Webhooks        | Next.js route handlers (`/api/webhooks/razorpay`, `/api/webhooks/clerk`) reading the raw body for signature checks                        |
 | UI              | Tailwind CSS, custom design system, React Hook Form, Zod, Zustand (editor state)                                                          |
 | Auth            | Clerk                                                                                                                                     |
 | Database        | PostgreSQL + Drizzle ORM                                                                                                                  |
@@ -674,13 +678,12 @@ In Phase 1 an admin can send `new_features` to a chosen group of users. More cam
 | LaTeX parsing   | node-latex-parser                                                                                                                          |
 | File validation | file-type, for magic-byte checks on every upload                                                                                          |
 | PDF             | Puppeteer (headless Chromium) in the worker                                                                                               |
-| File storage    | Amazon S3 (private bucket, presigned URLs, lifecycle rules)                                                                               |
+| File storage    | ImageKit (private files, signed URLs; 30-day upload cleanup by a worker job)                                                              |
 | Payments        | Razorpay Orders (one-time wallet top-ups)                                                                                                 |
-| Email           | Nodemailer over Amazon SES SMTP; SES events via SNS; React Email for templates                                                            |
-| Error tracking  | Sentry (web + worker)                                                                                                                      |
+| Email           | Nodemailer over a generic SMTP provider (transactional + campaigns); React Email for templates                                            |
+| Error tracking  | Deferred from Phase 1 (see 14.5)                                                                                                           |
 | Testing         | Vitest (unit/integration), Playwright (visual regression + E2E)                                                                            |
-| Hosting         | AWS (see 14.4), deployed as Docker images to ECS                                                                                           |
-| IaC             | AWS CDK                                                                                                                                     |
+| Hosting         | Railway (see 14.4), web and worker deployed from Dockerfiles                                                                               |
 | Monorepo        | Turborepo + pnpm                                                                                                                          |
 
 Why a separate worker: AI calls, Tesseract OCR and Puppeteer take 10–60 s and need Chromium, which doesn't fit serverless request limits. The web app enqueues jobs; the client polls (or subscribes via SSE) for job status.
@@ -700,10 +703,9 @@ resume-pilot/
 │   ├── ai/             openai client, prompts, schemas, grounding check, token estimator
 │   ├── credits/        estimate, hold, capture, release, pricing config
 │   ├── file-processing/ latex, pdf, docx, images
-│   ├── storage/        S3 wrapper (upload, presigned URL, delete)
+│   ├── storage/        ImageKit wrapper (upload, signed URL, delete)
 │   ├── resume-templates/ 5 templates, shared HTML renderer, print CSS, fonts
 │   └── emails/         React Email templates, shared header/footer, plain-text versions
-├── infra/              AWS CDK app (ECS, RDS, ElastiCache, S3, CloudFront, Secrets Manager)
 ├── turbo.json
 └── pnpm-workspace.yaml
 ```
@@ -712,7 +714,7 @@ resume-pilot/
 
 - **Unit / integration tests:** Vitest, across `packages/*` and `apps/*` (grounding check, credits math, pricing config, Zod schemas, tRPC procedures against a test database).
 - **E2E and visual regression:** Playwright — full user flows (upload → generate → score) and template PDF-vs-preview visual diffs (acceptance criterion 16.2.12).
-- **Error tracking:** Sentry, instrumented in both `apps/web` and `apps/worker`, capturing unhandled errors, failed AI jobs and webhook failures with user/job context (never resume or JD content).
+- **Error tracking:** deferred from Phase 1. Until it's added, failures are visible through Railway's service logs and the `ai_jobs` / `email_messages` status columns. When added, it must never capture resume or JD content.
 
 ### 14.3 Database tables
 
@@ -735,35 +737,35 @@ resume-pilot/
 | pricing_config          | Model prices, FX rate, markup, minimums; versioned                                                                           | —                                              |
 | payments                | Razorpay orders and payments, amount_paise, status                                                                           | unique order_id, payment_id                    |
 | payment_events          | Raw webhook events                                                                                                           | unique event_id                                |
-| generated_files         | PDFs in S3 by content_hash + template                                                                                        | unique (version_id, content_hash, template_id) |
+| generated_files         | PDFs in ImageKit by content_hash + template (storage_key + storage_file_id)                                                  | unique (version_id, content_hash, template_id) |
 | resume_templates        | The five templates                                                                                                           | —                                              |
 | audit_logs              | Admin actions with reason                                                                                                    | —                                              |
 | email_preferences       | Per user: reminders, offers, product_updates, consent source and time                                                        | unique user_id                                 |
 | email_suppressions      | Addresses blocked after hard bounce, complaint or unsubscribe-all                                                            | unique lower(email)                            |
 | email_template_settings | Enabled flag per marketing template, inactive-nudge timing                                                                   | unique template_key                            |
 | email_campaigns         | Template, audience filters JSONB, subject, preheader, content JSONB, status, scheduled_at, created_by, counts                | —                                              |
-| email_messages          | One row per send: user, template, campaign, status, SES message id, merge data                                               | unique idempotency_key; unique ses_message_id  |
-| email_events            | Raw SES events received via SNS                                                                                              | unique sns_message_id                          |
+| email_messages          | One row per send: user, template, campaign, status, provider message id, merge data                                          | unique idempotency_key; unique provider_message_id |
+| email_events            | Raw provider delivery events (unused until an event source exists)                                                           | unique provider_event_id                       |
 
 All primary keys are UUIDs. Every hold, capture and grant runs inside one database transaction with `SELECT … FOR UPDATE` on the user's `credit_accounts` rows.
 
-### 14.4 Hosting (AWS)
+### 14.4 Hosting (Railway)
 
-| Part                                                | AWS service                                                                          |
-| --------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Web app (Next.js)                                   | Docker image on ECS Fargate behind an Application Load Balancer, with CloudFront in front |
-| Worker (BullMQ, Tesseract.js, Puppeteer + Chromium) | Docker image on ECS Fargate, scaled on queue depth                                   |
-| Database                                            | Amazon RDS for PostgreSQL                                                            |
-| Queue                                                | Amazon ElastiCache for Redis                                                         |
-| Files                                                | Amazon S3                                                                            |
-| Email                                                | Amazon SES (SMTP for Nodemailer) + SNS for events                                    |
-| Secrets                                              | AWS Secrets Manager                                                                  |
-| Logs, alarms, errors                                 | Amazon CloudWatch; Sentry for error tracking (web + worker)                          |
-| IaC                                                  | AWS CDK (TypeScript), provisions all of the above                                    |
+| Part                                                | Railway                                                                       |
+| --------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Web app (Next.js)                                   | Railway service built from `apps/web/Dockerfile`, public domain               |
+| Worker (BullMQ, Tesseract.js, Puppeteer + Chromium) | Railway service built from `apps/worker/Dockerfile`, no public domain         |
+| Database                                            | Railway PostgreSQL                                                            |
+| Queue                                                | Railway Redis                                                                 |
+| Files                                                | ImageKit (external, see 5.2)                                                  |
+| Email                                                | Generic SMTP provider via Nodemailer (external, see 13.2)                     |
+| Secrets                                              | Railway service variables (shared variables for values both services need)    |
+| Logs                                                 | Railway's built-in service logs; dedicated observability deferred (14.5)      |
 
-- Region: Asia Pacific (Mumbai), `ap-south-1`, to keep data in India and latency low.
-- Web and worker are built as separate Docker images from the same monorepo and deployed to their own ECS services from CI.
-- These AWS service choices are decided (14.4); only sizing/scaling parameters remain open (16.4).
+- Both services build from the same monorepo. Railway deploys on push to `main` once GitHub is connected; migrations run as a pre-deploy command on the web service.
+- The worker needs a long-running container with Chromium installed, which is why it can't be serverless. Railway runs it as an always-on service.
+- Region: Railway has no India region; pick the nearest (Southeast Asia) for latency. Store user data only with providers whose terms meet the DPDP Act obligations in 15.
+- No infrastructure-as-code app. Services, variables and plugins are configured in Railway, and the config needed to recreate them is documented in `tasks/todo/m13-testing-deploy/05-railway-deploy.md`.
 
 ## 15. Non-functional requirements
 
@@ -771,20 +773,20 @@ All primary keys are UUIDs. Every hold, capture and grant runs inside one databa
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Performance   | Dashboard p95 < 1.5 s; preview updates < 200 ms after an edit; generation p95 < 60 s; PDF < 10 s                                                                                                                                                                                      |
 | Reliability   | AI and PDF jobs retried with backoff; holds auto-release after 15 min; every job status visible to the user; transactional emails sent within 2 min of their event                                                                                                                    |
-| Security      | Server-side auth on every procedure; magic-byte file checks; S3 presigned URLs (short expiry), private bucket, IAM roles; secrets in env only; Razorpay, Clerk and SNS webhook signatures verified                                                                                    |
+| Security      | Server-side auth on every procedure; magic-byte file checks; ImageKit private files with short-lived signed URLs, private key server-side only; secrets in env only; Razorpay and Clerk webhook signatures verified                                                                                    |
 | Rate limits   | Per user: 10 AI actions per minute, 20 uploads per day; per IP on public endpoints                                                                                                                                                                                                    |
-| Email         | SPF, DKIM, DMARC verified; one-click unsubscribe headers; campaign throttling; bounce and complaint rates monitored                                                                                                                                                                   |
+| Email         | SPF, DKIM, DMARC verified; one-click unsubscribe headers; campaign throttling; SMTP rejections tracked as hard bounces                                                                                                                                                                  |
 | Privacy       | Comply with India's DPDP Act 2023: consent at signup (separate opt-in for marketing email), delete resume / version / account on request, uploads deleted after 30 days; no use of resume data for model training; OpenAI API data-retention setting documented in the Privacy Policy |
 | Auditability  | Every credit movement traceable to an AI job, payment, grant or admin action                                                                                                                                                                                                          |
-| Observability | Structured logs and error tracking for web and worker; AI cost and failure dashboards                                                                                                                                                                                                 |
+| Observability | Deferred from Phase 1; Railway service logs only. AI cost and failures are visible in the admin dashboard from `ai_jobs`                                                                                                                                                                                                |
 
 ## 16. Phase 1 scope, acceptance and milestones
 
 ### 16.1 In scope (all P0)
 
-Auth (Google, LinkedIn, email) · upload + extraction for 4 formats · schema 2.0 · resume information editor · JD input and analysis · grounded generation with versioning · separate ATS scoring, re-scoring and comparison · split editor with 5 templates · Puppeteer PDF in S3 · credits (estimate, hold, capture) · wallet top-up packs · transactional and marketing email with campaigns and preferences · basic admin dashboard.
+Auth (Google, LinkedIn, email) · upload + extraction for 4 formats · schema 2.0 · resume information editor · JD input and analysis · grounded generation with versioning · separate ATS scoring, re-scoring and comparison · split editor with 5 templates · Puppeteer PDF in ImageKit · credits (estimate, hold, capture) · wallet top-up packs · transactional and marketing email with campaigns and preferences · basic admin dashboard.
 
-**Postponed:** cover letters, LinkedIn import, fetching JD from URL, application tracking, public sharing, team accounts, multiple languages (English only in Phase 1), premium templates, priority queue, subscription plans, personal gift codes and promo-code emails.
+**Postponed:** cover letters, LinkedIn import, fetching JD from URL, application tracking, public sharing, team accounts, multiple languages (English only in Phase 1), premium templates, priority queue, subscription plans, personal gift codes and promo-code emails, observability (Sentry, alarms), email delivery/open/click tracking.
 
 ### 16.2 Acceptance criteria
 
@@ -799,7 +801,7 @@ Auth (Google, LinkedIn, email) · upload + extraction for 4 formats · schema 2.
 9. Every generation creates a new version; the original and earlier versions are unchanged.
 10. Editing a version marks its ATS report Outdated; re-scoring creates a new report and keeps history.
 11. Comparison shows both scores and per-dimension change.
-12. The PDF matches the preview for all 5 templates (visual regression tests) and downloads via an S3 presigned URL.
+12. The PDF matches the preview for all 5 templates (visual regression tests) and downloads via a short-lived ImageKit signed URL.
 13. A ₹500 payment grants 10,000 credits and a ₹1,000 payment grants 21,000 credits, exactly once, even with duplicate webhooks.
 14. Users cannot read another user's resumes, files, JDs, reports or ledger.
 15. Admins can view users, AI jobs and cost, ledger, payments, and make audited credit adjustments.
@@ -814,19 +816,19 @@ Auth (Google, LinkedIn, email) · upload + extraction for 4 formats · schema 2.
 
 | #   | Deliverable                                                                                          |
 | --- | ---------------------------------------------------------------------------------------------------- |
-| M1  | Monorepo, AWS CDK provisioning (RDS, ElastiCache, S3, ECS), Docker images for web + worker, Clerk, tRPC in Next.js, worker skeleton |
+| M1  | Monorepo, local Docker Postgres + Redis, Clerk, tRPC in Next.js, worker skeleton                     |
 | M2  | Credits core: ledger, holds, estimate/capture, pricing config (with stub AI)                         |
-| M3  | Upload, S3 storage, file processing                                                                  |
+| M3  | Upload, ImageKit storage, file processing                                                                  |
 | M4  | Schema 2.0, extraction, review editor                                                                |
 | M5  | JD input and analysis                                                                                |
 | M6  | Generation, grounding check, versioning                                                              |
 | M7  | ATS scoring, report, re-score, comparison                                                            |
 | M8  | Editor, 5 HTML templates, live preview                                                               |
-| M9  | Puppeteer PDF + S3                                                                                   |
+| M9  | Puppeteer PDF + ImageKit                                                                                   |
 | M10 | Razorpay wallet top-ups                                                                              |
-| M11 | Email: SES and domain setup, Nodemailer, templates, transactional sends, preferences and unsubscribe |
+| M11 | Email: SMTP provider and domain setup, Nodemailer, templates, transactional sends, preferences and unsubscribe |
 | M12 | Marketing pages, dashboards, admin (including campaigns and email log)                               |
-| M13 | Eval set, load and security tests (Vitest + Playwright), Sentry wired up, CDK deploy to AWS          |
+| M13 | Eval set, load and security tests (Vitest + Playwright), Dockerfiles + Railway deploy                |
 
 Credits come at M2 so every AI feature is built on real metering from the start.
 
@@ -835,7 +837,9 @@ Credits come at M2 so every AI feature is built on real metering from the start.
 - [ ] Exact packs between ₹1,000 and ₹5,000 and their bonus credits
 - [ ] Markup multiplier and minimum credits per action, after measuring AI cost on the eval set
 - [ ] Whether OCR text is structured into JSON by OpenAI (platform-paid, as written) or by a rule-based parser
-- [ ] AWS service sizing (ECS task counts/CPU/memory, RDS and ElastiCache instance classes) — services themselves and region (`ap-south-1`) are decided (14.4)
-- [ ] Sender address and sending subdomain; confirm SES as Nodemailer's SMTP service
+- [ ] Railway service sizing and plan (web/worker replicas, CPU/memory, Postgres and Redis plans) — the platform itself is decided (14.4)
+- [ ] ImageKit plan (storage and bandwidth limits)
+- [ ] When to bring observability (Sentry, alarms) back into scope
+- [ ] Sender address, sending subdomain, and which SMTP provider Nodemailer uses
 - [ ] Email log retention period
 - [ ] Inactive-nudge timing: 30 days and a maximum of 3 nudges, as proposed

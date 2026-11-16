@@ -10,3 +10,7 @@ The category files are a manual index, not a live query — when a task file mov
 ## Checkbox convention in `by-category/`
 
 - `[ ]` not started · `[~]` in testing · `[x]` done — matching the three status folders.
+
+## Deferred tasks
+
+A task that's out of Phase 1 scope stays in `todo/` with `**Status:** deferred` and the reason. Don't start it until it's brought back in scope (currently: `m13-testing-deploy/04-sentry-observability.md`).

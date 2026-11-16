@@ -14,7 +14,7 @@ export const resumeTemplates = pgTable(
   (table) => [uniqueIndex("resume_templates_key_key").on(table.key)],
 );
 
-/** PDFs in S3, cached by content hash + template — prd.md §10.3. */
+/** PDFs in ImageKit, cached by content hash + template — prd.md §10.3. */
 export const generatedFiles = pgTable(
   "generated_files",
   {
@@ -26,7 +26,10 @@ export const generatedFiles = pgTable(
       .notNull()
       .references(() => resumeTemplates.id),
     contentHash: text("content_hash").notNull(),
-    s3Key: text("s3_key").notNull(),
+    /** File path in ImageKit (provider-neutral name). */
+    storageKey: text("storage_key").notNull(),
+    /** ImageKit fileId — needed to delete the file. */
+    storageFileId: text("storage_file_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
