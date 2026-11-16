@@ -1,3 +1,4 @@
+import type { Provenance, Resume } from "@resume-pilot/validators/resume";
 import type { TemplateName } from "@/stores/preferences-store";
 
 /**
@@ -28,34 +29,28 @@ export interface ResumeDoc {
   sections: DocSection[];
 }
 
-export interface EditableBullet {
-  id: string;
-  text: string;
-  origin: BulletOrigin;
-  /** The source bullet this was rewritten from (grounding, §8.3). */
-  originalText?: string;
+export interface VersionGap {
+  requirementId: string | null;
+  keyword: string;
+  note: string;
 }
 
-export interface EditableRole {
-  id: string;
-  company: string;
-  designation: string;
-  dates: string;
-  bullets: EditableBullet[];
-}
-
+/** A version as the editor / preview see it (built in src/server/versions.ts). */
 export interface VersionView {
   id: string;
+  kind: "original" | "generated";
   company: string;
   role: string;
   sourceLabel: string;
   template: TemplateName;
   savedAt: Date;
-  /** Section ids in order, with visibility. */
-  sections: { id: string; label: string; visible: boolean }[];
-  work: EditableRole[];
+  content: Resume;
+  /** `<itemId>.bullets[<bulletId>]` → how the AI produced it (§8.3). */
+  provenance: Provenance;
+  /** Bullet id → the source bullet text(s) it came from ("Show original"). */
+  sourceBulletTexts: Record<string, string>;
+  gaps: VersionGap[];
   score: { value: number; outdated: boolean } | null;
-  doc: ResumeDoc;
   fileName: string;
 }
 
@@ -109,4 +104,6 @@ export interface GenerationView {
   heldCredits: number;
   usedCredits: number | null;
   versionId: string | null;
+  /** Why it failed (shown to the user; grounding counts are admin detail). */
+  error?: string | null;
 }

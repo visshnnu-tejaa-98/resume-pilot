@@ -71,6 +71,13 @@
       "when": 1794822091040,
       "tag": "0009_blushing_gunslinger",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794832395251,
+      "tag": "0010_thin_morlocks",
+      "breakpoints": true
     }
   ]
 }

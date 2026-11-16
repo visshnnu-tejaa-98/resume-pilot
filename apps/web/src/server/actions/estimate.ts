@@ -1,12 +1,12 @@
 "use server";
 
-import { estimateAction, getJobDescription, getOriginalVersion, listJobDescriptions } from "@resume-pilot/services";
+import { estimateAction, estimateGeneration, getJdAnalysisStatus, getJobDescription, getVersion } from "@resume-pilot/services";
 import { z } from "zod";
 import { getDb } from "@/server/db";
 import { requireAppUser } from "@/server/session";
 
 const inputSchema = z.object({
-  resumeId: z.uuid(),
+  versionId: z.uuid(),
   jdId: z.uuid(),
   mode: z.enum(["tailor", "score"]),
 });
@@ -18,39 +18,38 @@ export interface EstimateLine {
 
 export type EstimateResult = { ok: true; lines: EstimateLine[]; total: number } | { ok: false; message: string };
 
+const LABELS = { jd_analysis: "Job description analysis", generation: "Resume generation" } as const;
+
 /**
- * Step 1 of estimate → hold → capture (prd.md §3.4): the maximum credits
- * the run can use, shown before anything is charged. Computed with the
- * same pricing config the hold will use. Ownership of both the resume and
- * the job is checked via userId-scoped lookups.
+ * Step 1 of estimate → hold → capture (prd.md §3.4): the most the run can
+ * cost, shown before anything is held. Tailoring uses the same service the
+ * confirm step re-checks against. Everything is userId-scoped.
  */
 export async function estimateRun(raw: unknown): Promise<EstimateResult> {
   const parsed = inputSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, message: "Pick a resume and a job first." };
-  const { resumeId, jdId, mode } = parsed.data;
+  const { versionId, jdId, mode } = parsed.data;
   const { user } = await requireAppUser();
   const db = getDb();
 
-  const [version, jd, jobs] = await Promise.all([
-    getOriginalVersion(db, { userId: user.id, resumeId }),
-    getJobDescription(db, { userId: user.id, jdId }).catch(() => null),
-    listJobDescriptions(db, user.id),
-  ]);
-  if (!version || !jd) return { ok: false, message: "That resume or job isn’t available." };
-
   try {
-    const resumeText = JSON.stringify(version.content);
-    const lines: EstimateLine[] = [];
-    const analysed = jobs.find((j) => j.id === jdId)?.analysed ?? false;
-    if (!analysed) {
-      const e = await estimateAction(db, "jd_analysis", [jd.text]);
-      lines.push({ label: "Job description analysis", credits: e.credits });
+    if (mode === "tailor") {
+      const est = await estimateGeneration(db, { userId: user.id, sourceVersionId: versionId, jdId });
+      return { ok: true, total: est.total, lines: est.lines.map((l) => ({ label: LABELS[l.action], credits: l.credits })) };
     }
-    const main = await estimateAction(db, mode === "tailor" ? "generation" : "ats_scoring", [resumeText, jd.text]);
-    lines.push({ label: mode === "tailor" ? "Resume generation" : "ATS score and report", credits: main.credits });
+    // Scoring (m7): analysis if needed + ATS scoring.
+    const [version, jd, analysis] = await Promise.all([
+      getVersion(db, { userId: user.id, versionId }),
+      getJobDescription(db, { userId: user.id, jdId }),
+      getJdAnalysisStatus(db, { userId: user.id, jdId }),
+    ]);
+    const lines: EstimateLine[] = [];
+    if (analysis.state !== "ready") lines.push({ label: LABELS.jd_analysis, credits: (await estimateAction(db, "jd_analysis", [jd.text])).credits });
+    lines.push({ label: "ATS score and report", credits: (await estimateAction(db, "ats_scoring", [JSON.stringify(version.content), jd.text])).credits });
     return { ok: true, lines, total: lines.reduce((n, l) => n + l.credits, 0) };
   } catch (err) {
-    console.error("[generate] estimate failed:", err);
-    return { ok: false, message: "We couldn’t work out the cost right now. Please try again." };
+    const message = err instanceof Error && /review|highlighted|isn.t available|not found/i.test(err.message) ? err.message : "We couldn’t work out the cost right now. Please try again.";
+    if (message.startsWith("We couldn")) console.error("[generate] estimate failed:", err);
+    return { ok: false, message };
   }
 }

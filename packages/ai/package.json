@@ -4,20 +4,24 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fixtures": "./src/generation/fixtures.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:generation": "tsx eval/generation.ts"
   },
   "devDependencies": {
+    "@types/node": "26.6.6",
+    "tsx": "4.23.15",
     "typescript": "6.0.3",
-    "vitest": "5.1.0",
-    "@types/node": "26.6.6"
+    "vitest": "5.1.0"
   },
   "dependencies": {
     "@resume-pilot/validators": "workspace:*",
-    "openai": "7.47.0"
+    "openai": "7.47.0",
+    "zod": "4.6.7"
   }
 }

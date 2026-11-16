@@ -4,6 +4,7 @@ import { scoreChip } from "@/lib/domain";
 import { fmtRelative } from "@/lib/format";
 import { appRoutes } from "@/lib/routes";
 import type { VersionListItem } from "./types";
+import { VersionActions } from "./VersionActions";
 
 const th = "px-3 py-3 text-xs uppercase tracking-[0.06em] text-text-2";
 
@@ -54,6 +55,7 @@ export function VersionTable({ versions }: { versions: VersionListItem[] }) {
                       {v.score === null ? "Score" : v.scoreOutdated ? "Re-score" : "Report"}
                     </Link>
                     <Link href={appRoutes.versionPreview(v.id)} className="text-link">Download</Link>
+                    <VersionActions versionId={v.id} label={[v.company, v.role].filter(Boolean).join(" · ")} />
                   </div>
                 </td>
               </tr>

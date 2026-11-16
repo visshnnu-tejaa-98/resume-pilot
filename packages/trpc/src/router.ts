@@ -39,9 +39,21 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueExtraction, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueueExtraction, enqueueGeneration, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import {
+  deleteVersion,
+  duplicateVersion,
+  estimateGeneration,
+  GenerationError,
+  getGenerationStatus,
+  getVersion,
+  listDeletedVersions,
+  listVersions,
+  restoreVersion,
+  saveVersionContent,
+  startGeneration,
+  VersionError,
   estimateJdAnalysis,
   getJdAnalysisStatus,
   InsufficientCreditsError,
@@ -81,6 +93,13 @@ function toTRPCError(err: unknown): never {
   }
   if (err instanceof InsufficientCreditsError) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Not enough credits. Add money to your wallet to continue.", cause: err });
+  }
+  if (err instanceof GenerationError) {
+    const code = err.code === "not_found" ? "NOT_FOUND" : err.code === "not_ready" ? "PRECONDITION_FAILED" : "CONFLICT";
+    throw new TRPCError({ code, message: err.message, cause: err });
+  }
+  if (err instanceof VersionError) {
+    throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "BAD_REQUEST", message: err.message, cause: err });
   }
   if (err instanceof JdAnalysisEstimateChangedError) {
     throw new TRPCError({ code: "CONFLICT", message: err.message, cause: err });
@@ -302,6 +321,51 @@ export const appRouter = router({
         }
         return r;
       }),
+  }),
+
+  /** Tailored resume generation — prd.md §8.1, estimate → hold → capture §3.4. */
+  generation: router({
+    /** What will run (JD analysis if needed + generation) and the most it can cost. Read-only. */
+    estimate: authProcedure
+      .input(z.object({ sourceVersionId: z.uuid(), jdId: z.uuid() }))
+      .query(({ ctx, input }) => estimateGeneration(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    /**
+     * Confirm: places the hold(s) and queues the run. `requestId` is made once
+     * per confirmation dialog, so double submits map to the same job.
+     */
+    start: authProcedure
+      .input(z.object({ sourceVersionId: z.uuid(), jdId: z.uuid(), confirmedCredits: z.number().int().positive(), requestId: z.uuid() }))
+      .mutation(async ({ ctx, input }) => {
+        const r = await startGeneration(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError);
+        try {
+          await enqueueGeneration(getAiQueue(), { aiJobId: r.aiJobId });
+        } catch (err) {
+          if (r.created) await releaseHold(ctx.db, { aiJobId: r.aiJobId, reason: "could not queue the generation" });
+          if (r.analysisCreated && r.analysisAiJobId) await releaseHold(ctx.db, { aiJobId: r.analysisAiJobId, reason: "could not queue the generation" });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't start tailoring. You weren't charged; please try again.", cause: err });
+        }
+        return { aiJobId: r.aiJobId };
+      }),
+    status: authProcedure.input(z.object({ aiJobId: z.uuid() })).query(async ({ ctx, input }) => {
+      const s = await getGenerationStatus(ctx.db, { userId: ctx.user.id, aiJobId: input.aiJobId });
+      if (!s) throw new TRPCError({ code: "NOT_FOUND" });
+      return s;
+    }),
+  }),
+
+  /** Resume versions — prd.md §8.5, §8.6. Always the caller's own. */
+  versions: router({
+    list: authProcedure.query(({ ctx }) => listVersions(ctx.db, ctx.user.id)),
+    deleted: authProcedure.query(({ ctx }) => listDeletedVersions(ctx.db, ctx.user.id)),
+    get: authProcedure.input(z.object({ versionId: z.uuid() })).query(({ ctx, input }) => getVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    /** Hand edits are the user's own claims (§8.6); marks cached ATS scores outdated. */
+    save: authProcedure
+      .input(z.object({ versionId: z.uuid(), content: z.unknown() }))
+      .mutation(({ ctx, input }) => saveVersionContent(ctx.db, { userId: ctx.user.id, versionId: input.versionId, content: input.content }).catch(toTRPCError)),
+    /** No AI call, no charge. */
+    duplicate: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => duplicateVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    delete: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => deleteVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    restore: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => restoreVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
   }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */

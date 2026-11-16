@@ -6,7 +6,10 @@ import {
   enqueueStructuring,
   extractionJobSchema,
   getExtractionQueue,
+  generationJobSchema,
   jdAnalysisJobSchema,
+  type AiQueueJob,
+  type GenerationJob,
   type JdAnalysisJob,
   MAINTENANCE_JOBS,
   QUEUE_NAMES,
@@ -18,6 +21,7 @@ import {
 } from "@resume-pilot/queue";
 import {
   analyzeJobDescription,
+  generateTailoredResume,
   createOpenAIClient,
   structureResume,
   StructuringError,
@@ -31,8 +35,11 @@ import {
   expireStaleHolds,
   findWalletMismatches,
   processExtraction,
+  processGeneration,
   processJdAnalysis,
   processStructuring,
+  purgeDeletedVersions,
+  type GenerateFn,
   type JdAnalyzeFn,
   processTransactionalEmail,
   type ExtractionDeps,
@@ -143,6 +150,11 @@ export async function handleMaintenanceJob(
         console.error("[worker] wallet mismatch:", JSON.stringify(m));
       }
       return { mismatches: mismatches.length };
+    }
+    case MAINTENANCE_JOBS.purgeVersions.name: {
+      const result = await purgeDeletedVersions(deps.db);
+      if (result.purged) console.log(`[worker] purge-versions: ${result.purged} removed`);
+      return result;
     }
     default:
       throw new UnrecoverableError(`Unknown maintenance job "${name}"`);
@@ -277,15 +289,34 @@ export async function handleJdAnalysisJob(
  * web app. processJdAnalysis captures on success and releases on failure;
  * only retryable errors on a non-final attempt reach BullMQ as a throw.
  */
+/** Turns a generation job into a processGeneration call. Exported for tests. */
+export async function handleGenerationJob(
+  job: Pick<Job<GenerationJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database; generate: GenerateFn; analyze: JdAnalyzeFn },
+) {
+  const data = generationJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processGeneration(deps.db, data, { generate: deps.generate, analyze: deps.analyze, isFinalAttempt });
+}
+
 export function createAiWorker(db: Database): Worker {
   const analyze: JdAnalyzeFn = async (input) => {
     const r = await analyzeJobDescription(getOpenAI(), input);
     return { analysis: r.analysis, usage: r.usage };
   };
-  const worker = new Worker<JdAnalysisJob>(
+  // generateTailoredResume runs the deterministic grounding check (prd.md §8.3) and
+  // throws GroundingFailedError after its one retry — nothing ungrounded is returned.
+  const generate: GenerateFn = (input) => generateTailoredResume(getOpenAI(), input);
+
+  const worker = new Worker<AiQueueJob>(
     QUEUE_NAMES.ai,
     async (job) => {
-      const outcome = await handleJdAnalysisJob(job, { db, analyze });
+      if (job.name === "generation") {
+        const outcome = await handleGenerationJob(job as Job<GenerationJob>, { db, generate, analyze });
+        console.log(`[worker] generation ${job.data.aiJobId}: ${outcome.status}${outcome.status === "failed" ? ` (${outcome.reason})` : ""}`);
+        return outcome;
+      }
+      const outcome = await handleJdAnalysisJob(job as Job<JdAnalysisJob>, { db, analyze });
       console.log(`[worker] jd-analysis ${job.data.aiJobId}: ${outcome.status}`);
       return outcome;
     },

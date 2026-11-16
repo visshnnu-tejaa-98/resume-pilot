@@ -1,7 +1,8 @@
-import { listResumes } from "@resume-pilot/services";
+import { listDeletedVersions, listResumes, listVersions, VERSION_RESTORE_DAYS } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import { AppMain, PageHeader } from "@/components/app/PageHeader";
 import { ResumesView } from "@/components/resumes/ResumesView";
+import { RestoreVersionButton } from "@/components/resumes/VersionActions";
 import type { VersionListItem } from "@/components/resumes/types";
 import { ButtonLink } from "@/components/ui/Button";
 import { routes } from "@/lib/routes";
@@ -13,9 +14,20 @@ export const metadata: Metadata = { title: "My resumes" };
 /** design/screens/MyResumes.dc.html */
 export default async function MyResumesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { user } = await requireAppUser();
-  const [{ q }, resumes] = await Promise.all([searchParams, listResumes(getDb(), user.id)]);
-  // Tailored versions arrive with generation (tasks/todo/m6-generation).
-  const versions: VersionListItem[] = [];
+  const db = getDb();
+  const [{ q }, resumes, all, deleted] = await Promise.all([searchParams, listResumes(db, user.id), listVersions(db, user.id), listDeletedVersions(db, user.id)]);
+  const versions: VersionListItem[] = all
+    .filter((v) => v.kind === "generated")
+    .map((v) => ({
+      id: v.id,
+      resumeId: v.resumeId,
+      company: v.companyName ?? "Tailored resume",
+      role: v.jobTitle ?? "",
+      score: v.score,
+      scoreOutdated: v.scoreOutdated,
+      template: "Classic",
+      updatedAt: v.updatedAt,
+    }));
 
   return (
     <AppMain className="gap-6">
@@ -29,6 +41,23 @@ export default async function MyResumesPage({ searchParams }: { searchParams: Pr
         }
       />
       <ResumesView resumes={resumes} versions={versions} initialQuery={q ?? ""} />
+      {deleted.length ? (
+        <section className="overflow-hidden rounded-xl border border-border bg-surface">
+          <h2 className="m-0 px-5 py-4 font-display text-lg font-bold">Recently deleted</h2>
+          {deleted.map((v) => {
+            const daysLeft = Math.max(0, VERSION_RESTORE_DAYS - Math.floor((Date.now() - +new Date(v.deletedAt!)) / 86_400_000));
+            return (
+              <div key={v.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
+                <span>
+                  <strong>{[v.companyName, v.jobTitle].filter(Boolean).join(" · ") || "Tailored resume"}</strong>{" "}
+                  <span className="text-text-2">· restorable for {daysLeft} more day{daysLeft === 1 ? "" : "s"}</span>
+                </span>
+                <RestoreVersionButton versionId={v.id} />
+              </div>
+            );
+          })}
+        </section>
+      ) : null}
     </AppMain>
   );
 }

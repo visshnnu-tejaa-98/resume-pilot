@@ -423,6 +423,32 @@ describe.skipIf(!connectionString)("appRouter.jds (real DB)", () => {
   });
 });
 
+describe.skipIf(!connectionString)("appRouter.generation (real DB)", () => {
+  let db: Database;
+  const userIds: string[] = [];
+  beforeAll(() => {
+    db = createDatabase(connectionString ?? "");
+  });
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, userIds));
+    await db.$client.end();
+  });
+
+  it("refuses to generate from another user's version (NOT_FOUND) and an unknown job status", async () => {
+    const mk = async () => {
+      const clerkUserId = `clerk_${randomUUID()}`;
+      const { userId } = await createUserFromClerkWebhook(db, { clerkUserId, email: `gen-trpc-${randomUUID()}@example.com` });
+      userIds.push(userId);
+      return appRouter.createCaller(createContext({ db, userId: clerkUserId }));
+    };
+    const caller = await mk();
+    await expect(caller.generation.estimate({ sourceVersionId: randomUUID(), jdId: randomUUID() })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.generation.status({ aiJobId: randomUUID() })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(caller.versions.get({ versionId: randomUUID() })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(await caller.versions.list()).toEqual([]);
+  });
+});
+
 describe.skipIf(!connectionString)("appRouter.jds analysis (real DB)", () => {
   let db: Database;
   const userIds: string[] = [];

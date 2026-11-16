@@ -28,6 +28,8 @@ export const MAINTENANCE_JOBS = {
   reconcileWallets: { name: "reconcile-wallets", everyMs: 60 * 60_000 },
   /** Deletes original uploads older than 30 days from ImageKit (prd.md §5.2). */
   cleanupUploads: { name: "cleanup-uploads", everyMs: 24 * 60 * 60_000 },
+  /** Hard-deletes versions soft-deleted more than 30 days ago (prd.md §8.5). */
+  purgeVersions: { name: "purge-versions", everyMs: 24 * 60 * 60_000 },
 } as const;
 
 export type MaintenanceJobName = (typeof MAINTENANCE_JOBS)[keyof typeof MAINTENANCE_JOBS]["name"];
@@ -212,13 +214,30 @@ export const AI_JOB_OPTIONS: JobsOptions = {
   removeOnFail: { age: 30 * 24 * 3600 },
 };
 
-export function createAiQueue(connection: IORedis): Queue<JdAnalysisJob> {
-  return new Queue<JdAnalysisJob>(QUEUE_NAMES.ai, { connection });
+/** Tailored resume generation (prd.md §8.1). Inputs live on the ai_jobs row. */
+export const generationJobSchema = z.object({ aiJobId: z.uuid() });
+export type GenerationJob = z.infer<typeof generationJobSchema>;
+
+/** Everything on the AI queue; the BullMQ job name says which. */
+export type AiQueueJob = JdAnalysisJob | GenerationJob;
+
+export function createAiQueue(connection: IORedis): Queue<AiQueueJob> {
+  return new Queue<AiQueueJob>(QUEUE_NAMES.ai, { connection });
+}
+
+/** One queue job per generation AI job (= per hold). */
+export async function enqueueGeneration(
+  queue: Pick<Queue<AiQueueJob>, "add" | "getJob">,
+  job: GenerationJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = generationJobSchema.parse(job);
+  // Generation retries the model inside the call (grounding retry); one queue retry covers API blips.
+  return addUniqueJob(queue, "generation", data, { ...AI_JOB_OPTIONS, jobId: `generation-${data.aiJobId}` });
 }
 
 /** One queue job per AI job (= per hold), so a duplicate enqueue is a no-op. */
 export async function enqueueJdAnalysis(
-  queue: Pick<Queue<JdAnalysisJob>, "add" | "getJob">,
+  queue: Pick<Queue<AiQueueJob>, "add" | "getJob">,
   job: JdAnalysisJob,
 ): Promise<"added" | "retried" | "replaced" | "exists"> {
   const data = jdAnalysisJobSchema.parse(job);
@@ -230,7 +249,7 @@ export async function enqueueJdAnalysis(
 let producerConnection: IORedis | undefined;
 let transactionalEmailQueue: Queue<TransactionalEmailJob> | undefined;
 let extractionQueue: Queue<ExtractionJob> | undefined;
-let aiQueue: Queue<JdAnalysisJob> | undefined;
+let aiQueue: Queue<AiQueueJob> | undefined;
 
 /** One Redis connection shared by every producer queue in this process (web app). */
 function producer(): IORedis {
@@ -243,7 +262,7 @@ export function getTransactionalEmailQueue(): Queue<TransactionalEmailJob> {
   return transactionalEmailQueue;
 }
 
-export function getAiQueue(): Queue<JdAnalysisJob> {
+export function getAiQueue(): Queue<AiQueueJob> {
   aiQueue ??= createAiQueue(producer());
   return aiQueue;
 }

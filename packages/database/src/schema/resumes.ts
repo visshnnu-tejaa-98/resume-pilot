@@ -85,6 +85,11 @@ export const resumeVersions = pgTable(
     jdId: uuid("jd_id").references(() => jobDescriptions.id),
     contentHash: text("content_hash").notNull(),
     templateId: uuid("template_id").references(() => resumeTemplates.id),
+    /**
+     * Generated/duplicated versions only: gap list, model + prompt version,
+     * grounding stats, producing AI job — prd.md §8.1–8.3. Null for originals.
+     */
+    generationMeta: jsonb("generation_meta"),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

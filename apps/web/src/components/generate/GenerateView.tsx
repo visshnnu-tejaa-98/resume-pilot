@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { estimateRun, type EstimateResult } from "@/server/actions/estimate";
 import { FlowSteps } from "@/components/app/FlowSteps";
@@ -9,14 +10,17 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
-import { fmtCredits, fmtRelative } from "@/lib/format";
-import { routes } from "@/lib/routes";
+import { fmtCredits } from "@/lib/format";
+import { appRoutes, routes } from "@/lib/routes";
+import { trpc, trpcErrorMessage } from "@/lib/trpc-client";
 import { useWalletStore } from "@/stores/wallet-store";
 
 export interface GenerateSource {
+  /** resume_versions.id */
   id: string;
   name: string;
-  createdAt: Date;
+  /** "Original · uploaded 3 days ago" / "Tailored version · edited today". */
+  sub: string;
 }
 
 export interface GenerateJob {
@@ -57,6 +61,27 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
   const [estimate, setEstimate] = useState<EstimateResult | null>(null);
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
+  /** One per confirmation dialog: a double submit maps to the same hold (§3.4). */
+  const [requestId, setRequestId] = useState<string>("");
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function confirm() {
+    if (!source || !job || !estimate?.ok) return;
+    setConfirming(true);
+    setConfirmError(null);
+    try {
+      const r = await trpc.generation.start.mutate({ sourceVersionId: source, jdId: job, confirmedCredits: estimate.total, requestId });
+      router.push(appRoutes.generation(r.aiJobId));
+    } catch (err) {
+      const msg = trpcErrorMessage(err);
+      setConfirmError(msg);
+      // The price moved: re-estimate so the user confirms the new number.
+      if (/estimate changed/i.test(msg)) setEstimate(await estimateRun({ versionId: source, jdId: job, mode }));
+      setConfirming(false);
+    }
+  }
 
   const src = sources.find((s) => s.id === source);
   const jd = jobs.find((j) => j.id === job);
@@ -66,7 +91,9 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
     if (!source || !job) return;
     setEstimate(null);
     setOpen(true);
-    start(async () => setEstimate(await estimateRun({ resumeId: source, jdId: job, mode })));
+    setRequestId(crypto.randomUUID());
+    setConfirmError(null);
+    start(async () => setEstimate(await estimateRun({ versionId: source, jdId: job, mode })));
   }
 
   const legend = "font-display text-lg font-semibold px-1.5";
@@ -96,7 +123,7 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
                 <Option key={s.id} name="src" on={s.id === source} onSelect={() => setSource(s.id)}>
                   <span className="flex flex-1 flex-col gap-0.5">
                     <strong className="text-[15px]">{s.name}</strong>
-                    <span className="text-[13px] text-text-2">Original · uploaded {fmtRelative(s.createdAt)}</span>
+                    <span className="text-[13px] text-text-2">{s.sub}</span>
                   </span>
                 </Option>
               ))
@@ -125,7 +152,7 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
           <strong className="font-display text-lg">Summary</strong>
           <div className="flex flex-col gap-1 text-sm">
             <span className="text-text-2">{tailor ? "From" : "Resume"}</span>
-            <strong>{src ? `${src.name} · Original` : "—"}</strong>
+            <strong>{src?.name ?? "—"}</strong>
           </div>
           <div className="flex flex-col gap-1 text-sm">
             <span className="text-text-2">{tailor ? "For" : "Against"}</span>
@@ -158,10 +185,16 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
             <Button variant="ghost" className="h-11 px-[18px]" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            {/* Holds + AI jobs arrive with m6/m7. Until then nothing is held or charged. */}
-            <Button className="h-11 px-5" disabled title="Opening soon">
-              {tailor ? "Confirm and generate" : "Confirm and score"}
-            </Button>
+            {tailor ? (
+              <Button className="h-11 px-5" disabled={!estimate?.ok || confirming || live < (estimate?.ok ? estimate.total : 0)} onClick={() => void confirm()}>
+                {confirming ? "Starting…" : "Confirm and generate"}
+              </Button>
+            ) : (
+              // Scoring jobs arrive with m7; nothing is held or charged until then.
+              <Button className="h-11 px-5" disabled title="Opening soon">
+                Confirm and score
+              </Button>
+            )}
           </>
         }
       >
@@ -199,9 +232,12 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
                 We hold the estimate and charge only what&apos;s used. If anything fails, you pay nothing.
               </Callout>
             )}
-            <span className="text-[13px] text-text-2">
-              {tailor ? "Tailoring" : "Scoring"} opens soon. Nothing has been held or charged.
-            </span>
+            {!tailor ? <span className="text-[13px] text-text-2">Scoring opens soon. Nothing has been held or charged.</span> : null}
+            {confirmError ? (
+              <p role="alert" className="m-0 text-sm text-crit">
+                {confirmError}
+              </p>
+            ) : null}
           </div>
         ) : (
           <Callout tone="crit" role="alert">

@@ -14,6 +14,15 @@ const STEPS = [
 
 const ICON = { done: "M5 12l5 5 9-10", fail: "M7 7l10 10M17 7 7 17", now: "M12 7v5l3 2", todo: "M12 12h.01" };
 
+/** User-facing reason; grounding rule counts stay in ai_jobs.error for admins. */
+function failureReason(error: string | null | undefined): string {
+  if (!error) return "";
+  if (/grounding/i.test(error)) return "Our fact check couldn't confirm every detail against your resume, so nothing was saved.";
+  if (/analysis/i.test(error)) return "We couldn't analyse the job description.";
+  if (/deleted/i.test(error)) return "The resume you started from was deleted.";
+  return "Something went wrong on our side.";
+}
+
 /** design/screens/GenProgress.dc.html — running / done / failed. */
 export function GenerationProgress({ g }: { g: GenerationView }) {
   const { status } = g;
@@ -117,7 +126,7 @@ export function GenerationProgress({ g }: { g: GenerationView }) {
               <path d="M9 9l6 6M15 9l-6 6" />
             </svg>
             <span className="text-sm leading-normal">
-              <strong>Generation didn&apos;t finish.</strong> All {fmtCredits(g.heldCredits)} held credits were released, so you weren&apos;t charged.
+              <strong>Generation didn&apos;t finish.</strong> {failureReason(g.error)} All {fmtCredits(g.heldCredits)} held credits were released, so you weren&apos;t charged.
             </span>
           </div>
           <div className="flex justify-center gap-2.5">

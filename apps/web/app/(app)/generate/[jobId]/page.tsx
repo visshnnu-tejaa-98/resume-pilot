@@ -7,17 +7,15 @@ import { requireAppUser } from "@/server/session";
 
 export const metadata: Metadata = { title: "Tailoring your resume" };
 
-/** design/screens/GenProgress.dc.html. `?status=` only applies to the dev-only demo id. */
+/** design/screens/GenProgress.dc.html — refreshes itself while running. */
 export default async function GenerationPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ jobId: string }>;
-  searchParams: Promise<{ status?: string }>;
 }) {
   const { user } = await requireAppUser();
-  const [{ jobId }, { status }] = await Promise.all([params, searchParams]);
-  const gen = await loadGeneration(user.id, jobId, status);
+  const { jobId } = await params;
+  const gen = await loadGeneration(user.id, jobId);
   if (!gen) notFound();
   return (
     <AppMain width="full" className="py-14">

@@ -36,6 +36,10 @@ export const aiJobs = pgTable(
       .references(() => pricingConfig.version),
     idempotencyKey: text("idempotency_key").notNull(),
     error: text("error"),
+    /** What the job runs on (e.g. sourceVersionId, jdId) — for progress pages and admin. */
+    input: jsonb("input"),
+    /** The resume version a generation produced (prd.md §8.1 step 6). */
+    resultVersionId: uuid("result_version_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

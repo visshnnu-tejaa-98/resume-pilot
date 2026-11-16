@@ -187,10 +187,16 @@ importers:
       openai:
         specifier: 7.47.0
         version: 7.47.0(zod@4.6.7)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
       typescript:
         specifier: 6.0.3
         version: 6.0.3
@@ -358,10 +364,16 @@ importers:
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(postgres@4.1.1)
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
     devDependencies:
       '@react-email/render':
         specifier: 2.3.1
         version: 2.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@resume-pilot/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6

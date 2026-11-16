@@ -13,15 +13,20 @@ vi.mock("@resume-pilot/services", () => ({
   processExtraction,
   processStructuring,
   processJdAnalysis,
+  processGeneration,
+  purgeDeletedVersions,
 }));
 vi.mock("@resume-pilot/storage", () => ({ getStorage: () => ({ deleteFile: vi.fn() }) }));
 const processExtraction = vi.hoisted(() => vi.fn());
 const processStructuring = vi.hoisted(() => vi.fn());
 const processJdAnalysis = vi.hoisted(() => vi.fn());
+const processGeneration = vi.hoisted(() => vi.fn());
+const purgeDeletedVersions = vi.hoisted(() => vi.fn().mockResolvedValue({ purged: 0 }));
 
 const {
   finishEmailJob,
   handleExtractionJob,
+  handleGenerationJob,
   handleJdAnalysisJob,
   handleStructuringJob,
   handleMaintenanceJob,
@@ -202,5 +207,23 @@ describe("handleJdAnalysisJob", () => {
     expect(spy).toHaveBeenCalledWith({}, data, { analyze, isFinalAttempt: true });
     await handleJdAnalysisJob({ data, attemptsMade: 0, opts: { attempts: 2 } }, { db: {} as never, analyze });
     expect(spy).toHaveBeenLastCalledWith({}, data, { analyze, isFinalAttempt: false });
+  });
+});
+
+describe("handleGenerationJob", () => {
+  it("passes the job id and final-attempt flag through", async () => {
+    processGeneration.mockReset().mockResolvedValue({ status: "succeeded", versionId: "v", creditsCharged: 500 });
+    const data = { aiJobId: "7b0b2f1e-3c4d-4e5f-8a9b-0c1d2e3f4a5b" };
+    const generate = vi.fn();
+    const analyze = vi.fn();
+    await handleGenerationJob({ data, attemptsMade: 1, opts: { attempts: 2 } }, { db: {} as never, generate, analyze });
+    expect(processGeneration).toHaveBeenCalledWith({}, data, { generate, analyze, isFinalAttempt: true });
+  });
+});
+
+describe("maintenance: purge-versions", () => {
+  it("runs the 30-day purge", async () => {
+    await handleMaintenanceJob("purge-versions", { db: {} as never });
+    expect(purgeDeletedVersions).toHaveBeenCalled();
   });
 });

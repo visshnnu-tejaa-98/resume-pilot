@@ -1,84 +1,11 @@
-import type { AtsReportView, CompareView, GenerationStatus, GenerationView, ResumeDoc, VersionView } from "./types";
+import type { AtsReportView, CompareView } from "./types";
 
 /**
  * Sample data copied from the design mockups, served ONLY for the id
  * "demo" and ONLY outside production (see src/server/versions.ts). It
- * lets the version screens be reviewed before generation exists.
+ * lets the ATS report and compare screens be reviewed before scoring (m7) exists.
  */
 export const DEMO_ID = "demo";
-
-const doc: ResumeDoc = {
-  name: "Asha Rao",
-  contact: "Frontend Engineer · Bengaluru · asha.rao@example.com · linkedin.com/in/asharao",
-  sections: [
-    {
-      id: "summary",
-      heading: "Summary",
-      items: [{ lines: ["Frontend engineer with 5 years of experience building React and TypeScript design systems and fast, accessible web apps."] }],
-    },
-    {
-      id: "work",
-      heading: "Experience",
-      items: [
-        {
-          title: "Frontend Engineer · Northwind",
-          date: "Jul 2023 – Present",
-          lines: [
-            "• Lead development of Northwind’s React and TypeScript design system, used across all customer-facing web apps.",
-            "• Partner with product designers on tokens, theming and accessible components.",
-            "• Mentor two junior engineers through code reviews and pairing.",
-          ],
-        },
-        {
-          title: "Software Engineer · Globex",
-          date: "Jan 2021 – Jun 2023",
-          lines: [
-            "• Built the checkout UI in React, used by every Globex web customer.",
-            "• Maintained the shared component library and its documentation.",
-            "• Worked with design to roll out a new type scale across the product.",
-          ],
-        },
-      ],
-    },
-    { id: "projects", heading: "Projects", items: [{ title: "Open-source date picker", date: "2024", lines: ["• Accessible React date picker with keyboard support and TypeScript types."] }] },
-    { id: "skills", heading: "Skills", items: [{ lines: ["React · TypeScript · JavaScript · Next.js · HTML · CSS · Storybook · Jest · Playwright · Git · Webpack · Figma"] }] },
-    { id: "education", heading: "Education", items: [{ title: "B.Tech, Computer Science · [UNIVERSITY]", date: "2016 – 2020", lines: [] }] },
-  ],
-};
-
-export const demoVersion: VersionView = {
-  id: DEMO_ID,
-  company: "Acme Corp",
-  role: "Frontend Engineer",
-  sourceLabel: "Asha Rao · Original",
-  template: "Modern",
-  savedAt: new Date(),
-  sections: [
-    { id: "personal", label: "Personal info", visible: true },
-    { id: "summary", label: "Summary", visible: true },
-    { id: "work", label: "Work experience", visible: true },
-    { id: "skills", label: "Skills", visible: true },
-    { id: "projects", label: "Projects", visible: true },
-    { id: "education", label: "Education", visible: true },
-    { id: "certifications", label: "Certifications", visible: false },
-  ],
-  work: [
-    {
-      id: "w1",
-      company: "Northwind",
-      designation: "Frontend Engineer",
-      dates: "Jul 2023 – Present",
-      bullets: [
-        { id: "b1", origin: "ai", text: "Lead development of Northwind’s React and TypeScript design system, used across all customer-facing web apps.", originalText: "Worked on the company's UI component library in React." },
-        { id: "b2", origin: "ai", text: "Partner with product designers on tokens, theming and accessible components.", originalText: "Worked with designers on theming." },
-        { id: "b3", origin: "user", text: "Mentor two junior engineers through code reviews and pairing.", originalText: "Mentored junior engineers." },
-      ],
-    },
-  ],
-  score: { value: 82, outdated: false },
-  doc,
-  fileName: "Asha-Rao-Frontend-Engineer.pdf",
-};
 
 export const demoReport: AtsReportView = {
   versionId: DEMO_ID,
@@ -150,17 +77,3 @@ export const demoCompare: CompareView = {
     tailored: "Lead development of Northwind's React and TypeScript design system, used across all customer-facing web apps.",
   },
 };
-
-export function demoGeneration(status: GenerationStatus): GenerationView {
-  return {
-    jobId: DEMO_ID,
-    label: "Umbrella Health · Frontend Developer · from your original",
-    status,
-    elapsed: "0:48",
-    currentStep: status === "done" ? 5 : status === "failed" ? 3 : 2,
-    stepTimes: ["0:06", "0:09", "0:21", "0:08", "0:04"],
-    heldCredits: 640,
-    usedCredits: status === "done" ? 591 : null,
-    versionId: status === "done" ? DEMO_ID : null,
-  };
-}

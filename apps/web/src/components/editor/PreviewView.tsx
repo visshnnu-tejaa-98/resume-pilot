@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ResumeDocument } from "@/components/resume/ResumeDocument";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Field";
+import { resumeToDoc } from "@/features/versions/doc";
 import type { VersionView } from "@/features/versions/types";
 import { appRoutes } from "@/lib/routes";
 import { TEMPLATES, type TemplateName } from "@/stores/preferences-store";
@@ -28,7 +29,7 @@ export function PreviewView({ version }: { version: VersionView }) {
           Back to editor
         </Link>
         <strong className="font-display text-base">
-          {version.company} · {version.role}
+          {[version.company, version.role].filter(Boolean).join(" · ")}
         </strong>
         <label className="ml-auto flex items-center gap-2 text-sm text-text-2">
           Template
@@ -58,7 +59,7 @@ export function PreviewView({ version }: { version: VersionView }) {
           <span>A4 · 1 page · selectable text · ATS-friendly single column</span>
           <span>Downloads are free</span>
         </div>
-        <ResumeDocument doc={version.doc} template={template} hiddenSections={new Set(version.sections.filter((s) => !s.visible).map((s) => s.id))} />
+        <ResumeDocument doc={resumeToDoc(version.content)} template={template} />
       </div>
     </div>
   );

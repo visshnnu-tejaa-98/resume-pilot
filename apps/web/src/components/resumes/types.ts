@@ -11,9 +11,8 @@ export interface ResumeListItem {
 }
 
 /**
- * A tailored version under an original. Generation (tasks/todo/m6) and
- * scoring (m7) aren't built yet, so pages pass an empty list for now;
- * the UI is ready for these rows.
+ * A tailored version under its original (resume_versions, kind=generated).
+ * Score fields fill in once ATS scoring (m7) runs.
  */
 export interface VersionListItem {
   id: string;
