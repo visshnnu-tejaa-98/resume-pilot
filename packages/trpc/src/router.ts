@@ -10,6 +10,11 @@ import {
   ReferralReviewError,
   RetryExtractionError,
   ReviewError,
+  JdNotFoundError,
+  createJobDescription,
+  getJobDescription,
+  listJobDescriptions,
+  reviseJobDescription,
   getGenerationReadiness,
   saveOriginalReview,
   reviewFlaggedReferral,
@@ -25,6 +30,8 @@ import {
 } from "@resume-pilot/services";
 import {
   createCouponInputSchema,
+  jdInputSchema,
+  reviseJdInputSchema,
   createPricingConfigVersionInputSchema,
   redeemCodeInputSchema,
   reviewReferralInputSchema,
@@ -58,6 +65,9 @@ function toTRPCError(err: unknown): never {
     err instanceof RetryExtractionError
   ) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
+  }
+  if (err instanceof JdNotFoundError) {
+    throw new TRPCError({ code: "NOT_FOUND", message: err.message, cause: err });
   }
   if (err instanceof ReviewError) {
     throw new TRPCError({
@@ -189,6 +199,25 @@ export const appRouter = router({
         getGenerationReadiness(ctx.db, { userId: ctx.user.id, resumeId: input.resumeId }).catch(
           toTRPCError,
         ),
+      ),
+  }),
+
+  /** Saved job descriptions — prd.md §7.1. Saving is free; the 200–30,000 limit is enforced here and in the DB. */
+  jds: router({
+    list: authProcedure.query(({ ctx }) => listJobDescriptions(ctx.db, ctx.user.id)),
+    get: authProcedure
+      .input(z.object({ jdId: z.uuid() }))
+      .query(({ ctx, input }) =>
+        getJobDescription(ctx.db, { userId: ctx.user.id, jdId: input.jdId }).catch(toTRPCError),
+      ),
+    create: authProcedure
+      .input(jdInputSchema)
+      .mutation(({ ctx, input }) => createJobDescription(ctx.db, ctx.user.id, input)),
+    /** Editing saves a new JD; the old one keeps backing whatever was built from it. */
+    revise: authProcedure
+      .input(reviseJdInputSchema)
+      .mutation(({ ctx, input }) =>
+        reviseJobDescription(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError),
       ),
   }),
 

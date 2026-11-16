@@ -1,7 +1,7 @@
 # JD input
 
 **Milestone:** M5 · prd.md §7.1, §16.2.7
-**Status:** todo
+**Status:** testing
 
 ## Scope
 

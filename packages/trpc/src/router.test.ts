@@ -372,3 +372,51 @@ describe.skipIf(!connectionString)("appRouter.resumes (real DB)", () => {
     expect(await caller.resumes.list()).toEqual([]);
   });
 });
+
+describe.skipIf(!connectionString)("appRouter.jds (real DB)", () => {
+  let db: Database;
+  const clerkA = `clerk_${randomUUID()}`;
+  const clerkB = `clerk_${randomUUID()}`;
+  const ids: string[] = [];
+  const JD = "We are hiring a frontend engineer. ".repeat(8);
+
+  beforeAll(async () => {
+    db = createDatabase(connectionString ?? "");
+    for (const c of [clerkA, clerkB]) {
+      const { userId } = await createUserFromClerkWebhook(db, {
+        clerkUserId: c,
+        email: `jd-trpc-${randomUUID()}@example.com`,
+      });
+      ids.push(userId);
+    }
+  });
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, ids));
+    await db.$client.end();
+  });
+
+  it("done-when (16.2.7): create rejects text over 30,000 chars with BAD_REQUEST", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: clerkA }));
+    await expect(caller.jds.create({ text: "x".repeat(30_001) })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    await expect(caller.jds.create({ text: "too short" })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(await caller.jds.list()).toEqual([]);
+  });
+
+  it("saves, lists and revises the caller's own JDs; others get NOT_FOUND", async () => {
+    const a = appRouter.createCaller(createContext({ db, userId: clerkA }));
+    const b = appRouter.createCaller(createContext({ db, userId: clerkB }));
+    const jd = await a.jds.create({ text: JD, jobTitle: "Frontend Engineer" });
+    expect((await a.jds.list()).map((j) => j.id)).toEqual([jd.id]);
+    await expect(b.jds.get({ jdId: jd.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(b.jds.revise({ jdId: jd.id, text: JD + "x" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    const revised = await a.jds.revise({ jdId: jd.id, text: JD + "Remote OK." });
+    expect(revised.id).not.toBe(jd.id);
+    expect((await a.jds.get({ jdId: jd.id })).text).toBe(JD.trim());
+  });
+});

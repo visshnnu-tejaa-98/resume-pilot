@@ -46,6 +46,9 @@ export default async function DashboardPage() {
         Balance: <strong>{wallet.balance.toLocaleString()}</strong> credits
       </p>
       <p className="font-mono text-sm">Referral code: {wallet.referralCode}</p>
+      <Link href="/jobs" style={{ color: "var(--color-link)" }}>
+        Job descriptions
+      </Link>
       {myResumes.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm">
           {myResumes.map((r) => (

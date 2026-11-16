@@ -107,3 +107,10 @@ export {
   saveOriginalReview,
   type ReviewErrorCode,
 } from "./review";
+export {
+  createJobDescription,
+  getJobDescription,
+  JdNotFoundError,
+  listJobDescriptions,
+  reviseJobDescription,
+} from "./jd";
