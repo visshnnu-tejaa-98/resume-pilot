@@ -6,17 +6,39 @@ import { WelcomeEmail } from "./templates/Welcome";
 describe("WelcomeEmail", () => {
   const props = {
     firstName: "Asha",
-    referralCode: "EARLYBIRD",
+    launchCoupon: { code: "EARLYBIRD", credits: 500 },
+    referralCredits: 100,
     uploadUrl: "https://app.resumepilot.app/dashboard",
+    walletUrl: "https://app.resumepilot.app/wallet",
   };
 
-  it("renders the recipient's name and referral code, light and dark", async () => {
+  it("renders name, launch coupon, referral option and links, light and dark", async () => {
     for (const dark of [false, true]) {
       const html = await render(WelcomeEmail({ ...props, dark }));
       expect(html).toContain("Asha");
       expect(html).toContain("EARLYBIRD");
+      expect(html).toContain("500 free credits");
+      expect(html).toContain("100 credits");
       expect(html).toContain(props.uploadUrl);
+      expect(html).toContain(props.walletUrl);
     }
+  });
+
+  it("uses the coupon amount from props, not a hardcoded 500", async () => {
+    const html = await render(
+      WelcomeEmail({ ...props, launchCoupon: { code: "LAUNCH25", credits: 2500 } }),
+    );
+    expect(html).toContain("LAUNCH25");
+    expect(html).toContain("2,500 free credits");
+    expect(html).not.toContain("EARLYBIRD");
+  });
+
+  it("hides the gift block when there's no active launch coupon, keeps the referral option", async () => {
+    const html = await render(WelcomeEmail({ ...props, launchCoupon: null }));
+    expect(html).not.toContain("EARLYBIRD");
+    expect(html).not.toContain("Claim");
+    expect(html).toContain("100 free credits");
+    expect(html).toContain("0 credits");
   });
 
   it("has a plain-text version", async () => {

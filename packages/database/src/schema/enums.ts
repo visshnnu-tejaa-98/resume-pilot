@@ -74,4 +74,6 @@ export const emailMessageStatusEnum = pgEnum("email_message_status", [
   "bounced",
   "failed",
   "unsubscribed",
+  /** Not sent on purpose: suppressed address or suspended user (prd.md §13.1, §13.5). */
+  "skipped",
 ]);

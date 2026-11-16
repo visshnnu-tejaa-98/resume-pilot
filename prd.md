@@ -705,6 +705,7 @@ resume-pilot/
 │   ├── file-processing/ latex, pdf, docx, images
 │   ├── storage/        ImageKit wrapper (upload, signed URL, delete)
 │   ├── resume-templates/ 5 templates, shared HTML renderer, print CSS, fonts
+│   ├── queue/          BullMQ queue names, job payloads (Zod), enqueue helpers
 │   └── emails/         React Email templates, shared header/footer, plain-text versions
 ├── turbo.json
 └── pnpm-workspace.yaml

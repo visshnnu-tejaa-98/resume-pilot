@@ -32,8 +32,10 @@ describe("sendEmail", () => {
       subject: "Welcome to Resume Pilot, Asha",
       element: WelcomeEmail({
         firstName: "Asha",
-        referralCode: "EARLYBIRD",
+        launchCoupon: { code: "EARLYBIRD", credits: 500 },
+        referralCredits: 100,
         uploadUrl: "https://app.resumepilot.app/dashboard",
+        walletUrl: "https://app.resumepilot.app/dashboard",
       }),
     });
 
@@ -55,7 +57,10 @@ describe("sendEmail", () => {
         subject: "x",
         element: WelcomeEmail({
           firstName: "Asha",
+          launchCoupon: null,
+          referralCredits: 100,
           uploadUrl: "https://app.resumepilot.app/dashboard",
+          walletUrl: "https://app.resumepilot.app/dashboard",
         }),
       }),
     ).rejects.toThrow(/SMTP is not configured/);

@@ -14,9 +14,25 @@ import { emailTheme, FONT_DISPLAY, FONT_MONO, FONT_SANS } from "../components/th
 
 export interface WelcomeEmailProps {
   firstName: string;
-  referralCode?: string;
+  /**
+   * The launch coupon (EARLYBIRD), read from `coupons` at send time so
+   * the code and amount are never hardcoded. `null` hides the gift
+   * block, e.g. once the coupon is deactivated or expired.
+   */
+  launchCoupon: { code: string; credits: number } | null;
+  /** Credits a new user gets for applying a friend's referral code (prd.md §2.1). */
+  referralCredits: number;
+  /** Where "Upload my resume" goes. */
   uploadUrl: string;
+  /** Where codes are applied. */
+  walletUrl: string;
   dark?: boolean;
+}
+
+const fmt = (n: number) => n.toLocaleString("en-IN");
+
+export function welcomeEmailSubject(firstName: string): string {
+  return `Welcome to Resume Pilot, ${firstName}`;
 }
 
 const STEPS = [
@@ -30,16 +46,21 @@ const STEPS = [
 
 export function WelcomeEmail({
   firstName,
-  referralCode = "EARLYBIRD",
+  launchCoupon,
+  referralCredits,
   uploadUrl,
+  walletUrl,
   dark = false,
 }: WelcomeEmailProps) {
   const t = emailTheme(dark);
+  const preview = launchCoupon
+    ? `Claim ${fmt(launchCoupon.credits)} free credits and tailor your first resume.`
+    : "Tailor your first resume in three steps.";
 
   return (
     <Html>
       <Head />
-      <Preview>Claim 500 free credits and tailor your first resume.</Preview>
+      <Preview>{preview}</Preview>
       <Body style={{ margin: 0, background: t.outer, fontFamily: FONT_SANS }}>
         <Container style={{ width: "600px", padding: "24px 0" }}>
           <Section
@@ -72,50 +93,68 @@ export function WelcomeEmail({
                 and never invents anything. Uploading your resume is free.
               </Text>
 
-              <Section
-                style={{
-                  border: `2px dashed ${t.accentLine}`,
-                  background: t.accentTint,
-                  borderRadius: "10px",
-                  padding: "20px",
-                  textAlign: "center",
-                  marginBottom: "22px",
-                }}
-              >
-                <Text
-                  style={{ margin: "0 0 6px", fontSize: "13px", fontWeight: 600, color: t.text2 }}
-                >
-                  Your launch gift
-                </Text>
-                <Text
+              {launchCoupon ? (
+                <Section
                   style={{
-                    margin: "0 0 6px",
-                    fontFamily: FONT_MONO,
-                    fontSize: "28px",
-                    fontWeight: 700,
-                    letterSpacing: "0.08em",
-                    color: t.text,
+                    border: `2px dashed ${t.accentLine}`,
+                    background: t.accentTint,
+                    borderRadius: "10px",
+                    padding: "20px",
+                    textAlign: "center",
+                    marginBottom: "22px",
                   }}
                 >
-                  {referralCode}
-                </Text>
-                <Text style={{ margin: "0 0 14px", fontSize: "14px", color: t.text }}>
-                  Apply it in your wallet for <strong>500 free credits</strong>.
-                </Text>
-                <Button
-                  href={uploadUrl}
+                  <Text
+                    style={{ margin: "0 0 6px", fontSize: "13px", fontWeight: 600, color: t.text2 }}
+                  >
+                    Your launch gift
+                  </Text>
+                  <Text
+                    style={{
+                      margin: "0 0 6px",
+                      fontFamily: FONT_MONO,
+                      fontSize: "28px",
+                      fontWeight: 700,
+                      letterSpacing: "0.08em",
+                      color: t.text,
+                    }}
+                  >
+                    {launchCoupon.code}
+                  </Text>
+                  <Text style={{ margin: "0 0 14px", fontSize: "14px", color: t.text }}>
+                    Apply it in your wallet for{" "}
+                    <strong>{fmt(launchCoupon.credits)} free credits</strong>.
+                  </Text>
+                  <Button
+                    href={walletUrl}
+                    style={{
+                      padding: "14px 26px",
+                      borderRadius: "6px",
+                      background: t.accent,
+                      color: t.onAccent,
+                      fontWeight: 700,
+                      fontSize: "15px",
+                    }}
+                  >
+                    {`Claim ${fmt(launchCoupon.credits)} credits`}
+                  </Button>
+                  <Text style={{ margin: "14px 0 0", fontSize: "13px", color: t.text2 }}>
+                    {`Have a friend's referral code? Apply that instead for ${fmt(referralCredits)} credits. One code per account.`}
+                  </Text>
+                </Section>
+              ) : (
+                <Text
                   style={{
-                    padding: "14px 26px",
-                    borderRadius: "6px",
-                    background: t.accent,
-                    color: t.onAccent,
-                    fontWeight: 700,
-                    fontSize: "15px",
+                    margin: "0 0 22px",
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    color: t.text2,
                   }}
                 >
-                  Claim 500 credits
-                </Button>
-              </Section>
+                  {"Have a friend's referral code? Apply it in your wallet for "}
+                  <strong>{`${fmt(referralCredits)} free credits`}</strong>.
+                </Text>
+              )}
 
               <Text
                 style={{ margin: "0 0 14px", fontSize: "15px", fontWeight: 600, color: t.text }}
@@ -200,8 +239,10 @@ export function WelcomeEmail({
 
 WelcomeEmail.PreviewProps = {
   firstName: "Asha",
-  referralCode: "EARLYBIRD",
+  launchCoupon: { code: "EARLYBIRD", credits: 500 },
+  referralCredits: 100,
   uploadUrl: "https://app.resumepilot.app/dashboard",
+  walletUrl: "https://app.resumepilot.app/dashboard",
   dark: false,
 } satisfies WelcomeEmailProps;
 

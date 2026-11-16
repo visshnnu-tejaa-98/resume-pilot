@@ -34,6 +34,7 @@ packages/credits/      estimate, hold, capture, release, pricing config
 packages/file-processing/ latex, pdf, docx, images
 packages/storage/      ImageKit wrapper (upload, signed URL, delete)
 packages/resume-templates/ 5 templates, shared HTML renderer, print CSS, fonts
+packages/queue/        BullMQ queue names, job payload schemas, enqueue helpers, Redis connection
 packages/emails/       React Email templates
 ```
 

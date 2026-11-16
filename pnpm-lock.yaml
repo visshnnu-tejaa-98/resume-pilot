@@ -47,6 +47,9 @@ importers:
       '@resume-pilot/emails':
         specifier: workspace:*
         version: link:../../packages/emails
+      '@resume-pilot/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@resume-pilot/services':
         specifier: workspace:*
         version: link:../../packages/services
@@ -59,6 +62,9 @@ importers:
       '@trpc/server':
         specifier: 11.28.0
         version: 11.28.0(next@16.4.6(@types/node@26.6.6)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(typescript@6.0.3)
+      bullmq:
+        specifier: 6.7.5
+        version: 6.7.5(ioredis@6.0.0)
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(postgres@4.1.1)
@@ -102,12 +108,21 @@ importers:
 
   apps/worker:
     dependencies:
+      '@resume-pilot/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@resume-pilot/emails':
+        specifier: workspace:*
+        version: link:../../packages/emails
+      '@resume-pilot/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
+      '@resume-pilot/services':
+        specifier: workspace:*
+        version: link:../../packages/services
       bullmq:
         specifier: 6.7.5
         version: 6.7.5(ioredis@6.0.0)
-      ioredis:
-        specifier: 6.0.0
-        version: 6.0.0
     devDependencies:
       '@types/node':
         specifier: 26.6.6
@@ -209,6 +224,28 @@ importers:
         specifier: 5.1.0
         version: 5.1.0(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
+  packages/queue:
+    dependencies:
+      bullmq:
+        specifier: 6.7.5
+        version: 6.7.5(ioredis@6.0.0)
+      ioredis:
+        specifier: 6.0.0
+        version: 6.0.0
+      zod:
+        specifier: 4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.6
+        version: 26.6.6
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 5.1.0
+        version: 5.1.0(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
   packages/resume-templates:
     devDependencies:
       typescript:
@@ -226,6 +263,12 @@ importers:
       '@resume-pilot/database':
         specifier: workspace:*
         version: link:../database
+      '@resume-pilot/emails':
+        specifier: workspace:*
+        version: link:../emails
+      '@resume-pilot/queue':
+        specifier: workspace:*
+        version: link:../queue
       '@resume-pilot/validators':
         specifier: workspace:*
         version: link:../validators
@@ -233,6 +276,9 @@ importers:
         specifier: 0.45.4
         version: 0.45.4(postgres@4.1.1)
     devDependencies:
+      '@react-email/render':
+        specifier: 2.3.1
+        version: 2.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6

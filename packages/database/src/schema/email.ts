@@ -95,6 +95,8 @@ export const emailMessages = pgTable(
     campaignId: uuid("campaign_id").references(() => emailCampaigns.id),
     status: emailMessageStatusEnum("status").notNull().default("queued"),
     providerMessageId: text("provider_message_id"),
+    /** Why a send failed or was skipped — shown in the admin email log. */
+    error: text("error"),
     idempotencyKey: text("idempotency_key").notNull(),
     mergeData: jsonb("merge_data"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

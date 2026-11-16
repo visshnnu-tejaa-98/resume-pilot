@@ -1,7 +1,7 @@
 # Transactional email templates
 
 **Milestone:** M11 · prd.md §13.1, §13.3, §16.2.16, §16.2.17, §16.2.21
-**Status:** todo
+**Status:** todo (`welcome` is done: template, plain text and once-only send, see 03-sending-pipeline.md "Progress"; 5 to go)
 
 ## Scope
 

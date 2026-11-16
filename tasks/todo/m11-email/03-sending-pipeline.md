@@ -1,7 +1,7 @@
 # Email sending pipeline
 
 **Milestone:** M11 · prd.md §13.2
-**Status:** todo
+**Status:** todo (partly built: the transactional queue and the `welcome` email work end to end; see "Progress")
 
 ## Scope
 
@@ -22,3 +22,19 @@
 - A large simulated campaign send never delays a concurrent transactional email beyond its 2-minute SLA
 - Re-running the same email job (same idempotency key) never sends twice (acceptance 16.2.16)
 - A simulated 550 recipient rejection suppresses the address; a simulated 421 retries and then succeeds
+
+## Progress
+
+The `welcome` email is built on this pipeline (prd.md §13.1):
+
+- `packages/queue` holds the queue names, Zod job payloads, and `enqueueTransactionalEmail`. The job id is the idempotency key, with `:` replaced by `-`. Jobs get 3 attempts with exponential backoff (10 s, 20 s).
+- The Clerk webhook enqueues `welcome` on every `user.created` delivery and returns 500 if Redis is down, so Clerk retries.
+- `apps/worker` consumes the `email-transactional` queue and calls `processTransactionalEmail` in `packages/services/src/email.ts`. That function:
+  - logs an `email_messages` row (`welcome:<userId>`) before sending
+  - runs the send under an advisory lock on that key, so the email goes out exactly once, even with concurrent duplicate jobs
+  - skips suspended users and hard-bounced addresses (status `skipped`, migration 0003)
+  - on a 5xx recipient rejection, marks the row failed and suppresses the address
+  - on a transient error, retries, and marks the row failed on the final attempt
+- The welcome template reads the launch coupon from `coupons` (`LAUNCH_COUPON_CODE`, default EARLYBIRD) and hides the gift block if the coupon is inactive. It also offers the 100-credit friend referral option.
+
+Still to do here: a marketing queue with a campaign throttle, the remaining 5 transactional templates, the daily inactive-user scheduler, and the pending-payment delayed job.

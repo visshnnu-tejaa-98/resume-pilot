@@ -10,6 +10,13 @@ export {
 } from "./pricing";
 
 /**
+ * Credits each side gets for a referral (prd.md v2.2 §2.1: 100 to the
+ * referrer, 100 to the new user). Decided, not an open §16.4 value —
+ * move into config if that ever changes.
+ */
+export const REFERRAL_REWARD_CREDITS = 100;
+
+/**
  * Placeholder for the real estimate -> hold -> capture flow
  * (tasks/todo/m2-credits/02-estimate-hold-capture.md). Still consumed by
  * the `ping` procedure in @resume-pilot/trpc to prove workspace wiring.

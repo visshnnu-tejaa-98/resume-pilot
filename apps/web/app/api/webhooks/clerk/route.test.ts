@@ -2,7 +2,12 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { createDatabase, users, type Database } from "@resume-pilot/database";
 import { eq } from "drizzle-orm";
 import { Webhook } from "svix";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+
+// The real queue needs Redis; capture enqueues instead. The worker side
+// (sending, idempotency, retries) is covered in services/worker tests.
+const queueAdd = vi.hoisted(() => vi.fn());
+vi.mock("@/server/queue", () => ({ getTransactionalEmailQueue: () => ({ add: queueAdd }) }));
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -32,11 +37,12 @@ function signedRequest(secret: string, body: string) {
   });
 }
 
-function userCreatedPayload(clerkUserId: string, email: string) {
+function userCreatedPayload(clerkUserId: string, email: string, firstName: string | null = "Asha") {
   return JSON.stringify({
     type: "user.created",
     data: {
       id: clerkUserId,
+      first_name: firstName,
       email_addresses: [{ id: "idn_1", email_address: email }],
       primary_email_address_id: "idn_1",
     },
@@ -49,6 +55,11 @@ describe.skipIf(!connectionString)("POST /api/webhooks/clerk", () => {
   beforeAll(() => {
     process.env.CLERK_WEBHOOK_SECRET = TEST_SECRET;
     db = createDatabase(connectionString ?? "");
+  });
+
+  beforeEach(() => {
+    queueAdd.mockReset();
+    queueAdd.mockResolvedValue(undefined);
   });
 
   afterAll(async () => {
@@ -108,5 +119,48 @@ describe.skipIf(!connectionString)("POST /api/webhooks/clerk", () => {
     const res = await POST(signedRequest(TEST_SECRET, body));
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("ignored");
+  });
+
+  it("enqueues exactly one welcome job with the idempotent job id on signup", async () => {
+    const { POST } = await import("./route");
+    const clerkUserId = `clerk_${randomUUID()}`;
+    const res = await POST(
+      signedRequest(TEST_SECRET, userCreatedPayload(clerkUserId, "welcome-q@example.com")),
+    );
+    const { userId } = (await res.json()) as { userId: string };
+
+    expect(queueAdd).toHaveBeenCalledTimes(1);
+    expect(queueAdd).toHaveBeenCalledWith(
+      "welcome",
+      { templateKey: "welcome", userId, firstName: "Asha" },
+      expect.objectContaining({ jobId: `welcome-${userId}`, attempts: 3 }),
+    );
+  });
+
+  it("re-enqueues with the same job id on a duplicate delivery (deduped downstream)", async () => {
+    const { POST } = await import("./route");
+    const body = userCreatedPayload(`clerk_${randomUUID()}`, "welcome-dup@example.com", null);
+    await POST(signedRequest(TEST_SECRET, body));
+    await POST(signedRequest(TEST_SECRET, body));
+
+    expect(queueAdd).toHaveBeenCalledTimes(2);
+    const [a, b] = queueAdd.mock.calls.map((c) => c[2].jobId);
+    expect(a).toBe(b);
+    expect(queueAdd.mock.calls[0]?.[1].firstName).toBeNull();
+  });
+
+  it("returns 500 when the queue is down so Clerk retries, and the retry enqueues", async () => {
+    const { POST } = await import("./route");
+    const clerkUserId = `clerk_${randomUUID()}`;
+    const body = userCreatedPayload(clerkUserId, "welcome-redis-down@example.com");
+
+    queueAdd.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+    const first = await POST(signedRequest(TEST_SECRET, body));
+    expect(first.status).toBe(500);
+
+    const retry = await POST(signedRequest(TEST_SECRET, body));
+    expect(retry.status).toBe(200);
+    expect(((await retry.json()) as { created: boolean }).created).toBe(false);
+    expect(queueAdd).toHaveBeenCalledTimes(2);
   });
 });

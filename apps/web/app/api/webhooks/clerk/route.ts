@@ -1,8 +1,9 @@
 import { createUserFromClerkWebhook } from "@resume-pilot/services";
-import { sendWelcomeEmail } from "@resume-pilot/emails";
+import { enqueueTransactionalEmail } from "@resume-pilot/queue";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Webhook, type WebhookRequiredHeaders } from "svix";
 import { getDb } from "@/server/db";
+import { getTransactionalEmailQueue } from "@/server/queue";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -92,18 +93,23 @@ export async function POST(req: Request) {
     } catch (err) {
       console.error("[clerk-webhook] failed to mirror role into Clerk metadata:", err);
     }
+  }
 
-    // Best-effort — SMTP may not be configured yet (tasks/todo/m11-email),
-    // so a send failure here never blocks the webhook from succeeding.
-    try {
-      await sendWelcomeEmail({
-        to: email,
-        firstName: event.data.first_name?.trim() || "there",
-        uploadUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/dashboard`,
-      });
-    } catch (err) {
-      console.error("[clerk-webhook] failed to send welcome email:", err);
-    }
+  // Welcome email (prd.md §13.1): enqueued, not sent inline, so SMTP
+  // latency never slows the webhook and failed sends retry in the
+  // worker. Enqueued on *every* delivery, not just when the user was
+  // created: if Redis was down on the first delivery we return 500,
+  // Clerk retries, and the retry (created=false) still enqueues. The
+  // job id and email_messages.idempotency_key make duplicates no-ops.
+  try {
+    await enqueueTransactionalEmail(getTransactionalEmailQueue(), {
+      templateKey: "welcome",
+      userId: result.userId,
+      firstName: event.data.first_name,
+    });
+  } catch (err) {
+    console.error("[clerk-webhook] failed to enqueue welcome email:", err);
+    return new Response("Failed to enqueue welcome email", { status: 500 });
   }
 
   return new Response(JSON.stringify(result), {

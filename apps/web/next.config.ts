@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "@resume-pilot/resume-templates",
     "@resume-pilot/emails",
     "@resume-pilot/database",
+    "@resume-pilot/queue",
   ],
 };
 

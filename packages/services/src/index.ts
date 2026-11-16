@@ -15,3 +15,10 @@ export {
   NoActivePricingConfigError,
   type PricingConfigRecord,
 } from "./pricing";
+export {
+  isPermanentRecipientRejection,
+  processTransactionalEmail,
+  type EmailProcessContext,
+  type EmailProcessResult,
+  type SendFn,
+} from "./email";
