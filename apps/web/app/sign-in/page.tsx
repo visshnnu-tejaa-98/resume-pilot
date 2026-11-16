@@ -23,6 +23,9 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Second step: Clerk asks for a code on a new device (client trust) or MFA.
+  const [factor, setFactor] = useState<"email_code" | "phone_code" | "totp" | null>(null);
+  const [code, setCode] = useState("");
 
   async function handleOAuth(strategy: "oauth_google" | "oauth_linkedin_oidc") {
     if (!isLoaded) return;
@@ -48,8 +51,36 @@ export default function SignInPage() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         router.push("/dashboard");
+      } else if (
+        result.status === "needs_second_factor" ||
+        (result.status as string) === "needs_client_trust"
+      ) {
+        const factors = (result.supportedSecondFactors ?? []) as Array<{
+          strategy: string;
+          emailAddressId?: string;
+          phoneNumberId?: string;
+        }>;
+        const pick =
+          factors.find((f) => f.strategy === "email_code") ??
+          factors.find((f) => f.strategy === "totp") ??
+          factors.find((f) => f.strategy === "phone_code");
+        if (!pick) {
+          setError("This account needs a verification method we don't support yet.");
+          return;
+        }
+        if (pick.strategy === "email_code") {
+          await signIn.prepareSecondFactor({
+            strategy: "email_code",
+            emailAddressId: pick.emailAddressId,
+          } as Parameters<typeof signIn.prepareSecondFactor>[0]);
+        } else if (pick.strategy === "phone_code") {
+          await signIn.prepareSecondFactor({
+            strategy: "phone_code",
+            phoneNumberId: pick.phoneNumberId,
+          } as Parameters<typeof signIn.prepareSecondFactor>[0]);
+        }
+        setFactor(pick.strategy as "email_code" | "phone_code" | "totp");
       } else {
-        // needs_first_factor / needs_second_factor (MFA) — not built yet.
         setError("Additional verification is required for this account.");
       }
     } catch (err) {
@@ -57,6 +88,84 @@ export default function SignInPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function handleVerify(e: FormEvent) {
+    e.preventDefault();
+    if (!isLoaded || !factor) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await signIn.attemptSecondFactor({ strategy: factor, code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        router.push("/dashboard");
+      } else {
+        setError("Verification didn't complete. Please try again.");
+      }
+    } catch (err) {
+      setError(messageFor(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (factor) {
+    const hint =
+      factor === "email_code"
+        ? `We sent a 6-digit code to ${email}.`
+        : factor === "phone_code"
+          ? "We sent a 6-digit code to your phone."
+          : "Enter the 6-digit code from your authenticator app.";
+    return (
+      <div className="flex min-h-screen flex-wrap" style={{ background: "var(--color-background)" }}>
+        <AuthHero
+          headline="Pick up right where you left off."
+          subtext="Your resumes, tailored versions, scores and credits are waiting."
+        />
+        <main className="flex flex-1 basis-[520px] items-center justify-center p-6 sm:p-12">
+          <form className="flex w-full max-w-[420px] flex-col gap-4" onSubmit={handleVerify}>
+            <h2
+              style={{
+                margin: 0,
+                fontFamily: "'Space Grotesk', Inter, sans-serif",
+                fontSize: 30,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Verify it's you
+            </h2>
+            <span style={{ fontSize: 15, color: "var(--color-text-secondary)" }}>{hint}</span>
+            <label style={styles.label}>
+              Verification code
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.trim())}
+                style={styles.input}
+              />
+            </label>
+            {error && <p style={styles.errorText}>{error}</p>}
+            <button type="submit" disabled={submitting} style={styles.primaryButton}>
+              {submitting ? "Verifying…" : "Verify and sign in"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFactor(null);
+                setCode("");
+                setError(null);
+              }}
+              style={{ ...styles.oauthButton }}
+            >
+              Back
+            </button>
+          </form>
+        </main>
+      </div>
+    );
   }
 
   return (
