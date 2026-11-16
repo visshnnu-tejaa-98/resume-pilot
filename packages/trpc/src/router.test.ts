@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { createDatabase, type Database } from "@resume-pilot/database";
+import { createDatabase, users, type Database } from "@resume-pilot/database";
+import { eq, inArray } from "drizzle-orm";
 import { createUserFromClerkWebhook } from "@resume-pilot/services";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createContext } from "./context";
@@ -64,5 +65,79 @@ describe.skipIf(!connectionString)("appRouter (authed procedures, real DB)", () 
     const result = await caller.wallet();
     expect(result.balance).toBe(0);
     expect(result.referralCode).toMatch(/^RP-[A-Z0-9]{6}$/);
+  });
+});
+
+describe.skipIf(!connectionString)("appRouter.admin.pricing (real DB)", () => {
+  let db: Database;
+  let userClerkId: string;
+  let adminClerkId: string;
+  const createdUserIds: string[] = [];
+
+  const validInput = {
+    config: {
+      modelPrices: { "gpt-5.1": { inputPerMillionUsd: 2.5, outputPerMillionUsd: 10 } },
+      usdToInrRate: 83,
+      markupMultiplier: 3,
+      minimumCreditsPerAction: 50,
+      creditValueInr: 0.05,
+    },
+    reason: "should never be written",
+  };
+
+  beforeAll(async () => {
+    db = createDatabase(connectionString ?? "");
+    userClerkId = `clerk_${randomUUID()}`;
+    adminClerkId = `clerk_${randomUUID()}`;
+    const u = await createUserFromClerkWebhook(db, {
+      clerkUserId: userClerkId,
+      email: "u@example.com",
+    });
+    const a = await createUserFromClerkWebhook(db, {
+      clerkUserId: adminClerkId,
+      email: "a@example.com",
+    });
+    createdUserIds.push(u.userId, a.userId);
+    await db.update(users).set({ role: "admin" }).where(eq(users.id, a.userId));
+  });
+
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, createdUserIds));
+    await db.$client.end();
+  });
+
+  it("rejects unauthenticated callers", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: null }));
+    await expect(caller.admin.pricing.active()).rejects.toThrow(/UNAUTHORIZED/);
+  });
+
+  it("forbids regular users from reading or changing pricing", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: userClerkId }));
+    await expect(caller.admin.pricing.active()).rejects.toThrow(/FORBIDDEN/);
+    await expect(caller.admin.pricing.list()).rejects.toThrow(/FORBIDDEN/);
+    await expect(caller.admin.pricing.createVersion(validInput)).rejects.toThrow(/FORBIDDEN/);
+  });
+
+  it("lets admins read the active config and history", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: adminClerkId }));
+    const active = await caller.admin.pricing.active();
+    expect(active.active).toBe(true);
+    const list = await caller.admin.pricing.list();
+    expect(list.some((c) => c.version === active.version)).toBe(true);
+  });
+
+  it("validates input before writing anything", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: adminClerkId }));
+    const before = (await caller.admin.pricing.list()).length;
+    const bad = [
+      { ...validInput, config: { ...validInput.config, markupMultiplier: 0 } },
+      { ...validInput, config: { ...validInput.config, modelPrices: {} } },
+      { ...validInput, config: { ...validInput.config, minimumCreditsPerAction: 1.5 } },
+      { ...validInput, reason: "" },
+    ];
+    for (const input of bad) {
+      await expect(caller.admin.pricing.createVersion(input)).rejects.toThrow();
+    }
+    expect((await caller.admin.pricing.list()).length).toBe(before);
   });
 });

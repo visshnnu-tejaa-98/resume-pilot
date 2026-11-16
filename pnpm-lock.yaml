@@ -157,6 +157,10 @@ importers:
         version: 5.1.0(@types/node@26.6.6)(vite@8.3.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/credits:
+    dependencies:
+      '@resume-pilot/validators':
+        specifier: workspace:*
+        version: link:../validators
     devDependencies:
       typescript:
         specifier: 6.0.3
@@ -241,9 +245,15 @@ importers:
 
   packages/services:
     dependencies:
+      '@resume-pilot/credits':
+        specifier: workspace:*
+        version: link:../credits
       '@resume-pilot/database':
         specifier: workspace:*
         version: link:../database
+      '@resume-pilot/validators':
+        specifier: workspace:*
+        version: link:../validators
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(postgres@4.1.1)
@@ -291,6 +301,9 @@ importers:
       '@types/node':
         specifier: 26.6.6
         version: 26.6.6
+      drizzle-orm:
+        specifier: 0.45.4
+        version: 0.45.4(postgres@4.1.1)
       typescript:
         specifier: 6.0.3
         version: 6.0.3

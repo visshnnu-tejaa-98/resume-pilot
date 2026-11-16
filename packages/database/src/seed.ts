@@ -48,6 +48,8 @@ async function main() {
       usdToInrRate: "83.0000",
       markupMultiplier: "3.000",
       minimumCreditsPerAction: 50,
+      creditValueInr: "0.0500", // ₹500 / 10,000 credits (prd.md §3.3)
+      note: "Seed placeholder — replace once the eval set is measured",
     })
     .onConflictDoNothing();
 

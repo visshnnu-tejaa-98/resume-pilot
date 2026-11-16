@@ -51,3 +51,10 @@ infra/                 AWS CDK app
 ## Open decisions (see prd.md §16.4)
 
 Top-up pack amounts between ₹1,000–5,000, markup multiplier, AWS resource sizing, SES sender domain, email log retention period, inactive-nudge timing. Don't hardcode values for these — keep them in `pricing_config` / `credit_packages` / env config so they can change without a deploy.
+
+
+## Reference
+
+- check tasks/ to check the seperated small taskes to track the application development
+- Check design/ to check the Figma design of the application UI
+

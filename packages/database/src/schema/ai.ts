@@ -10,6 +10,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { aiJobStatusEnum, aiJobTypeEnum, atsReportStatusEnum } from "./enums";
 import { jobDescriptions } from "./job-descriptions";
+import { pricingConfig } from "./pricing";
 import { resumeVersions } from "./resumes";
 import { users } from "./users";
 
@@ -29,7 +30,10 @@ export const aiJobs = pgTable(
     costPaise: integer("cost_paise"),
     creditsEstimated: integer("credits_estimated").notNull(),
     creditsCharged: integer("credits_charged"),
-    pricingConfigVersion: integer("pricing_config_version"),
+    /** Config the estimate/charge was computed under — required (prd.md §3.3). */
+    pricingConfigVersion: integer("pricing_config_version")
+      .notNull()
+      .references(() => pricingConfig.version),
     idempotencyKey: text("idempotency_key").notNull(),
     error: text("error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
