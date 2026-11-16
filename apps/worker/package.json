@@ -13,6 +13,7 @@
   "dependencies": {
     "@resume-pilot/database": "workspace:*",
     "@resume-pilot/emails": "workspace:*",
+    "@resume-pilot/file-processing": "workspace:*",
     "@resume-pilot/queue": "workspace:*",
     "@resume-pilot/services": "workspace:*",
     "@resume-pilot/storage": "workspace:*",

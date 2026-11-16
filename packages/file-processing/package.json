@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./extract": "./src/extract.ts",
+    "./ocr": "./src/ocr.ts",
     "./fixtures": "./src/fixtures.ts"
   },
   "scripts": {
@@ -18,7 +20,12 @@
     "vitest": "5.1.0"
   },
   "dependencies": {
+    "@napi-rs/canvas": "1.1.0",
+    "@tesseract.js-data/eng": "1.0.0",
     "file-type": "22.2.0",
-    "pdfjs-dist": "6.4.299"
+    "latex-utensils": "7.0.0",
+    "mammoth": "1.13.0",
+    "pdfjs-dist": "6.4.299",
+    "tesseract.js": "7.0.0"
   }
 }

@@ -14,6 +14,7 @@
   "dependencies": {
     "@resume-pilot/credits": "workspace:*",
     "@resume-pilot/database": "workspace:*",
+    "@resume-pilot/queue": "workspace:*",
     "@resume-pilot/services": "workspace:*",
     "@resume-pilot/storage": "workspace:*",
     "@resume-pilot/validators": "workspace:*",

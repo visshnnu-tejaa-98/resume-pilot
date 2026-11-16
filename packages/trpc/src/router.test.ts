@@ -11,6 +11,12 @@ import { eq, inArray } from "drizzle-orm";
 import { createUserFromClerkWebhook, grantCredits } from "@resume-pilot/services";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
+const extractionAdd = vi.hoisted(() => vi.fn());
+vi.mock("@resume-pilot/queue", async (orig) => ({
+  ...(await orig<typeof import("@resume-pilot/queue")>()),
+  getExtractionQueue: () => ({ add: extractionAdd, getJob: async () => undefined }),
+}));
+
 vi.mock("@resume-pilot/storage", async (orig) => {
   const real = await orig<typeof import("@resume-pilot/storage")>();
   // Real ownership check, fake signing: no ImageKit credentials in tests.
@@ -312,6 +318,28 @@ describe.skipIf(!connectionString)("appRouter.resumes (real DB)", () => {
     expect(urls).toEqual([
       expect.objectContaining({ pageIndex: 0, url: expect.stringContaining("ik-s=") }),
     ]);
+  });
+
+  it("retryExtraction re-queues a failed resume for its owner only", async () => {
+    await db
+      .update(resumes)
+      .set({ status: "failed", extractionError: "x" })
+      .where(eq(resumes.id, resumeId));
+    extractionAdd.mockReset();
+
+    const other = appRouter.createCaller(createContext({ db, userId: intruder }));
+    await expect(other.resumes.retryExtraction({ resumeId })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(extractionAdd).not.toHaveBeenCalled();
+
+    const caller = appRouter.createCaller(createContext({ db, userId: owner }));
+    expect(await caller.resumes.retryExtraction({ resumeId })).toEqual({ status: "uploaded" });
+    expect(extractionAdd).toHaveBeenCalledWith("extract", { resumeId }, expect.anything());
+    // Already uploaded again, so a second retry is refused.
+    await expect(caller.resumes.retryExtraction({ resumeId })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
   });
 
   it("another user gets NOT_FOUND for the same resume id, and sees no resumes", async () => {

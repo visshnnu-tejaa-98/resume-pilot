@@ -26,6 +26,12 @@ export const resumes = pgTable(
     fileFormat: resumeFormatEnum("file_format").notNull(),
     fileHash: text("file_hash").notNull(),
     status: resumeStatusEnum("status").notNull().default("uploaded"),
+    /** Plain text from extraction (prd.md §5.3 step 3); input to the JSON step (M4). */
+    rawText: text("raw_text"),
+    /** How each page was read: text layer / OCR (with confidence) / docx / latex. */
+    extractionMeta: jsonb("extraction_meta"),
+    /** User-facing reason when status is `failed`. */
+    extractionError: text("extraction_error"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

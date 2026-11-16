@@ -8,6 +8,7 @@ import {
   listFlaggedReferrals,
   redeemCode,
   ReferralReviewError,
+  RetryExtractionError,
   reviewFlaggedReferral,
   updateCoupon,
   getActivePricingConfig,
@@ -16,6 +17,7 @@ import {
   getWalletSummary,
   listPricingConfigs,
   listResumes,
+  markExtractionForRetry,
 } from "@resume-pilot/services";
 import {
   createCouponInputSchema,
@@ -26,6 +28,7 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
+import { enqueueExtraction, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -45,7 +48,11 @@ function toTRPCError(err: unknown): never {
       cause: err,
     });
   }
-  if (err instanceof CouponError || err instanceof ReferralReviewError) {
+  if (
+    err instanceof CouponError ||
+    err instanceof ReferralReviewError ||
+    err instanceof RetryExtractionError
+  ) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
   }
   throw err;
@@ -124,6 +131,17 @@ export const appRouter = router({
           mimeType: f.mimeType,
           url: storage.getSignedUrl({ userId: ctx.user.id, storageKey: f.storageKey }),
         }));
+      }),
+    /** Retry a failed extraction (prd.md §5.3). Free; never touches the wallet. */
+    retryExtraction: authProcedure
+      .input(z.object({ resumeId: z.uuid() }))
+      .mutation(async ({ ctx, input }) => {
+        await markExtractionForRetry(ctx.db, {
+          userId: ctx.user.id,
+          resumeId: input.resumeId,
+        }).catch(toTRPCError);
+        await enqueueExtraction(getExtractionQueue(), { resumeId: input.resumeId });
+        return { status: "uploaded" as const };
       }),
   }),
 

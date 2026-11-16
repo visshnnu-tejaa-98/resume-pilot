@@ -10,7 +10,7 @@ SaaS app that turns a user's existing resume into job-tailored, ATS-optimised ve
 - **DB:** PostgreSQL + Drizzle ORM
 - **Jobs:** BullMQ on Redis, run by a separate `apps/worker` (AI calls, OCR, PDF, email — all too slow/heavy for serverless)
 - **AI:** OpenAI Responses API with Structured Outputs
-- **File processing:** Tesseract.js (OCR), pdfjs-dist (PDF text layer), node-latex-parser (.tex), mammoth (.docx), file-type (magic-byte validation)
+- **File processing:** Tesseract.js (OCR), pdfjs-dist (PDF text layer), latex-utensils (.tex), mammoth (.docx), file-type (magic-byte validation)
 - **PDF export:** Puppeteer (headless Chromium) — renders the same HTML template used for web preview
 - **Storage:** ImageKit (private files, short-lived signed URLs) via `packages/storage` — the only package that talks to ImageKit
 - **Payments:** Razorpay Orders (one-time wallet top-ups, no subscriptions)

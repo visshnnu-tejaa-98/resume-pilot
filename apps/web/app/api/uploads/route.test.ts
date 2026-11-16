@@ -7,6 +7,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 const session = vi.hoisted(() => ({ userId: null as string | null }));
 const stored = vi.hoisted(() => new Map<string, string>());
+const queueAdd = vi.hoisted(() => vi.fn());
+vi.mock("@/server/queue", () => ({
+  getExtractionQueue: () => ({ add: queueAdd, getJob: async () => undefined }),
+}));
 vi.mock("@clerk/nextjs/server", () => ({ auth: async () => ({ userId: session.userId }) }));
 vi.mock("@/server/ensure-user", () => ({
   ensureUserSynced: async (clerkUserId: string) => {
@@ -53,6 +57,7 @@ describe.skipIf(!connectionString)("POST /api/uploads", () => {
   beforeEach(() => {
     session.userId = clerkUserId;
     stored.clear();
+    queueAdd.mockReset().mockResolvedValue(undefined);
   });
 
   afterAll(async () => {
@@ -74,6 +79,12 @@ describe.skipIf(!connectionString)("POST /api/uploads", () => {
 
     expect(res.status).toBe(201);
     expect(body.pageCount).toBe(2);
+    expect(body).toMatchObject({ status: "uploaded" });
+    expect(queueAdd).toHaveBeenCalledWith(
+      "extract",
+      { resumeId: body.resumeId },
+      expect.objectContaining({ jobId: `extract-${body.resumeId}` }),
+    );
     expect(stored.size).toBe(1);
     const [row] = await db.select().from(resumes).where(eq(resumes.id, body.resumeId));
     expect(row).toMatchObject({ userId, status: "uploaded", fileName: "My CV.pdf" });
@@ -126,5 +137,22 @@ describe.skipIf(!connectionString)("POST /api/uploads", () => {
     await db.update(users).set({ status: "active" }).where(eq(users.id, userId));
     expect(res.status).toBe(403);
     expect(await getUserByClerkId(db, clerkUserId)).toMatchObject({ status: "active" });
+  });
+
+  it("if extraction can't be queued, the resume is marked failed so the user can retry", async () => {
+    const { POST } = await import("./route");
+    queueAdd.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const res = await POST(uploadRequest([{ name: "cv.pdf", data: makePdf(3) }]));
+    const body = (await res.json()) as { resumeId: string; status: string };
+
+    expect(res.status).toBe(201);
+    expect(body.status).toBe("failed");
+    const [row] = await db.select().from(resumes).where(eq(resumes.id, body.resumeId));
+    expect(row).toMatchObject({
+      status: "failed",
+      extractionError: expect.stringMatching(/Retry/),
+    });
   });
 });

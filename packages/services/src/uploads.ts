@@ -148,6 +148,8 @@ export async function listResumes(db: Database, userId: string) {
       fileName: resumes.fileName,
       fileFormat: resumes.fileFormat,
       status: resumes.status,
+      /** User-facing reason when status is failed; the UI offers a retry. */
+      extractionError: resumes.extractionError,
       createdAt: resumes.createdAt,
     })
     .from(resumes)

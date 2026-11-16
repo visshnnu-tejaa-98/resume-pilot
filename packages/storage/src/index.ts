@@ -44,6 +44,8 @@ export interface Storage {
   getSignedUrl(input: { userId: string; storageKey: string; expiresInSeconds?: number }): string;
   /** Idempotent: deleting a file that's already gone succeeds. */
   deleteFile(storageFileId: string): Promise<void>;
+  /** Downloads one of `userId`'s own files (via a 60-second signed URL). */
+  readFile(input: { userId: string; storageKey: string }): Promise<Uint8Array>;
 }
 
 export class StorageError extends Error {
@@ -95,8 +97,9 @@ export interface ImageKitClient {
 export function createImageKitStorage(
   config: ImageKitConfig,
   client: ImageKitClient = new ImageKit({ privateKey: config.privateKey }),
+  fetchImpl: typeof fetch = fetch,
 ): Storage {
-  return {
+  const storage: Storage = {
     async uploadFile({ userId, kind, data, extension }) {
       const ext = extension.toLowerCase();
       if (!EXTENSION.test(ext)) throw new StorageError(`Invalid extension "${extension}"`);
@@ -140,7 +143,16 @@ export function createImageKitStorage(
         throw err;
       }
     },
+
+    async readFile({ userId, storageKey }) {
+      const url = storage.getSignedUrl({ userId, storageKey, expiresInSeconds: 60 });
+      const res = await fetchImpl(url, { signal: AbortSignal.timeout(30_000) });
+      if (res.status === 404) throw new StorageError("File not found in storage");
+      if (!res.ok) throw new Error(`Storage download failed: HTTP ${res.status}`);
+      return new Uint8Array(await res.arrayBuffer());
+    },
   };
+  return storage;
 }
 
 let defaultStorage: Storage | undefined;

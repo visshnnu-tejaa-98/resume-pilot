@@ -149,3 +149,41 @@ describe("imageKitConfigFromEnv", () => {
     ).toEqual({ privateKey: "k", urlEndpoint: "https://ik.io/x" });
   });
 });
+
+describe("readFile", () => {
+  it("downloads via a short signed URL, only for the user's own file", async () => {
+    const fetchImpl = vi.fn(async () => new Response(Buffer.from("PDFBYTES")));
+    const { client, buildSrc } = fakeClient();
+    const storage = createImageKitStorage(config, client, fetchImpl as unknown as typeof fetch);
+    const key = `/users/${userId}/uploads/${randomUUID()}.pdf`;
+
+    const bytes = await storage.readFile({ userId, storageKey: key });
+
+    expect(Buffer.from(bytes).toString()).toBe("PDFBYTES");
+    expect(buildSrc).toHaveBeenCalledWith(expect.objectContaining({ src: key, expiresIn: 60 }));
+    await expect(storage.readFile({ userId: otherId, storageKey: key })).rejects.toBeInstanceOf(
+      StorageError,
+    );
+  });
+
+  it("distinguishes a missing file (StorageError) from a transient failure", async () => {
+    const key = `/users/${userId}/uploads/${randomUUID()}.pdf`;
+    const missing = createImageKitStorage(
+      config,
+      fakeClient().client,
+      (async () => new Response("", { status: 404 })) as unknown as typeof fetch,
+    );
+    await expect(missing.readFile({ userId, storageKey: key })).rejects.toBeInstanceOf(
+      StorageError,
+    );
+
+    const down = createImageKitStorage(
+      config,
+      fakeClient().client,
+      (async () => new Response("", { status: 503 })) as unknown as typeof fetch,
+    );
+    const err = await down.readFile({ userId, storageKey: key }).catch((e: unknown) => e);
+    expect(err).not.toBeInstanceOf(StorageError);
+    expect(String(err)).toContain("503");
+  });
+});

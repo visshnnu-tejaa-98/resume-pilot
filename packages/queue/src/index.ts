@@ -12,6 +12,8 @@ import { z } from "zod";
  */
 export const QUEUE_NAMES = {
   emailTransactional: "email-transactional",
+  /** Raw-text extraction for uploaded resumes (prd.md §5.3). */
+  extraction: "resume-extraction",
   /** Scheduled housekeeping (hold expiry, later: upload cleanup, inactive nudges). */
   maintenance: "maintenance",
 } as const;
@@ -110,30 +112,104 @@ export function createTransactionalEmailQueue(connection: IORedis): Queue<Transa
 }
 
 /**
- * Validates the payload, then enqueues with the idempotent job id.
- *
- * BullMQ silently ignores `add` when a job with the same id still
- * exists. That's what we want for waiting/active/completed jobs (the
- * email is in flight or sent), but a job that exhausted its attempts
- * is kept for 30 days and would block any re-enqueue, so a failed job
- * is retried instead. `email_messages` still guarantees one send.
+ * Adds a job under a fixed id. BullMQ silently ignores `add` when a job
+ * with that id still exists. That's right for waiting/active/completed
+ * jobs (in flight or done), but a job that exhausted its attempts is
+ * kept for weeks and would block any re-run, so a failed job is retried
+ * instead. Callers keep their own durable idempotency (DB rows).
  */
-export async function enqueueTransactionalEmail(
-  queue: Pick<Queue<TransactionalEmailJob>, "add" | "getJob">,
-  job: TransactionalEmailJob,
-): Promise<"added" | "retried" | "exists"> {
-  const data = transactionalEmailJobSchema.parse(job);
-  const jobId = emailJobId(data);
-
-  const existing = await queue.getJob(jobId);
+export async function addUniqueJob<T>(
+  queue: Pick<Queue<T>, "add" | "getJob">,
+  name: string,
+  data: T,
+  opts: JobsOptions & { jobId: string },
+  /** Also replace a *completed* job (for work the user can legitimately re-run). */
+  replaceCompleted = false,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const existing = await queue.getJob(opts.jobId);
   if (existing) {
     if (await existing.isFailed()) {
       await existing.retry("failed");
       return "retried";
     }
+    if (replaceCompleted && (await existing.isCompleted())) {
+      await existing.remove();
+      await queue.add(name as never, data as never, opts);
+      return "replaced";
+    }
     return "exists";
   }
-
-  await queue.add(data.templateKey, data, { ...TRANSACTIONAL_EMAIL_JOB_OPTIONS, jobId });
+  await queue.add(name as never, data as never, opts);
   return "added";
+}
+
+/** Validates the payload, then enqueues with the idempotent job id. */
+export async function enqueueTransactionalEmail(
+  queue: Pick<Queue<TransactionalEmailJob>, "add" | "getJob">,
+  job: TransactionalEmailJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = transactionalEmailJobSchema.parse(job);
+  return addUniqueJob(queue, data.templateKey, data, {
+    ...TRANSACTIONAL_EMAIL_JOB_OPTIONS,
+    jobId: emailJobId(data),
+  });
+}
+
+// --- Resume extraction ---------------------------------------------------
+
+export const extractionJobSchema = z.object({ resumeId: z.uuid() });
+export type ExtractionJob = z.infer<typeof extractionJobSchema>;
+
+/** OCR can be slow; 3 attempts with 15 s / 30 s backoff for transient errors. */
+export const EXTRACTION_JOB_OPTIONS: JobsOptions = {
+  attempts: 3,
+  backoff: { type: "exponential", delay: 15_000 },
+  removeOnComplete: { age: 7 * 24 * 3600 },
+  removeOnFail: { age: 30 * 24 * 3600 },
+};
+
+export function createExtractionQueue(connection: IORedis): Queue<ExtractionJob> {
+  return new Queue<ExtractionJob>(QUEUE_NAMES.extraction, { connection });
+}
+
+/**
+ * One extraction job per resume. A user's retry re-runs it even if the
+ * last run completed (a permanent failure like a blurry photo completes
+ * the job, not fails it). Double work is prevented by the resume's
+ * status: processExtraction skips anything already processed.
+ */
+export async function enqueueExtraction(
+  queue: Pick<Queue<ExtractionJob>, "add" | "getJob">,
+  job: ExtractionJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = extractionJobSchema.parse(job);
+  return addUniqueJob(
+    queue,
+    "extract",
+    data,
+    { ...EXTRACTION_JOB_OPTIONS, jobId: `extract-${data.resumeId}` },
+    true,
+  );
+}
+
+// --- Process-wide producers ------------------------------------------------
+
+let producerConnection: IORedis | undefined;
+let transactionalEmailQueue: Queue<TransactionalEmailJob> | undefined;
+let extractionQueue: Queue<ExtractionJob> | undefined;
+
+/** One Redis connection shared by every producer queue in this process (web app). */
+function producer(): IORedis {
+  producerConnection ??= createRedisConnection();
+  return producerConnection;
+}
+
+export function getTransactionalEmailQueue(): Queue<TransactionalEmailJob> {
+  transactionalEmailQueue ??= createTransactionalEmailQueue(producer());
+  return transactionalEmailQueue;
+}
+
+export function getExtractionQueue(): Queue<ExtractionJob> {
+  extractionQueue ??= createExtractionQueue(producer());
+  return extractionQueue;
 }

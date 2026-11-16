@@ -10,11 +10,14 @@ vi.mock("@resume-pilot/services", () => ({
   expireStaleHolds,
   findWalletMismatches,
   cleanupExpiredUploads,
+  processExtraction,
 }));
 vi.mock("@resume-pilot/storage", () => ({ getStorage: () => ({ deleteFile: vi.fn() }) }));
+const processExtraction = vi.hoisted(() => vi.fn());
 
 const {
   finishEmailJob,
+  handleExtractionJob,
   handleMaintenanceJob,
   handleTransactionalEmailJob,
   REDIS_URL,
@@ -124,5 +127,41 @@ describe("handleMaintenanceJob", () => {
     await expect(handleMaintenanceJob("nope", { db: deps.db })).rejects.toBeInstanceOf(
       UnrecoverableError,
     );
+  });
+});
+
+describe("handleExtractionJob", () => {
+  const resumeId = "8a5f0f0e-2b8e-4c1e-9d3f-0a1b2c3d4e5f";
+  const io = { readFile: vi.fn(), extract: vi.fn() };
+
+  it.each([
+    { attemptsMade: 0, final: false },
+    { attemptsMade: 2, final: true },
+  ])("attempt $attemptsMade of 3 → isFinalAttempt=$final", async ({ attemptsMade, final }) => {
+    processExtraction.mockReset().mockResolvedValue({ status: "processed", chars: 10 });
+    await handleExtractionJob(
+      { data: { resumeId }, attemptsMade, opts: { attempts: 3 } },
+      { db: deps.db, ...io },
+    );
+    expect(processExtraction).toHaveBeenCalledWith(
+      deps.db,
+      resumeId,
+      expect.objectContaining({
+        isFinalAttempt: final,
+        readFile: io.readFile,
+        extract: io.extract,
+      }),
+    );
+  });
+
+  it("rejects a malformed payload", async () => {
+    processExtraction.mockReset();
+    await expect(
+      handleExtractionJob(
+        { data: { resumeId: "nope" }, attemptsMade: 0, opts: {} },
+        { db: deps.db, ...io },
+      ),
+    ).rejects.toThrow();
+    expect(processExtraction).not.toHaveBeenCalled();
   });
 });

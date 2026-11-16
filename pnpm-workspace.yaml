@@ -2,6 +2,8 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
+  # Only an opencollective donation message; not needed.
+  tesseract.js: false
   esbuild: true
   msgpackr-extract: true
 minimumReleaseAgeExclude:
@@ -18,3 +20,8 @@ minimumReleaseAgeExclude:
   - "@clerk/nextjs@7.9.26"
   - "@clerk/react@6.18.7"
   - "@clerk/shared@4.45.0"
+
+# @napi-rs/canvas comes in through pdfjs-dist's range; pin a release that's
+# older than two weeks (1.1.1 was too new when M3-03 was built).
+overrides:
+  "@napi-rs/canvas": 1.1.0

@@ -675,7 +675,7 @@ In Phase 1 an admin can send `new_features` to a chosen group of users. More cam
 | Background jobs | BullMQ on Redis, run by `apps/worker` (extraction + OCR, JD analysis, generation, scoring, PDF, email)                                    |
 | AI              | OpenAI Responses API with Structured Outputs; Tesseract.js OCR (in the worker) for images and scanned PDFs                                |
 | PDF text layer  | pdfjs-dist, used before falling back to Tesseract.js OCR for scanned pages                                                                |
-| LaTeX parsing   | node-latex-parser                                                                                                                          |
+| LaTeX parsing   | latex-utensils (AST parser; the originally named `node-latex-parser` does not exist on npm)                                                                     |
 | File validation | file-type, for magic-byte checks on every upload                                                                                          |
 | PDF             | Puppeteer (headless Chromium) in the worker                                                                                               |
 | File storage    | ImageKit (private files, signed URLs; 30-day upload cleanup by a worker job)                                                              |

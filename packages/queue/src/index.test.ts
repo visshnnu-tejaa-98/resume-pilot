@@ -102,3 +102,41 @@ describe("registerMaintenanceSchedules", () => {
     );
   });
 });
+
+describe("enqueueExtraction", () => {
+  const resumeId = "8a5f0f0e-2b8e-4c1e-9d3f-0a1b2c3d4e5f";
+
+  it("adds one job per resume with a stable id", async () => {
+    const { enqueueExtraction } = await import("./index");
+    const add = vi.fn();
+    const getJob = vi.fn().mockResolvedValue(undefined);
+    expect(await enqueueExtraction({ add, getJob }, { resumeId })).toBe("added");
+    expect(add).toHaveBeenCalledWith(
+      "extract",
+      { resumeId },
+      expect.objectContaining({ jobId: `extract-${resumeId}`, attempts: 3 }),
+    );
+  });
+
+  it("replaces a completed job so a user retry actually runs", async () => {
+    const { enqueueExtraction } = await import("./index");
+    const remove = vi.fn();
+    const add = vi.fn();
+    const getJob = vi
+      .fn()
+      .mockResolvedValue({ isFailed: async () => false, isCompleted: async () => true, remove });
+    expect(await enqueueExtraction({ add, getJob }, { resumeId })).toBe("replaced");
+    expect(remove).toHaveBeenCalled();
+    expect(add).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves a waiting or running job alone", async () => {
+    const { enqueueExtraction } = await import("./index");
+    const add = vi.fn();
+    const getJob = vi
+      .fn()
+      .mockResolvedValue({ isFailed: async () => false, isCompleted: async () => false });
+    expect(await enqueueExtraction({ add, getJob }, { resumeId })).toBe("exists");
+    expect(add).not.toHaveBeenCalled();
+  });
+});

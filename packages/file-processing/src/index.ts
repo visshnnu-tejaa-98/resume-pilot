@@ -13,3 +13,13 @@ export {
   type ValidatedFile,
   type ValidatedUpload,
 } from "./validate";
+// Light: errors and types only. The extractors and OCR engine are heavy
+// (canvas, Tesseract, mammoth) and live behind the "./extract" and
+// "./ocr" subpaths, imported only by the worker.
+export {
+  ExtractionError,
+  type ExtractionFailure,
+  type ExtractionResult,
+  type OcrEngine,
+  type PageMethod,
+} from "./errors";

@@ -5,10 +5,12 @@ import {
   UploadValidationError,
   validateUpload,
 } from "@resume-pilot/file-processing";
-import { createResumeFromUpload, UploadError } from "@resume-pilot/services";
+import { enqueueExtraction } from "@resume-pilot/queue";
+import { createResumeFromUpload, failExtraction, UploadError } from "@resume-pilot/services";
 import { getStorage } from "@resume-pilot/storage";
 import { getDb } from "@/server/db";
 import { ensureUserSynced } from "@/server/ensure-user";
+import { getExtractionQueue } from "@/server/queue";
 
 /**
  * POST /api/uploads — resume upload (prd.md §5.1–5.3). Multipart form
@@ -63,7 +65,17 @@ export async function POST(req: Request) {
       userId: user.id,
       upload,
     });
-    return json(201, created);
+
+    // Extraction runs in the worker (§5.3). If it can't be queued, fail the
+    // resume so the user gets a Retry button rather than a stuck upload.
+    try {
+      await enqueueExtraction(getExtractionQueue(), { resumeId: created.resumeId });
+    } catch (err) {
+      console.error("[uploads] failed to enqueue extraction:", err);
+      await failExtraction(getDb(), created.resumeId);
+      return json(201, { ...created, status: "failed" });
+    }
+    return json(201, { ...created, status: "uploaded" });
   } catch (err) {
     if (err instanceof UploadValidationError)
       return json(400, { error: err.message, reason: err.reason });

@@ -57,6 +57,13 @@
       "when": 1794819762650,
       "tag": "0007_careless_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794820642508,
+      "tag": "0008_foamy_pepper_potts",
+      "breakpoints": true
     }
   ]
 }

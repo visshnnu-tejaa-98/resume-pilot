@@ -82,3 +82,12 @@ export {
   type UploadErrorReason,
   type UploadStorage,
 } from "./uploads";
+export {
+  failExtraction,
+  markExtractionForRetry,
+  processExtraction,
+  RetryExtractionError,
+  TEMPORARY_FAILURE_MESSAGE,
+  type ExtractionDeps,
+  type ExtractionOutcome,
+} from "./extraction";

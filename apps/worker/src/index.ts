@@ -3,19 +3,25 @@ import { sendEmail } from "@resume-pilot/emails";
 import {
   createMaintenanceQueue,
   createRedisConnection,
+  extractionJobSchema,
   MAINTENANCE_JOBS,
   QUEUE_NAMES,
   registerMaintenanceSchedules,
   redisUrlFromEnv,
   transactionalEmailJobSchema,
+  type ExtractionJob,
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
+import { extractText } from "@resume-pilot/file-processing/extract";
+import { createTesseractOcr, type TesseractOcr } from "@resume-pilot/file-processing/ocr";
 import { getStorage } from "@resume-pilot/storage";
 import {
   cleanupExpiredUploads,
   expireStaleHolds,
   findWalletMismatches,
+  processExtraction,
   processTransactionalEmail,
+  type ExtractionDeps,
   type EmailProcessContext,
   type EmailProcessResult,
 } from "@resume-pilot/services";
@@ -141,6 +147,57 @@ export function createMaintenanceWorker(db: Database): Worker {
   return worker;
 }
 
+// --- Resume extraction (prd.md §5.3) ------------------------------------
+
+let ocrEngine: Promise<TesseractOcr> | undefined;
+/** One Tesseract engine per process, started on the first job that needs it. */
+function getOcr(): Promise<TesseractOcr> {
+  ocrEngine ??= createTesseractOcr().catch((err: unknown) => {
+    ocrEngine = undefined; // let the next job try again
+    throw err;
+  });
+  return ocrEngine;
+}
+
+/** Turns an extraction job into a processExtraction call. Exported for tests. */
+export async function handleExtractionJob(
+  job: Pick<Job<ExtractionJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database } & Omit<ExtractionDeps, "isFinalAttempt">,
+) {
+  const { resumeId } = extractionJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processExtraction(deps.db, resumeId, {
+    readFile: deps.readFile,
+    extract: deps.extract,
+    isFinalAttempt,
+  });
+}
+
+export function createExtractionWorker(db: Database): Worker {
+  const worker = new Worker<ExtractionJob>(
+    QUEUE_NAMES.extraction,
+    async (job) => {
+      const outcome = await handleExtractionJob(job, {
+        db,
+        readFile: (input) => getStorage().readFile(input),
+        extract: async (format, files) => extractText(format, files, await getOcr()),
+      });
+      console.log(`[worker] extract ${job.data.resumeId}: ${outcome.status}`);
+      return outcome;
+    },
+    // OCR is CPU-heavy; two at a time per worker instance.
+    { connection: createRedisConnection(REDIS_URL), concurrency: 2 },
+  );
+  worker.on("failed", (job, err) => {
+    console.error(
+      `[worker] extract ${job?.data.resumeId} attempt ${job?.attemptsMade} failed:`,
+      err.message,
+    );
+  });
+  worker.on("error", (err) => console.error("[worker] extraction worker error:", err.message));
+  return worker;
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -151,7 +208,11 @@ async function main() {
   const db = createDatabase(databaseUrl);
 
   console.log("[worker] starting");
-  const workers = [createTransactionalEmailWorker(db, config), createMaintenanceWorker(db)];
+  const workers = [
+    createTransactionalEmailWorker(db, config),
+    createMaintenanceWorker(db),
+    createExtractionWorker(db),
+  ];
 
   const maintenanceConnection = createRedisConnection(REDIS_URL);
   const maintenanceQueue = createMaintenanceQueue(maintenanceConnection);
@@ -160,12 +221,13 @@ async function main() {
   await maintenanceConnection.quit();
 
   console.log(
-    `[worker] listening on queues "${QUEUE_NAMES.emailTransactional}", "${QUEUE_NAMES.maintenance}"`,
+    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction].map((q) => `"${q}"`).join(", ")}`,
   );
 
   const shutdown = async () => {
     console.log("[worker] shutting down...");
     await Promise.all(workers.map((w) => w.close()));
+    await (await ocrEngine?.catch(() => undefined))?.terminate();
     await db.$client.end();
     process.exit(0);
   };
