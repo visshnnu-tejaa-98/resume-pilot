@@ -6,7 +6,7 @@ export default function SignUpSsoCallbackPage() {
   return (
     <AuthenticateWithRedirectCallback
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/welcome"
     />
   );
 }

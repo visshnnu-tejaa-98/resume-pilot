@@ -1,0 +1,52 @@
+/** Public route paths — single source for nav, footer and page links. */
+export const routes = {
+  home: "/",
+  howItWorks: "/how-it-works",
+  pricing: "/pricing",
+  about: "/about",
+  faq: "/faq",
+  contact: "/contact",
+  privacy: "/privacy",
+  terms: "/terms",
+  refunds: "/refunds",
+  signIn: "/sign-in",
+  signUp: "/sign-up",
+  dashboard: "/dashboard",
+} as const;
+
+export const siteNavLinks = [
+  { href: routes.howItWorks, label: "How it works" },
+  { href: routes.pricing, label: "Pricing" },
+  { href: routes.about, label: "About" },
+  { href: routes.faq, label: "FAQ" },
+  { href: routes.contact, label: "Contact" },
+] as const;
+
+export const footerColumns = [
+  {
+    title: "Product",
+    links: [
+      { href: routes.howItWorks, label: "How it works" },
+      { href: routes.pricing, label: "Pricing" },
+      { href: routes.faq, label: "FAQ" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { href: routes.about, label: "About" },
+      { href: routes.contact, label: "Contact" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: routes.privacy, label: "Privacy policy" },
+      { href: routes.terms, label: "Terms and conditions" },
+      { href: routes.refunds, label: "Refund policy" },
+    ],
+  },
+] as const;
+
+/** Placeholder until the support address is decided (prd §16.4). */
+export const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "[SUPPORT EMAIL]";

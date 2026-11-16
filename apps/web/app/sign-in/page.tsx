@@ -4,280 +4,296 @@ import { useSignIn } from "@clerk/nextjs/legacy";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { AuthHero } from "@/components/AuthHero";
-import * as styles from "@/components/auth-styles";
-import { GoogleIcon, LinkedInIcon } from "@/components/BrandIcons";
+import { AuthHeading, FormError, LegalLinks, OAuthButtons, OrDivider, type OAuthStrategy } from "@/components/auth/AuthParts";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Field";
+import { clerkErrorMessage } from "@/lib/clerk-errors";
+import { routes } from "@/lib/routes";
+import { AFTER_SIGN_IN, signInCopy } from "@/content/auth";
+
+type SecondFactor = "email_code" | "phone_code" | "totp";
+type Step = "credentials" | "second-factor" | "reset-request" | "reset-verify";
+
+const authInput = "h-[46px]";
+const codeInput = "h-[46px] font-mono text-lg font-semibold tracking-[0.1em]";
 
 /**
- * Fully custom UI, no Clerk-rendered components for the form itself —
- * built against Clerk's headless `useSignIn()` per
- * https://clerk.com/docs/guides/development/custom-flows/authentication/legacy/email-password-mfa.
- * `/sign-in/sso-callback` still uses Clerk's `AuthenticateWithRedirectCallback`,
- * which the same guide says to keep even in a custom flow — it
- * completes the OAuth handshake, it isn't UI.
+ * design/screens/SignIn.dc.html — fully custom UI on Clerk's headless
+ * `useSignIn()` (custom-flow guide, email/password + MFA). Steps:
+ *
+ * - credentials → (needs_second_factor / needs_client_trust) → second-factor
+ * - "Forgot password?" → reset-request → reset-verify (code + new password)
+ *
+ * `/sign-in/sso-callback` keeps Clerk's AuthenticateWithRedirectCallback,
+ * which completes the OAuth handshake; it isn't UI.
  */
 export default function SignInPage() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
+
+  const [step, setStep] = useState<Step>("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [factor, setFactor] = useState<SecondFactor | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  // Second step: Clerk asks for a code on a new device (client trust) or MFA.
-  const [factor, setFactor] = useState<"email_code" | "phone_code" | "totp" | null>(null);
-  const [code, setCode] = useState("");
 
-  async function handleOAuth(strategy: "oauth_google" | "oauth_linkedin_oidc") {
+  function goTo(next: Step) {
+    setStep(next);
+    setCode("");
+    setError(null);
+  }
+
+  /** Wraps a Clerk call with the submitting/error bookkeeping. */
+  async function run(fn: () => Promise<void>) {
     if (!isLoaded) return;
+    setSubmitting(true);
     setError(null);
     try {
-      await signIn.authenticateWithRedirect({
+      await fn();
+    } catch (err) {
+      setError(clerkErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function finish(sessionId: string | null) {
+    await setActive!({ session: sessionId });
+    router.push(AFTER_SIGN_IN);
+  }
+
+  /** Clerk asks for a second step on a new device (client trust) or with MFA. */
+  async function startSecondFactor(result: NonNullable<typeof signIn>) {
+    const factors = (result.supportedSecondFactors ?? []) as Array<{
+      strategy: string;
+      emailAddressId?: string;
+      phoneNumberId?: string;
+    }>;
+    const pick =
+      factors.find((f) => f.strategy === "email_code") ??
+      factors.find((f) => f.strategy === "totp") ??
+      factors.find((f) => f.strategy === "phone_code");
+    if (!pick) {
+      setError("This account needs a verification method we don't support yet.");
+      return;
+    }
+    if (pick.strategy === "email_code") {
+      await signIn!.prepareSecondFactor({
+        strategy: "email_code",
+        emailAddressId: pick.emailAddressId,
+      } as Parameters<NonNullable<typeof signIn>["prepareSecondFactor"]>[0]);
+    } else if (pick.strategy === "phone_code") {
+      await signIn!.prepareSecondFactor({
+        strategy: "phone_code",
+        phoneNumberId: pick.phoneNumberId,
+      } as Parameters<NonNullable<typeof signIn>["prepareSecondFactor"]>[0]);
+    }
+    setFactor(pick.strategy as SecondFactor);
+    goTo("second-factor");
+  }
+
+  function handleOAuth(strategy: OAuthStrategy) {
+    void run(async () => {
+      await signIn!.authenticateWithRedirect({
         strategy,
         redirectUrl: "/sign-in/sso-callback",
-        redirectUrlComplete: "/dashboard",
+        redirectUrlComplete: AFTER_SIGN_IN,
       });
-    } catch (err) {
-      setError(messageFor(err));
-    }
+    });
   }
 
-  async function handleSubmit(e: FormEvent) {
+  function handleCredentials(e: FormEvent) {
     e.preventDefault();
-    if (!isLoaded) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await signIn.create({ identifier: email, password });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
-      } else if (
-        result.status === "needs_second_factor" ||
-        (result.status as string) === "needs_client_trust"
-      ) {
-        const factors = (result.supportedSecondFactors ?? []) as Array<{
-          strategy: string;
-          emailAddressId?: string;
-          phoneNumberId?: string;
-        }>;
-        const pick =
-          factors.find((f) => f.strategy === "email_code") ??
-          factors.find((f) => f.strategy === "totp") ??
-          factors.find((f) => f.strategy === "phone_code");
-        if (!pick) {
-          setError("This account needs a verification method we don't support yet.");
-          return;
-        }
-        if (pick.strategy === "email_code") {
-          await signIn.prepareSecondFactor({
-            strategy: "email_code",
-            emailAddressId: pick.emailAddressId,
-          } as Parameters<typeof signIn.prepareSecondFactor>[0]);
-        } else if (pick.strategy === "phone_code") {
-          await signIn.prepareSecondFactor({
-            strategy: "phone_code",
-            phoneNumberId: pick.phoneNumberId,
-          } as Parameters<typeof signIn.prepareSecondFactor>[0]);
-        }
-        setFactor(pick.strategy as "email_code" | "phone_code" | "totp");
-      } else {
-        setError("Additional verification is required for this account.");
+    void run(async () => {
+      const result = await signIn!.create({ identifier: email, password });
+      if (result.status === "complete") return finish(result.createdSessionId);
+      if (result.status === "needs_second_factor" || (result.status as string) === "needs_client_trust") {
+        return startSecondFactor(result);
       }
-    } catch (err) {
-      setError(messageFor(err));
-    } finally {
-      setSubmitting(false);
-    }
+      setError("Additional verification is required for this account.");
+    });
   }
 
-  async function handleVerify(e: FormEvent) {
+  function handleSecondFactor(e: FormEvent) {
     e.preventDefault();
-    if (!isLoaded || !factor) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await signIn.attemptSecondFactor({ strategy: factor, code });
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        router.push("/dashboard");
-      } else {
-        setError("Verification didn't complete. Please try again.");
-      }
-    } catch (err) {
-      setError(messageFor(err));
-    } finally {
-      setSubmitting(false);
-    }
+    if (!factor) return;
+    void run(async () => {
+      const result = await signIn!.attemptSecondFactor({ strategy: factor, code });
+      if (result.status === "complete") return finish(result.createdSessionId);
+      setError("Verification didn't complete. Please try again.");
+    });
   }
 
-  if (factor) {
-    const hint =
-      factor === "email_code"
-        ? `We sent a 6-digit code to ${email}.`
-        : factor === "phone_code"
-          ? "We sent a 6-digit code to your phone."
-          : "Enter the 6-digit code from your authenticator app.";
-    return (
-      <div className="flex min-h-screen flex-wrap" style={{ background: "var(--color-background)" }}>
-        <AuthHero
-          headline="Pick up right where you left off."
-          subtext="Your resumes, tailored versions, scores and credits are waiting."
-        />
-        <main className="flex flex-1 basis-[520px] items-center justify-center p-6 sm:p-12">
-          <form className="flex w-full max-w-[420px] flex-col gap-4" onSubmit={handleVerify}>
-            <h2
-              style={{
-                margin: 0,
-                fontFamily: "'Space Grotesk', Inter, sans-serif",
-                fontSize: 30,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Verify it's you
-            </h2>
-            <span style={{ fontSize: 15, color: "var(--color-text-secondary)" }}>{hint}</span>
-            <label style={styles.label}>
-              Verification code
-              <input
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value.trim())}
-                style={styles.input}
-              />
-            </label>
-            {error && <p style={styles.errorText}>{error}</p>}
-            <button type="submit" disabled={submitting} style={styles.primaryButton}>
-              {submitting ? "Verifying…" : "Verify and sign in"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFactor(null);
-                setCode("");
-                setError(null);
-              }}
-              style={{ ...styles.oauthButton }}
-            >
-              Back
-            </button>
-          </form>
-        </main>
-      </div>
-    );
+  function handleResetRequest(e: FormEvent) {
+    e.preventDefault();
+    void run(async () => {
+      await signIn!.create({ strategy: "reset_password_email_code", identifier: email });
+      goTo("reset-verify");
+    });
   }
+
+  function handleResetVerify(e: FormEvent) {
+    e.preventDefault();
+    void run(async () => {
+      const result = await signIn!.attemptFirstFactor({
+        strategy: "reset_password_email_code",
+        code,
+        password: newPassword,
+      });
+      if (result.status === "complete") return finish(result.createdSessionId);
+      if (result.status === "needs_second_factor") return startSecondFactor(result);
+      setError("We couldn't reset your password. Please try again.");
+    });
+  }
+
+  const backButton = (to: Step) => (
+    <Button variant="outline" size="lg" block className="h-12 border-border-strong" onClick={() => goTo(to)}>
+      Back
+    </Button>
+  );
 
   return (
-    <div className="flex min-h-screen flex-wrap" style={{ background: "var(--color-background)" }}>
-      <AuthHero
-        headline="Pick up right where you left off."
-        subtext="Your resumes, tailored versions, scores and credits are waiting."
-      />
-      <main className="flex flex-1 basis-[520px] items-center justify-center p-6 sm:p-12">
-        <div className="flex w-full max-w-[420px] flex-col gap-[22px]">
-          <div className="flex flex-col gap-2">
-            <h2
-              style={{
-                margin: 0,
-                fontFamily: "'Space Grotesk', Inter, sans-serif",
-                fontSize: 30,
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Sign in
-            </h2>
-            <span style={{ fontSize: 15, color: "var(--color-text-secondary)" }}>
-              New to Resume Pilot?{" "}
-              <Link href="/sign-up" style={{ color: "var(--color-link)", fontWeight: 600 }}>
-                Create an account
-              </Link>
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <button
-              type="button"
-              style={styles.oauthButton}
-              onClick={() => handleOAuth("oauth_google")}
-            >
-              <GoogleIcon /> Continue with Google
-            </button>
-            <button
-              type="button"
-              style={styles.oauthButton}
-              onClick={() => handleOAuth("oauth_linkedin_oidc")}
-            >
-              <LinkedInIcon /> Continue with LinkedIn
-            </button>
-          </div>
-
-          <div
-            className="flex items-center gap-3 text-[13px]"
-            style={{ color: "var(--color-text-secondary)" }}
-          >
-            <span className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-            or with email
-            <span className="h-px flex-1" style={{ background: "var(--color-border)" }} />
-          </div>
-
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <label style={styles.label}>
-              Email
-              <input
+    <AuthShell headline={signInCopy.headline} subtext={signInCopy.subtext}>
+      {step === "credentials" ? (
+        <>
+          <AuthHeading title="Sign in">
+            New to Resume Pilot?{" "}
+            <Link href={routes.signUp} className="font-semibold text-link underline">
+              Create an account
+            </Link>
+          </AuthHeading>
+          <OAuthButtons onSelect={handleOAuth} disabled={!isLoaded} />
+          <OrDivider />
+          <form className="flex flex-col gap-4" onSubmit={handleCredentials}>
+            <Field label="Email">
+              <Input
                 type="email"
                 autoComplete="email"
                 required
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={styles.input}
+                className={authInput}
               />
-            </label>
-            <label style={styles.label}>
-              <span className="flex justify-between">
-                Password
-                <Link href="#" style={{ fontWeight: 500, color: "var(--color-link)" }}>
+            </Field>
+            <Field
+              label="Password"
+              labelAside={
+                <button
+                  type="button"
+                  onClick={() => goTo("reset-request")}
+                  className="cursor-pointer font-medium text-link underline"
+                >
                   Forgot password?
-                </Link>
-              </span>
-              <input
+                </button>
+              }
+            >
+              <Input
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={styles.input}
+                className={authInput}
               />
-            </label>
-            {error && <p style={styles.errorText}>{error}</p>}
-            <button type="submit" disabled={submitting} style={styles.primaryButton}>
+            </Field>
+            <FormError>{error}</FormError>
+            <Button type="submit" size="lg" block disabled={submitting || !isLoaded} className="h-12">
               {submitting ? "Signing in…" : "Sign in"}
-            </button>
+            </Button>
           </form>
-
-          <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--color-text-secondary)" }}>
-            By continuing you agree to our{" "}
-            <Link href="/legal" style={{ color: "var(--color-link)" }}>
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/legal" style={{ color: "var(--color-link)" }}>
-              Privacy policy
-            </Link>
-            .
+          <span className="text-[13px] leading-normal text-text-2">
+            By continuing you agree to our <LegalLinks />.
           </span>
-        </div>
-      </main>
-    </div>
-  );
-}
+        </>
+      ) : null}
 
-function messageFor(err: unknown): string {
-  if (err && typeof err === "object" && "errors" in err) {
-    const errors = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors;
-    const first = errors?.[0];
-    if (first) return first.longMessage ?? first.message ?? "Something went wrong.";
-  }
-  return "Something went wrong. Please try again.";
+      {step === "second-factor" ? (
+        <form className="flex flex-col gap-4" onSubmit={handleSecondFactor}>
+          <AuthHeading title="Verify it’s you">
+            {factor === "email_code"
+              ? `We sent a 6-digit code to ${email}.`
+              : factor === "phone_code"
+                ? "We sent a 6-digit code to your phone."
+                : "Enter the 6-digit code from your authenticator app."}
+          </AuthHeading>
+          <Field label="Verification code">
+            <Input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.trim())}
+              className={codeInput}
+            />
+          </Field>
+          <FormError>{error}</FormError>
+          <Button type="submit" size="lg" block disabled={submitting} className="h-12">
+            {submitting ? "Verifying…" : "Verify and sign in"}
+          </Button>
+          {backButton("credentials")}
+        </form>
+      ) : null}
+
+      {step === "reset-request" ? (
+        <form className="flex flex-col gap-4" onSubmit={handleResetRequest}>
+          <AuthHeading title="Reset your password">
+            Enter your account email and we&apos;ll send you a code.
+          </AuthHeading>
+          <Field label="Email">
+            <Input
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={authInput}
+            />
+          </Field>
+          <FormError>{error}</FormError>
+          <Button type="submit" size="lg" block disabled={submitting} className="h-12">
+            {submitting ? "Sending…" : "Send reset code"}
+          </Button>
+          {backButton("credentials")}
+        </form>
+      ) : null}
+
+      {step === "reset-verify" ? (
+        <form className="flex flex-col gap-4" onSubmit={handleResetVerify}>
+          <AuthHeading title="Choose a new password">Enter the code we sent to {email}.</AuthHeading>
+          <Field label="Reset code">
+            <Input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.trim())}
+              className={codeInput}
+            />
+          </Field>
+          <Field label="New password" help="At least 8 characters">
+            <Input
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className={authInput}
+            />
+          </Field>
+          <FormError>{error}</FormError>
+          <Button type="submit" size="lg" block disabled={submitting} className="h-12">
+            {submitting ? "Saving…" : "Reset password and sign in"}
+          </Button>
+          {backButton("reset-request")}
+        </form>
+      ) : null}
+    </AuthShell>
+  );
 }

@@ -12,7 +12,7 @@ export default function SignInSsoCallbackPage() {
   return (
     <AuthenticateWithRedirectCallback
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/welcome"
     />
   );
 }

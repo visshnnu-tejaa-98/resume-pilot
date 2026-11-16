@@ -1,47 +1,228 @@
 @import "tailwindcss";
 
-/* Design tokens from design/README.md and the design/screens/*.dc.html
-   mockups — swap/extend when the real Tailwind theme + shadcn/ui setup
-   lands (tasks/todo/m8-editor-templates). */
+/*
+ * Design tokens — taken from the `t` palettes in design/screens/*.dc.html.
+ * Raw values live in --rp-* and are swapped for dark mode; Tailwind
+ * utilities (bg-surface, text-text-2, border-border-strong, ...) map onto
+ * them through @theme inline, so every component flips theme for free.
+ *
+ * Theme selection: <html data-theme="light|dark"> forces a mode (set by
+ * the Zustand theme store, see src/stores/theme-store.ts); without it the
+ * OS preference wins.
+ */
 :root {
-  --color-background: #f4f6f8;
-  --color-surface: #ffffff;
-  --color-input-bg: #ffffff;
-  --color-border: #d6dde6;
-  --color-border-strong: #9aa8b8;
-  --color-text: #0f1b2a;
-  --color-text-secondary: #4b5a6b;
-  --color-accent: #ff9900;
-  --color-on-accent: #0f1b2a;
-  --color-accent-tint: #fff4e2;
-  --color-accent-line: #c77700;
-  --color-link: #0a6bcb;
-  --color-hero-navy: #0f1b2a;
+  --rp-bg: #f4f6f8;
+  --rp-surface: #ffffff;
+  --rp-surface-2: #eaeef3;
+  --rp-input-bg: #ffffff;
+  --rp-border: #d6dde6;
+  --rp-border-strong: #9aa8b8;
+  --rp-text: #0f1b2a;
+  --rp-text-2: #4b5a6b;
+  --rp-accent: #ff9900;
+  --rp-on-accent: #0f1b2a;
+  --rp-accent-text: #a85e00;
+  --rp-accent-tint: #fff4e2;
+  --rp-accent-line: #c77700;
+  --rp-link: #0a6bcb;
+  --rp-good: #1b7a43;
+  --rp-good-bg: #e3f4ea;
+  --rp-good-line: #b5dfc5;
+  --rp-warn: #8f4d00;
+  --rp-warn-bg: #fff1dc;
+  --rp-warn-line: #f2cf98;
+  --rp-info: #0a62ba;
+  --rp-info-bg: #e6f0fb;
+  --rp-info-line: #b9d3f0;
+  --rp-crit: #b42318;
+  --rp-crit-bg: #fdecea;
+  --rp-crit-line: #f4c1bc;
+  --rp-sel-bg: #f1f6fc;
+  --rp-hero: #0f1b2a;
+  --rp-canvas: #dde3ea;
+  --rp-scrim: rgba(15, 27, 42, 0.45);
+  --rp-shadow: 0 1px 2px rgba(15, 27, 42, 0.06), 0 12px 32px rgba(15, 27, 42, 0.08);
+  --rp-shadow-sm: 0 1px 2px rgba(15, 27, 42, 0.06), 0 6px 18px rgba(15, 27, 42, 0.06);
+  --rp-shadow-lg: 0 12px 40px rgba(15, 27, 42, 0.22);
+  /* Chrome (nav / footer / app bars) */
+  --rp-bar: #0f1b2a;
+  --rp-bar-line: #22344a;
+  --rp-bar-active: #1e3047;
+  --rp-bar-field: #16243a;
+  color-scheme: light;
+}
+
+/* Legacy aliases still read via var() by auth-styles.ts / AuthHero */
+:root {
+  --color-background: var(--rp-bg);
+  --color-surface: var(--rp-surface);
+  --color-input-bg: var(--rp-input-bg);
+  --color-border: var(--rp-border);
+  --color-border-strong: var(--rp-border-strong);
+  --color-text: var(--rp-text);
+  --color-text-secondary: var(--rp-text-2);
+  --color-accent: var(--rp-accent);
+  --color-on-accent: var(--rp-on-accent);
+  --color-accent-tint: var(--rp-accent-tint);
+  --color-accent-line: var(--rp-accent-line);
+  --color-link: var(--rp-link);
+  --color-hero-navy: var(--rp-hero);
   --color-hero-text-secondary: #a9b8c9;
   --color-hero-muted: #8fa1b5;
 }
 
+:root[data-theme="dark"] {
+  --rp-bg: #0a1119;
+  --rp-surface: #111b27;
+  --rp-surface-2: #1a2636;
+  --rp-input-bg: #0d1620;
+  --rp-border: #26364a;
+  --rp-border-strong: #4a5f78;
+  --rp-text: #e8eef5;
+  --rp-text-2: #a3b3c5;
+  --rp-accent: #ff9f1c;
+  --rp-on-accent: #0a1119;
+  --rp-accent-text: #ffb547;
+  --rp-accent-tint: #2e2210;
+  --rp-accent-line: #c9801c;
+  --rp-link: #5aabff;
+  --rp-good: #4cc38a;
+  --rp-good-bg: #10291c;
+  --rp-good-line: #1e5236;
+  --rp-warn: #f5b54a;
+  --rp-warn-bg: #30220c;
+  --rp-warn-line: #5e4216;
+  --rp-info: #6fb5ff;
+  --rp-info-bg: #0e2339;
+  --rp-info-line: #1e4670;
+  --rp-crit: #ff8a7e;
+  --rp-crit-bg: #341311;
+  --rp-crit-line: #6a2620;
+  --rp-sel-bg: #0e2339;
+  --rp-hero: #060b12;
+  --rp-canvas: #060b12;
+  --rp-scrim: rgba(0, 0, 0, 0.5);
+  --rp-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
+  --rp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
+  --rp-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --rp-bar: #060b12;
+  --rp-bar-line: #1a2636;
+  --rp-bar-active: #16222f;
+  --rp-bar-field: #0d1620;
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: #0a1119;
-    --color-surface: #111b27;
-    --color-input-bg: #0d1620;
-    --color-border: #26364a;
-    --color-border-strong: #4a5f78;
-    --color-text: #e8eef5;
-    --color-text-secondary: #a3b3c5;
-    --color-accent: #ff9f1c;
-    --color-on-accent: #0a1119;
-    --color-accent-tint: #2e2210;
-    --color-accent-line: #c9801c;
-    --color-link: #5aabff;
-    --color-hero-navy: #060b12;
-    --color-hero-text-secondary: #a9b8c9;
-    --color-hero-muted: #8fa1b5;
+  :root:not([data-theme="light"]) {
+    --rp-bg: #0a1119;
+    --rp-surface: #111b27;
+    --rp-surface-2: #1a2636;
+    --rp-input-bg: #0d1620;
+    --rp-border: #26364a;
+    --rp-border-strong: #4a5f78;
+    --rp-text: #e8eef5;
+    --rp-text-2: #a3b3c5;
+    --rp-accent: #ff9f1c;
+    --rp-on-accent: #0a1119;
+    --rp-accent-text: #ffb547;
+    --rp-accent-tint: #2e2210;
+    --rp-accent-line: #c9801c;
+    --rp-link: #5aabff;
+    --rp-good: #4cc38a;
+    --rp-good-bg: #10291c;
+    --rp-good-line: #1e5236;
+    --rp-warn: #f5b54a;
+    --rp-warn-bg: #30220c;
+    --rp-warn-line: #5e4216;
+    --rp-info: #6fb5ff;
+    --rp-info-bg: #0e2339;
+    --rp-info-line: #1e4670;
+    --rp-crit: #ff8a7e;
+    --rp-crit-bg: #341311;
+    --rp-crit-line: #6a2620;
+    --rp-sel-bg: #0e2339;
+    --rp-hero: #060b12;
+    --rp-canvas: #060b12;
+    --rp-scrim: rgba(0, 0, 0, 0.5);
+    --rp-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35);
+    --rp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
+    --rp-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+    --rp-bar: #060b12;
+    --rp-bar-line: #1a2636;
+    --rp-bar-active: #16222f;
+    --rp-bar-field: #0d1620;
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --font-sans: var(--font-inter), Inter, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), "Space Grotesk", Inter, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+
+  --color-bg: var(--rp-bg);
+  --color-surface: var(--rp-surface);
+  --color-surface-2: var(--rp-surface-2);
+  --color-input-bg: var(--rp-input-bg);
+  --color-border: var(--rp-border);
+  --color-border-strong: var(--rp-border-strong);
+  --color-text: var(--rp-text);
+  --color-text-2: var(--rp-text-2);
+  --color-accent: var(--rp-accent);
+  --color-on-accent: var(--rp-on-accent);
+  --color-accent-text: var(--rp-accent-text);
+  --color-accent-tint: var(--rp-accent-tint);
+  --color-accent-line: var(--rp-accent-line);
+  --color-link: var(--rp-link);
+  --color-good: var(--rp-good);
+  --color-good-bg: var(--rp-good-bg);
+  --color-good-line: var(--rp-good-line);
+  --color-warn: var(--rp-warn);
+  --color-warn-bg: var(--rp-warn-bg);
+  --color-warn-line: var(--rp-warn-line);
+  --color-info: var(--rp-info);
+  --color-info-bg: var(--rp-info-bg);
+  --color-info-line: var(--rp-info-line);
+  --color-crit: var(--rp-crit);
+  --color-crit-bg: var(--rp-crit-bg);
+  --color-crit-line: var(--rp-crit-line);
+  --color-sel-bg: var(--rp-sel-bg);
+  --color-hero: var(--rp-hero);
+  --color-canvas: var(--rp-canvas);
+  --color-scrim: var(--rp-scrim);
+  --color-bar: var(--rp-bar);
+  --color-bar-line: var(--rp-bar-line);
+  --color-bar-active: var(--rp-bar-active);
+  --color-bar-field: var(--rp-bar-field);
+
+  /* Fixed colours used on navy hero / chrome surfaces in both themes */
+  --color-brand: #ff9900;
+  --color-brand-ink: #0f1b2a;
+  --color-on-hero: #f2f5f9;
+  --color-on-hero-2: #c3cfdc;
+  --color-on-hero-3: #a9b8c9;
+  --color-on-hero-muted: #8fa1b5;
+  --color-on-hero-link: #dce4ee;
+  --color-hero-chip: #1b2a3d;
+  --color-hero-line: #33475e;
+  --color-hero-line-strong: #4a5f78;
+  --color-hero-accent: #ffb547;
+  --color-hero-good: #4cc38a;
+
+  --shadow-card: var(--rp-shadow);
+  --shadow-card-sm: var(--rp-shadow-sm);
+  --shadow-modal: var(--rp-shadow-lg);
+}
+
 body {
-  background-color: var(--color-background);
-  color: var(--color-text);
+  background-color: var(--rp-bg);
+  color: var(--rp-text);
+  font-family: var(--font-sans);
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
 }
