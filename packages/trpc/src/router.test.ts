@@ -342,6 +342,28 @@ describe.skipIf(!connectionString)("appRouter.resumes (real DB)", () => {
     });
   });
 
+  it("retryExtraction re-runs only the JSON step when the raw text already exists", async () => {
+    await db
+      .update(resumes)
+      .set({ status: "failed", extractionError: "x", rawText: "Priya Raman resume text" })
+      .where(eq(resumes.id, resumeId));
+    extractionAdd.mockReset();
+
+    const caller = appRouter.createCaller(createContext({ db, userId: owner }));
+    expect(await caller.resumes.retryExtraction({ resumeId })).toEqual({ status: "processed" });
+    expect(extractionAdd).toHaveBeenCalledWith(
+      "structure",
+      { resumeId },
+      expect.objectContaining({ jobId: `structure-${resumeId}` }),
+    );
+    await db.update(resumes).set({ rawText: null }).where(eq(resumes.id, resumeId));
+  });
+
+  it("original returns NOT_FOUND until the resume is parsed, and to anyone but the owner", async () => {
+    const owned = appRouter.createCaller(createContext({ db, userId: owner }));
+    await expect(owned.resumes.original({ resumeId })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("another user gets NOT_FOUND for the same resume id, and sees no resumes", async () => {
     const caller = appRouter.createCaller(createContext({ db, userId: intruder }));
     await expect(caller.resumes.fileUrls({ resumeId })).rejects.toMatchObject({

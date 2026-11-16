@@ -91,3 +91,12 @@ export {
   type ExtractionDeps,
   type ExtractionOutcome,
 } from "./extraction";
+export {
+  getOriginalVersion,
+  processStructuring,
+  resumeContentHash,
+  STRUCTURING_FAILED_MESSAGE,
+  STRUCTURING_TEMPORARY_MESSAGE,
+  type StructuringDeps,
+  type StructuringOutcome,
+} from "./structuring";

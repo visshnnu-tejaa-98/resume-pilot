@@ -213,3 +213,22 @@ export function getExtractionQueue(): Queue<ExtractionJob> {
   extractionQueue ??= createExtractionQueue(producer());
   return extractionQueue;
 }
+
+/**
+ * Text → JSON for a resume whose raw text is ready (prd.md §5.3 step 4).
+ * Same queue and options as extraction; job name "structure". Retries
+ * of a completed job are allowed (a user retry after a failure).
+ */
+export async function enqueueStructuring(
+  queue: Pick<Queue<ExtractionJob>, "add" | "getJob">,
+  job: ExtractionJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = extractionJobSchema.parse(job);
+  return addUniqueJob(
+    queue,
+    "structure",
+    data,
+    { ...EXTRACTION_JOB_OPTIONS, jobId: `structure-${data.resumeId}` },
+    true,
+  );
+}

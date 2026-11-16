@@ -11,13 +11,16 @@ vi.mock("@resume-pilot/services", () => ({
   findWalletMismatches,
   cleanupExpiredUploads,
   processExtraction,
+  processStructuring,
 }));
 vi.mock("@resume-pilot/storage", () => ({ getStorage: () => ({ deleteFile: vi.fn() }) }));
 const processExtraction = vi.hoisted(() => vi.fn());
+const processStructuring = vi.hoisted(() => vi.fn());
 
 const {
   finishEmailJob,
   handleExtractionJob,
+  handleStructuringJob,
   handleMaintenanceJob,
   handleTransactionalEmailJob,
   REDIS_URL,
@@ -163,5 +166,26 @@ describe("handleExtractionJob", () => {
       ),
     ).rejects.toThrow();
     expect(processExtraction).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleStructuringJob", () => {
+  const resumeId = "8a5f0f0e-2b8e-4c1e-9d3f-0a1b2c3d4e5f";
+  it.each([
+    { attemptsMade: 0, final: false },
+    { attemptsMade: 2, final: true },
+  ])("attempt $attemptsMade of 3 → isFinalAttempt=$final", async ({ attemptsMade, final }) => {
+    processStructuring
+      .mockReset()
+      .mockResolvedValue({ status: "ready", versionId: "v", flagged: 0 });
+    const structure = vi.fn();
+    await handleStructuringJob(
+      { data: { resumeId }, attemptsMade, opts: { attempts: 3 } },
+      { db: deps.db, structure },
+    );
+    expect(processStructuring).toHaveBeenCalledWith(deps.db, resumeId, {
+      structure,
+      isFinalAttempt: final,
+    });
   });
 });

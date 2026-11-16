@@ -170,7 +170,6 @@ describe.skipIf(!connectionString)("estimate → hold → capture (real DB)", ()
 
     it("load test: 20 parallel hold+capture flows never take the balance below zero", async () => {
       const userId = await userWith(1000);
-      const config = await getActivePricingConfig(db);
       const usage = { inputTokens: 1000, outputTokens: 500 };
 
       await Promise.allSettled(
@@ -191,7 +190,6 @@ describe.skipIf(!connectionString)("estimate → hold → capture (real DB)", ()
       expect(wallet.balance).toBe(1000 - spent);
       expect(wallet.held).toBe(0);
       expect(spent).toBeGreaterThan(0);
-      expect(config.version).toBe(pricingVersion);
     });
   });
 

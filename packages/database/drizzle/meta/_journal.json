@@ -64,6 +64,13 @@
       "when": 1794820642508,
       "tag": "0008_foamy_pepper_potts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794822091040,
+      "tag": "0009_blushing_gunslinger",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import {
   reviewFlaggedReferral,
   updateCoupon,
   getActivePricingConfig,
+  getOriginalVersion,
   getResumeFileKeys,
   getWalletPage,
   getWalletSummary,
@@ -28,7 +29,7 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueExtraction, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueueExtraction, enqueueStructuring, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -136,12 +137,24 @@ export const appRouter = router({
     retryExtraction: authProcedure
       .input(z.object({ resumeId: z.uuid() }))
       .mutation(async ({ ctx, input }) => {
-        await markExtractionForRetry(ctx.db, {
+        const { step } = await markExtractionForRetry(ctx.db, {
           userId: ctx.user.id,
           resumeId: input.resumeId,
         }).catch(toTRPCError);
-        await enqueueExtraction(getExtractionQueue(), { resumeId: input.resumeId });
-        return { status: "uploaded" as const };
+        const enqueue = step === "structure" ? enqueueStructuring : enqueueExtraction;
+        await enqueue(getExtractionQueue(), { resumeId: input.resumeId });
+        return { status: step === "structure" ? ("processed" as const) : ("uploaded" as const) };
+      }),
+    /** The parsed original version with its review flags, once status is `ready`. */
+    original: authProcedure
+      .input(z.object({ resumeId: z.uuid() }))
+      .query(async ({ ctx, input }) => {
+        const version = await getOriginalVersion(ctx.db, {
+          userId: ctx.user.id,
+          resumeId: input.resumeId,
+        });
+        if (!version) throw new TRPCError({ code: "NOT_FOUND" });
+        return version;
       }),
   }),
 

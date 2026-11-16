@@ -1,5 +1,14 @@
-/**
- * OpenAI client, prompts, schemas, grounding check, token estimator.
- * Empty at scaffold time — see tasks/todo/m6-generation.
- */
-export const packageName = "@resume-pilot/ai";
+export {
+  createOpenAIClient,
+  DEFAULT_EXTRACTION_MODEL,
+  EXTRACTION_INSTRUCTIONS,
+  EXTRACTION_MAX_OUTPUT_TOKENS,
+  EXTRACTION_PROMPT_VERSION,
+  structureResume,
+  StructuringError,
+  wrapResumeText,
+  type ResponsesClient,
+  type StructureResult,
+  type StructureUsage,
+  type StructuringFailure,
+} from "./structure";

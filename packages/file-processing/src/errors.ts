@@ -7,15 +7,43 @@ import { OCR_LOW_QUALITY_MESSAGE } from "./validate";
  */
 
 /** Pluggable OCR so tests and the worker can share one engine instance. */
-export interface OcrEngine {
-  recognize(image: Uint8Array): Promise<{ text: string; wordConfidences: number[] }>;
+export interface OcrLine {
+  text: string;
+  /** 0–100, Tesseract's line confidence. */
+  confidence: number;
 }
+
+export interface OcrEngine {
+  recognize(
+    image: Uint8Array,
+  ): Promise<{ text: string; wordConfidences: number[]; lines?: OcrLine[] }>;
+}
+
+/**
+ * A line OCR read with low confidence, kept so the JSON step can flag
+ * the resume fields that came from it (prd.md §5.3 step 5).
+ */
+export interface LowConfidenceLine {
+  /** 1-based page number in the upload. */
+  page: number;
+  text: string;
+  confidence: number;
+}
+
+/** Lines under this confidence are kept for field flagging (below 60 is `low`, else `medium`). */
+export const LINE_FLAG_THRESHOLD = 75;
 
 export type PageMethod = "text_layer" | "ocr" | "docx" | "latex";
 
 export interface ExtractionResult {
   text: string;
-  pages: { method: PageMethod; chars: number; ocrConfidence?: number }[];
+  pages: {
+    method: PageMethod;
+    chars: number;
+    ocrConfidence?: number;
+    /** OCR pages only: lines read below LINE_FLAG_THRESHOLD. */
+    lowConfidenceLines?: LowConfidenceLine[];
+  }[];
 }
 
 export type ExtractionFailure =

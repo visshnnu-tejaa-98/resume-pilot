@@ -3,7 +3,9 @@ import { sendEmail } from "@resume-pilot/emails";
 import {
   createMaintenanceQueue,
   createRedisConnection,
+  enqueueStructuring,
   extractionJobSchema,
+  getExtractionQueue,
   MAINTENANCE_JOBS,
   QUEUE_NAMES,
   registerMaintenanceSchedules,
@@ -12,6 +14,12 @@ import {
   type ExtractionJob,
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
+import {
+  createOpenAIClient,
+  structureResume,
+  StructuringError,
+  type ResponsesClient,
+} from "@resume-pilot/ai";
 import { extractText } from "@resume-pilot/file-processing/extract";
 import { createTesseractOcr, type TesseractOcr } from "@resume-pilot/file-processing/ocr";
 import { getStorage } from "@resume-pilot/storage";
@@ -20,8 +28,10 @@ import {
   expireStaleHolds,
   findWalletMismatches,
   processExtraction,
+  processStructuring,
   processTransactionalEmail,
   type ExtractionDeps,
+  type StructuringDeps,
   type EmailProcessContext,
   type EmailProcessResult,
 } from "@resume-pilot/services";
@@ -159,6 +169,28 @@ function getOcr(): Promise<TesseractOcr> {
   return ocrEngine;
 }
 
+let openai: ResponsesClient | undefined;
+/** Created on first use, so a missing key fails structuring jobs only, not the worker. */
+function getOpenAI(): ResponsesClient {
+  try {
+    openai ??= createOpenAIClient();
+  } catch (err) {
+    // A missing key won't fix itself on retry: fail the job straight away.
+    throw new StructuringError("config_error", (err as Error).message, false, { cause: err });
+  }
+  return openai;
+}
+
+/** Turns a structure job into a processStructuring call. Exported for tests. */
+export async function handleStructuringJob(
+  job: Pick<Job<ExtractionJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database } & Omit<StructuringDeps, "isFinalAttempt">,
+) {
+  const { resumeId } = extractionJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processStructuring(deps.db, resumeId, { structure: deps.structure, isFinalAttempt });
+}
+
 /** Turns an extraction job into a processExtraction call. Exported for tests. */
 export async function handleExtractionJob(
   job: Pick<Job<ExtractionJob>, "data" | "attemptsMade" | "opts">,
@@ -177,12 +209,30 @@ export function createExtractionWorker(db: Database): Worker {
   const worker = new Worker<ExtractionJob>(
     QUEUE_NAMES.extraction,
     async (job) => {
+      if (job.name === "structure") {
+        const outcome = await handleStructuringJob(job, {
+          db,
+          structure: (rawText) =>
+            structureResume(getOpenAI(), {
+              rawText,
+              model: process.env.OPENAI_EXTRACTION_MODEL || undefined,
+            }),
+        });
+        console.log(`[worker] structure ${job.data.resumeId}: ${outcome.status}`);
+        return outcome;
+      }
+
       const outcome = await handleExtractionJob(job, {
         db,
         readFile: (input) => getStorage().readFile(input),
         extract: async (format, files) => extractText(format, files, await getOcr()),
       });
       console.log(`[worker] extract ${job.data.resumeId}: ${outcome.status}`);
+      // Text is ready: chain the JSON step (§5.3 step 4) as its own job, so a
+      // model retry never redoes OCR.
+      if (outcome.status === "processed") {
+        await enqueueStructuring(getExtractionQueue(), { resumeId: job.data.resumeId });
+      }
       return outcome;
     },
     // OCR is CPU-heavy; two at a time per worker instance.
@@ -190,7 +240,7 @@ export function createExtractionWorker(db: Database): Worker {
   );
   worker.on("failed", (job, err) => {
     console.error(
-      `[worker] extract ${job?.data.resumeId} attempt ${job?.attemptsMade} failed:`,
+      `[worker] ${job?.name ?? "extraction"} ${job?.data.resumeId} attempt ${job?.attemptsMade} failed:`,
       err.message,
     );
   });

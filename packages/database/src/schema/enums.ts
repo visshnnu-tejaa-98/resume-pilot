@@ -3,11 +3,18 @@ import { pgEnum } from "drizzle-orm/pg-core";
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 export const userStatusEnum = pgEnum("user_status", ["active", "suspended"]);
 
+/**
+ * uploaded → processing (text extraction) → processed (raw text ready)
+ * → structuring (text → JSON) → ready (original version saved), or
+ * failed at any step with `extraction_error`.
+ */
 export const resumeStatusEnum = pgEnum("resume_status", [
   "uploaded",
   "processing",
   "processed",
   "failed",
+  "structuring",
+  "ready",
 ]);
 export const resumeFormatEnum = pgEnum("resume_format", [
   "tex",

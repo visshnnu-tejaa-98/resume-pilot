@@ -110,10 +110,20 @@ export class RetryExtractionError extends Error {
 export async function markExtractionForRetry(
   db: Database,
   input: { userId: string; resumeId: string },
-): Promise<void> {
+): Promise<{ step: "extract" | "structure" }> {
+  // If text extraction already succeeded, only the JSON step needs re-running.
+  const [current] = await db
+    .select({ rawText: resumes.rawText })
+    .from(resumes)
+    .where(and(eq(resumes.id, input.resumeId), eq(resumes.userId, input.userId)));
+  const step = current?.rawText ? "structure" : "extract";
   const [row] = await db
     .update(resumes)
-    .set({ status: "uploaded", extractionError: null, updatedAt: new Date() })
+    .set({
+      status: step === "structure" ? "processed" : "uploaded",
+      extractionError: null,
+      updatedAt: new Date(),
+    })
     .where(
       and(
         eq(resumes.id, input.resumeId),
@@ -123,6 +133,7 @@ export async function markExtractionForRetry(
     )
     .returning({ id: resumes.id });
   if (!row) throw new RetryExtractionError("Only a failed upload of yours can be retried.");
+  return { step };
 }
 
 /**

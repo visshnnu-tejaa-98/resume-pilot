@@ -18,7 +18,10 @@ export {
 // "./ocr" subpaths, imported only by the worker.
 export {
   ExtractionError,
+  LINE_FLAG_THRESHOLD,
   type ExtractionFailure,
+  type LowConfidenceLine,
+  type OcrLine,
   type ExtractionResult,
   type OcrEngine,
   type PageMethod,

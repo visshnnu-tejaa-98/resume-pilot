@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   integer,
   type AnyPgColumn,
@@ -66,23 +67,32 @@ export const resumeFiles = pgTable(
  * schema in `@resume-pilot/validators` (tasks/todo/m4-schema-extraction),
  * not at the DB layer: Postgres jsonb has no schema of its own.
  */
-export const resumeVersions = pgTable("resume_versions", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  resumeId: uuid("resume_id")
-    .notNull()
-    .references(() => resumes.id, { onDelete: "cascade" }),
-  kind: resumeVersionKindEnum("kind").notNull(),
-  content: jsonb("content").notNull(),
-  extractionMeta: jsonb("extraction_meta"),
-  provenance: jsonb("provenance"),
-  // Self-referential FK: the snapshot a generated version was built
-  // from. The `AnyPgColumn` return type avoids a circular
-  // type-inference issue Drizzle has with self-references.
-  parentVersionId: uuid("parent_version_id").references((): AnyPgColumn => resumeVersions.id),
-  jdId: uuid("jd_id").references(() => jobDescriptions.id),
-  contentHash: text("content_hash").notNull(),
-  templateId: uuid("template_id").references(() => resumeTemplates.id),
-  deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const resumeVersions = pgTable(
+  "resume_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resumeId: uuid("resume_id")
+      .notNull()
+      .references(() => resumes.id, { onDelete: "cascade" }),
+    kind: resumeVersionKindEnum("kind").notNull(),
+    content: jsonb("content").notNull(),
+    extractionMeta: jsonb("extraction_meta"),
+    provenance: jsonb("provenance"),
+    // Self-referential FK: the snapshot a generated version was built
+    // from. The `AnyPgColumn` return type avoids a circular
+    // type-inference issue Drizzle has with self-references.
+    parentVersionId: uuid("parent_version_id").references((): AnyPgColumn => resumeVersions.id),
+    jdId: uuid("jd_id").references(() => jobDescriptions.id),
+    contentHash: text("content_hash").notNull(),
+    templateId: uuid("template_id").references(() => resumeTemplates.id),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // One original per upload: retried extraction jobs can't save twice.
+    uniqueIndex("resume_versions_one_original_key")
+      .on(table.resumeId)
+      .where(sql`${table.kind} = 'original'`),
+  ],
+);

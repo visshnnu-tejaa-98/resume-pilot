@@ -32,9 +32,11 @@ export async function createTesseractOcr(): Promise<TesseractOcr> {
     async recognize(image) {
       const { data } = await worker.recognize(Buffer.from(image), {}, { text: true, blocks: true });
       const wordConfidences: number[] = [];
+      const lines: { text: string; confidence: number }[] = [];
       for (const block of data.blocks ?? []) {
         for (const paragraph of block.paragraphs) {
           for (const line of paragraph.lines) {
+            lines.push({ text: line.text, confidence: line.confidence });
             for (const word of line.words) {
               // Skip stray punctuation/noise so it doesn't drag the average.
               if (word.text.replace(/[^\p{L}\p{N}]/gu, "").length > 0)
@@ -43,7 +45,7 @@ export async function createTesseractOcr(): Promise<TesseractOcr> {
           }
         }
       }
-      return { text: data.text, wordConfidences };
+      return { text: data.text, wordConfidences, lines };
     },
     terminate: () => worker.terminate().then(() => undefined),
   };

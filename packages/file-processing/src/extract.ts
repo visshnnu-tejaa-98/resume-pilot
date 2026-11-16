@@ -2,7 +2,12 @@ import { createCanvas } from "@napi-rs/canvas";
 import { latexParser } from "latex-utensils";
 import mammoth from "mammoth";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
-import { ExtractionError, type ExtractionResult, type OcrEngine } from "./errors";
+import {
+  ExtractionError,
+  LINE_FLAG_THRESHOLD,
+  type ExtractionResult,
+  type OcrEngine,
+} from "./errors";
 
 // Re-exported so worker code can import everything extraction-related from "./extract".
 export {
@@ -51,11 +56,14 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
-async function ocrPage(ocr: OcrEngine, image: Uint8Array) {
-  const { text, wordConfidences } = await ocr.recognize(image);
+async function ocrPage(ocr: OcrEngine, image: Uint8Array, page: number) {
+  const { text, wordConfidences, lines = [] } = await ocr.recognize(image);
   if (!isOcrQualityAcceptable(wordConfidences)) throw new ExtractionError("low_quality_image");
   const avg = wordConfidences.reduce((s, c) => s + c, 0) / wordConfidences.length;
-  return { text, confidence: Math.round(avg) };
+  const lowConfidenceLines = lines
+    .filter((l) => l.text.trim().length >= 2 && l.confidence < LINE_FLAG_THRESHOLD)
+    .map((l) => ({ page, text: l.text.trim(), confidence: Math.round(l.confidence) }));
+  return { text, confidence: Math.round(avg), lowConfidenceLines };
 }
 
 // --- PDF ------------------------------------------------------------
@@ -102,9 +110,14 @@ export async function extractPdf(data: Uint8Array, ocr: OcrEngine): Promise<Extr
       // accepts @napi-rs/canvas (its own optional dependency for this).
       type RenderCanvas = Parameters<typeof page.render>[0]["canvas"];
       await page.render({ canvas: canvas as unknown as RenderCanvas, viewport }).promise;
-      const { text: ocrText, confidence } = await ocrPage(ocr, canvas.toBuffer("image/png"));
-      texts.push(ocrText);
-      pages.push({ method: "ocr", chars: nonSpace(ocrText), ocrConfidence: confidence });
+      const ocrd = await ocrPage(ocr, canvas.toBuffer("image/png"), n);
+      texts.push(ocrd.text);
+      pages.push({
+        method: "ocr",
+        chars: nonSpace(ocrd.text),
+        ocrConfidence: ocrd.confidence,
+        lowConfidenceLines: ocrd.lowConfidenceLines,
+      });
     }
     return { text: texts.join("\n\n"), pages };
   } finally {
@@ -359,10 +372,15 @@ export async function extractImages(
 ): Promise<ExtractionResult> {
   const texts: string[] = [];
   const pages: ExtractionResult["pages"] = [];
-  for (const image of images) {
-    const { text, confidence } = await ocrPage(ocr, image);
-    texts.push(text);
-    pages.push({ method: "ocr", chars: nonSpace(text), ocrConfidence: confidence });
+  for (const [i, image] of images.entries()) {
+    const ocrd = await ocrPage(ocr, image, i + 1);
+    texts.push(ocrd.text);
+    pages.push({
+      method: "ocr",
+      chars: nonSpace(ocrd.text),
+      ocrConfidence: ocrd.confidence,
+      lowConfidenceLines: ocrd.lowConfidenceLines,
+    });
   }
   return { text: texts.join("\n\n"), pages };
 }

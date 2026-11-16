@@ -338,6 +338,19 @@ export const extractionMetaSchema = z.record(
     confidence: z.enum(["low", "medium"]),
     reason: z.string().max(300),
     reviewed: z.boolean().default(false),
+    /**
+     * Where the doubt comes from, so a flag is traceable (prd.md §5.3
+     * step 5): the OCR line the field was read from and its confidence,
+     * or `text` when the value couldn't be found in the source at all.
+     */
+    source: z
+      .object({
+        kind: z.enum(["ocr_line", "not_in_source", "partial_date"]),
+        page: z.number().int().positive().optional(),
+        line: z.string().max(500).optional(),
+        ocrConfidence: z.number().min(0).max(100).optional(),
+      })
+      .optional(),
   }),
 );
 
