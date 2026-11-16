@@ -12,7 +12,38 @@ import { z } from "zod";
  */
 export const QUEUE_NAMES = {
   emailTransactional: "email-transactional",
+  /** Scheduled housekeeping (hold expiry, later: upload cleanup, inactive nudges). */
+  maintenance: "maintenance",
 } as const;
+
+/** Maintenance job names, each run on a schedule by the worker. */
+export const MAINTENANCE_JOBS = {
+  /** Releases credit holds older than 15 minutes (prd.md §3.4 step 6). */
+  expireHolds: { name: "expire-holds", everyMs: 60_000 },
+  /** Logs any wallet whose cached balance differs from its ledger (prd.md §3.5). */
+  reconcileWallets: { name: "reconcile-wallets", everyMs: 60 * 60_000 },
+} as const;
+
+export type MaintenanceJobName = (typeof MAINTENANCE_JOBS)[keyof typeof MAINTENANCE_JOBS]["name"];
+
+export function createMaintenanceQueue(connection: IORedis): Queue {
+  return new Queue(QUEUE_NAMES.maintenance, { connection });
+}
+
+/**
+ * Registers every maintenance schedule. Idempotent: upsertJobScheduler
+ * replaces an existing schedule with the same id, so each worker start
+ * (or several replicas) keeps exactly one schedule per job.
+ */
+export async function registerMaintenanceSchedules(queue: Pick<Queue, "upsertJobScheduler">) {
+  for (const job of Object.values(MAINTENANCE_JOBS)) {
+    await queue.upsertJobScheduler(
+      job.name,
+      { every: job.everyMs },
+      { name: job.name, opts: { removeOnComplete: { count: 100 }, removeOnFail: { count: 500 } } },
+    );
+  }
+}
 
 /** Every transactional email job. `templateKey` picks the processor. */
 export const transactionalEmailJobSchema = z.discriminatedUnion("templateKey", [

@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -38,6 +39,10 @@ describe.skipIf(!connectionString)("database schema constraints", () => {
   });
 
   afterAll(async () => {
+    // These tests insert raw ledger rows to probe constraints, bypassing
+    // postLedgerEntry, so the wallet wouldn't reconcile. Deleting the user
+    // cascades its rows away (the one delete the append-only trigger allows).
+    await db.delete(schema.users).where(eq(schema.users.id, userId));
     await sql.end();
   });
 

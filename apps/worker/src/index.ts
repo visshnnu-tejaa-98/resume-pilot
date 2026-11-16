@@ -1,13 +1,18 @@
 import { createDatabase, type Database } from "@resume-pilot/database";
 import { sendEmail } from "@resume-pilot/emails";
 import {
+  createMaintenanceQueue,
   createRedisConnection,
+  MAINTENANCE_JOBS,
   QUEUE_NAMES,
+  registerMaintenanceSchedules,
   redisUrlFromEnv,
   transactionalEmailJobSchema,
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
 import {
+  expireStaleHolds,
+  findWalletMismatches,
   processTransactionalEmail,
   type EmailProcessContext,
   type EmailProcessResult,
@@ -83,7 +88,47 @@ export function createTransactionalEmailWorker(db: Database, config: WorkerConfi
   return worker;
 }
 
-function main() {
+/** Runs one maintenance job by name. Exported for tests. */
+export async function handleMaintenanceJob(name: string, deps: { db: Database }) {
+  switch (name) {
+    case MAINTENANCE_JOBS.expireHolds.name:
+      return expireStaleHolds(deps.db);
+    case MAINTENANCE_JOBS.reconcileWallets.name: {
+      const mismatches = await findWalletMismatches(deps.db);
+      for (const m of mismatches) {
+        // Should never happen; every balance change goes through postLedgerEntry.
+        console.error("[worker] wallet mismatch:", JSON.stringify(m));
+      }
+      return { mismatches: mismatches.length };
+    }
+    default:
+      throw new UnrecoverableError(`Unknown maintenance job "${name}"`);
+  }
+}
+
+export function createMaintenanceWorker(db: Database): Worker {
+  const worker = new Worker(
+    QUEUE_NAMES.maintenance,
+    async (job) => {
+      const result = await handleMaintenanceJob(job.name, { db });
+      if (result && "expired" in result && result.expired > 0) {
+        console.log(`[worker] ${job.name}: released ${result.expired} expired hold(s)`);
+      }
+      return result;
+    },
+    // One at a time: these are sweeps, not per-user work.
+    { connection: createRedisConnection(REDIS_URL), concurrency: 1 },
+  );
+  worker.on("failed", (job, err) => {
+    console.error(`[worker] ${job?.name} failed:`, err.message);
+  });
+  worker.on("error", (err) => {
+    console.error("[worker] maintenance worker error:", err.message);
+  });
+  return worker;
+}
+
+async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
     console.error("[worker] DATABASE_URL is not set");
@@ -93,8 +138,17 @@ function main() {
   const db = createDatabase(databaseUrl);
 
   console.log("[worker] starting");
-  const workers = [createTransactionalEmailWorker(db, config)];
-  console.log(`[worker] listening on queue "${QUEUE_NAMES.emailTransactional}"`);
+  const workers = [createTransactionalEmailWorker(db, config), createMaintenanceWorker(db)];
+
+  const maintenanceConnection = createRedisConnection(REDIS_URL);
+  const maintenanceQueue = createMaintenanceQueue(maintenanceConnection);
+  await registerMaintenanceSchedules(maintenanceQueue);
+  await maintenanceQueue.close();
+  await maintenanceConnection.quit();
+
+  console.log(
+    `[worker] listening on queues "${QUEUE_NAMES.emailTransactional}", "${QUEUE_NAMES.maintenance}"`,
+  );
 
   const shutdown = async () => {
     console.log("[worker] shutting down...");
@@ -108,5 +162,8 @@ function main() {
 }
 
 if (process.env.VITEST !== "true") {
-  main();
+  main().catch((err) => {
+    console.error("[worker] failed to start:", err);
+    process.exit(1);
+  });
 }

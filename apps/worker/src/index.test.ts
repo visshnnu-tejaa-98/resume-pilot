@@ -2,10 +2,21 @@ import type { Database } from "@resume-pilot/database";
 import { describe, expect, it, vi } from "vitest";
 
 const processTransactionalEmail = vi.fn().mockResolvedValue({ status: "sent", messageId: "m" });
-vi.mock("@resume-pilot/services", () => ({ processTransactionalEmail }));
+const expireStaleHolds = vi.fn().mockResolvedValue({ expired: 2 });
+const findWalletMismatches = vi.fn().mockResolvedValue([]);
+vi.mock("@resume-pilot/services", () => ({
+  processTransactionalEmail,
+  expireStaleHolds,
+  findWalletMismatches,
+}));
 
-const { finishEmailJob, handleTransactionalEmailJob, REDIS_URL, workerConfigFromEnv } =
-  await import("./index");
+const {
+  finishEmailJob,
+  handleMaintenanceJob,
+  handleTransactionalEmailJob,
+  REDIS_URL,
+  workerConfigFromEnv,
+} = await import("./index");
 const { UnrecoverableError } = await import("bullmq");
 
 const userId = "8a5f0f0e-2b8e-4c1e-9d3f-0a1b2c3d4e5f";
@@ -74,5 +85,33 @@ describe("finishEmailJob", () => {
     expect(() =>
       finishEmailJob({ status: "failed_permanent", reason: "550 no such user" }),
     ).toThrow(UnrecoverableError);
+  });
+});
+
+describe("handleMaintenanceJob", () => {
+  it("runs the hold-expiry sweep for expire-holds", async () => {
+    const result = await handleMaintenanceJob("expire-holds", { db: deps.db });
+    expect(expireStaleHolds).toHaveBeenCalledWith(deps.db);
+    expect(result).toEqual({ expired: 2 });
+  });
+
+  it("reports wallet mismatches for reconcile-wallets", async () => {
+    findWalletMismatches.mockResolvedValueOnce([
+      { userId: "u", cachedBalance: 5, ledgerSum: 4, lastBalanceAfter: 4 },
+    ]);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const result = await handleMaintenanceJob("reconcile-wallets", { db: deps.db });
+    expect(result).toEqual({ mismatches: 1 });
+    expect(spy).toHaveBeenCalledWith(
+      "[worker] wallet mismatch:",
+      expect.stringContaining('"ledgerSum":4'),
+    );
+    spy.mockRestore();
+  });
+
+  it("fails an unknown job without retrying", async () => {
+    await expect(handleMaintenanceJob("nope", { db: deps.db })).rejects.toBeInstanceOf(
+      UnrecoverableError,
+    );
   });
 });

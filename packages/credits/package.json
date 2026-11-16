@@ -16,6 +16,7 @@
     "vitest": "5.1.0"
   },
   "dependencies": {
-    "@resume-pilot/validators": "workspace:*"
+    "@resume-pilot/validators": "workspace:*",
+    "gpt-tokenizer": "4.1.0"
   }
 }

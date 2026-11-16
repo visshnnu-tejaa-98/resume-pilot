@@ -1,5 +1,14 @@
 import { sql } from "drizzle-orm";
-import { boolean, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { codeTypeEnum, referrerStatusEnum } from "./enums";
 import { users } from "./users";
 
@@ -54,7 +63,41 @@ export const codeRedemptions = pgTable(
     creditsToReferrer: integer("credits_to_referrer").notNull().default(0),
     referrerStatus: referrerStatusEnum("referrer_status").notNull().default("granted"),
     flaggedForAbuse: boolean("flagged_for_abuse").notNull().default(false),
+    /** Why the referral was flagged, for the admin review queue. */
+    flagReason: text("flag_reason"),
+    /**
+     * Salted SHA-256 of the client IP / device id at redemption — enough
+     * to spot repeats from one source, without storing the raw IP.
+     */
+    ipHash: text("ip_hash"),
+    deviceHash: text("device_hash"),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => users.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("code_redemptions_user_id_key").on(table.userId)],
+  (table) => [
+    uniqueIndex("code_redemptions_user_id_key").on(table.userId),
+    index("code_redemptions_referral_ip_idx").on(table.referralCodeId, table.ipHash),
+    index("code_redemptions_referral_device_idx").on(table.referralCodeId, table.deviceHash),
+    index("code_redemptions_coupon_id_idx").on(table.couponId),
+  ],
+);
+
+/**
+ * Every code a user tries, right or wrong — backs the 5-per-hour rate
+ * limit (prd.md §2.1). Failed guesses must count, or brute-forcing
+ * codes would be free.
+ */
+export const codeAttempts = pgTable(
+  "code_attempts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    code: text("code").notNull(),
+    succeeded: boolean("succeeded").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("code_attempts_user_created_idx").on(table.userId, table.createdAt)],
 );

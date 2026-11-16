@@ -1,7 +1,12 @@
 import type { PricingConfig } from "@resume-pilot/credits";
 import { auditLogs, pricingConfig, type Database } from "@resume-pilot/database";
-import { modelPricesSchema, type CreatePricingConfigVersionInput } from "@resume-pilot/validators";
+import {
+  actionSettingsSchema,
+  modelPricesSchema,
+  type CreatePricingConfigVersionInput,
+} from "@resume-pilot/validators";
 import { desc, eq, sql } from "drizzle-orm";
+import type { Queryable } from "./db-types";
 
 /**
  * Pricing config reads/writes — prd.md §3.3, §3.6, §16.4.
@@ -35,6 +40,7 @@ function toRecord(row: PricingConfigRow): PricingConfigRecord {
     id: row.id,
     version: row.version,
     modelPrices: modelPricesSchema.parse(row.modelPrices),
+    actionSettings: actionSettingsSchema.parse(row.actionSettings),
     usdToInrRate: Number(row.usdToInrRate),
     markupMultiplier: Number(row.markupMultiplier),
     minimumCreditsPerAction: row.minimumCreditsPerAction,
@@ -63,7 +69,7 @@ export async function getActivePricingConfig(db: Database): Promise<PricingConfi
 
 /** A specific version — for re-pricing a capture under the version its estimate used. */
 export async function getPricingConfigByVersion(
-  db: Database,
+  db: Queryable,
   version: number,
 ): Promise<PricingConfigRecord | null> {
   const [row] = await db
@@ -115,6 +121,7 @@ export async function createPricingConfigVersion(
       .values({
         version: maxVersion + 1,
         modelPrices: config.modelPrices,
+        actionSettings: config.actionSettings,
         usdToInrRate: config.usdToInrRate.toFixed(4),
         markupMultiplier: config.markupMultiplier.toFixed(3),
         minimumCreditsPerAction: config.minimumCreditsPerAction,

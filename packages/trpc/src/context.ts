@@ -12,6 +12,10 @@ import type { Database } from "@resume-pilot/database";
 export interface Context {
   db: Database;
   userId: string | null;
+  /** Client IP for abuse checks (code redemption); hashed before storage. */
+  clientIp?: string | null;
+  /** Optional client-generated device id (`x-device-id` header), same use. */
+  deviceId?: string | null;
 }
 
 export function createContext(input: Context): Context {

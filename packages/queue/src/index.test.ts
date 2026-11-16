@@ -87,3 +87,18 @@ describe("redisUrlFromEnv", () => {
     expect(redisUrlFromEnv({ REDIS_URL: "redis://x:1" })).toBe("redis://x:1");
   });
 });
+
+describe("registerMaintenanceSchedules", () => {
+  it("upserts one schedule per maintenance job, including hold expiry every minute", async () => {
+    const { registerMaintenanceSchedules, MAINTENANCE_JOBS } = await import("./index");
+    const upsertJobScheduler = vi.fn().mockResolvedValue(undefined);
+    await registerMaintenanceSchedules({ upsertJobScheduler });
+
+    expect(upsertJobScheduler).toHaveBeenCalledTimes(Object.keys(MAINTENANCE_JOBS).length);
+    expect(upsertJobScheduler).toHaveBeenCalledWith(
+      "expire-holds",
+      { every: 60_000 },
+      expect.objectContaining({ name: "expire-holds" }),
+    );
+  });
+});

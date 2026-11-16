@@ -23,6 +23,11 @@ const connectionString = process.env.DATABASE_URL;
 
 const baseConfig: PricingConfigInput = {
   modelPrices: { "gpt-5.1": { inputPerMillionUsd: 2.5, outputPerMillionUsd: 10 } },
+  actionSettings: {
+    jd_analysis: { model: "gpt-5.1", promptOverheadTokens: 1500, maxOutputTokens: 2000 },
+    generation: { model: "gpt-5.1", promptOverheadTokens: 2500, maxOutputTokens: 6000 },
+    ats_scoring: { model: "gpt-5.1", promptOverheadTokens: 2000, maxOutputTokens: 2500 },
+  },
   usdToInrRate: 83,
   markupMultiplier: 3,
   minimumCreditsPerAction: 50,

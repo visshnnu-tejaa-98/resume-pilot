@@ -8,6 +8,7 @@ export {
   type PricingConfig,
   type TokenUsage,
 } from "./pricing";
+export { countInputTokens, estimateCredits, type CreditEstimate } from "./estimate";
 
 /**
  * Credits each side gets for a referral (prd.md v2.2 §2.1: 100 to the

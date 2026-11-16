@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
-import { createDatabase, users, type Database } from "@resume-pilot/database";
+import { createDatabase, referralCodes, users, type Database } from "@resume-pilot/database";
 import { eq, inArray } from "drizzle-orm";
-import { createUserFromClerkWebhook } from "@resume-pilot/services";
+import { createUserFromClerkWebhook, grantCredits } from "@resume-pilot/services";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createContext } from "./context";
 import { appRouter } from "./router";
@@ -64,7 +64,37 @@ describe.skipIf(!connectionString)("appRouter (authed procedures, real DB)", () 
     const caller = appRouter.createCaller(createContext({ db, userId: clerkUserId }));
     const result = await caller.wallet();
     expect(result.balance).toBe(0);
+    expect(result.held).toBe(0);
+    expect(result.available).toBe(0);
     expect(result.referralCode).toMatch(/^RP-[A-Z0-9]{6}$/);
+  });
+
+  it("walletHistory returns only the caller's own wallet, with defaults", async () => {
+    const other = `clerk_${randomUUID()}`;
+    const { userId: otherId } = await createUserFromClerkWebhook(db, {
+      clerkUserId: other,
+      email: "trpc-other@example.com",
+    });
+    await grantCredits(db, {
+      userId: otherId,
+      type: "purchase",
+      credits: 10_000,
+      sourceType: "payment",
+      sourceId: randomUUID(),
+    });
+
+    const caller = appRouter.createCaller(createContext({ db, userId: clerkUserId }));
+    const page = await caller.walletHistory();
+    expect(page).toMatchObject({ balance: 0, held: 0, history: [], nextCursor: null });
+
+    await expect(caller.walletHistory({ limit: 500 })).rejects.toThrow();
+    await expect(caller.walletHistory({ cursor: "not-a-uuid" })).rejects.toThrow();
+    await db.delete(users).where(eq(users.id, otherId));
+  });
+
+  it("walletHistory rejects unauthenticated callers", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: null }));
+    await expect(caller.walletHistory()).rejects.toThrow(/UNAUTHORIZED/);
   });
 });
 
@@ -77,6 +107,11 @@ describe.skipIf(!connectionString)("appRouter.admin.pricing (real DB)", () => {
   const validInput = {
     config: {
       modelPrices: { "gpt-5.1": { inputPerMillionUsd: 2.5, outputPerMillionUsd: 10 } },
+      actionSettings: {
+        jd_analysis: { model: "gpt-5.1", promptOverheadTokens: 1500, maxOutputTokens: 2000 },
+        generation: { model: "gpt-5.1", promptOverheadTokens: 2500, maxOutputTokens: 6000 },
+        ats_scoring: { model: "gpt-5.1", promptOverheadTokens: 2000, maxOutputTokens: 2500 },
+      },
       usdToInrRate: 83,
       markupMultiplier: 3,
       minimumCreditsPerAction: 50,
@@ -139,5 +174,68 @@ describe.skipIf(!connectionString)("appRouter.admin.pricing (real DB)", () => {
       await expect(caller.admin.pricing.createVersion(input)).rejects.toThrow();
     }
     expect((await caller.admin.pricing.list()).length).toBe(before);
+  });
+});
+
+describe.skipIf(!connectionString)("appRouter codes (real DB)", () => {
+  let db: Database;
+  let userClerkId: string;
+  let otherUserId: string;
+  const ids: string[] = [];
+
+  beforeAll(async () => {
+    db = createDatabase(connectionString ?? "");
+    userClerkId = `clerk_${randomUUID()}`;
+    const u = await createUserFromClerkWebhook(db, {
+      clerkUserId: userClerkId,
+      email: "codes-u@example.com",
+    });
+    const o = await createUserFromClerkWebhook(db, {
+      clerkUserId: `clerk_${randomUUID()}`,
+      email: "codes-o@example.com",
+    });
+    otherUserId = o.userId;
+    ids.push(u.userId, o.userId);
+  });
+
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, ids));
+    await db.$client.end();
+  });
+
+  it("redeemCode applies a referral code to the caller's own wallet", async () => {
+    const [ref] = await db
+      .select()
+      .from(referralCodes)
+      .where(eq(referralCodes.userId, otherUserId));
+    const caller = appRouter.createCaller(
+      createContext({ db, userId: userClerkId, clientIp: "203.0.113.1" }),
+    );
+
+    const result = await caller.redeemCode({ code: ref!.code });
+    expect(result).toMatchObject({ codeType: "referral", creditsToUser: 100 });
+    expect((await caller.wallet()).balance).toBe(100);
+  });
+
+  it("maps code errors to BAD_REQUEST with the user-facing message", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: userClerkId }));
+    await expect(caller.redeemCode({ code: "WHATEVER" })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: expect.stringMatching(/isn't valid|already used/),
+    });
+  });
+
+  it("rejects an empty code before touching the database", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: userClerkId }));
+    await expect(caller.redeemCode({ code: "   " })).rejects.toThrow();
+  });
+
+  it("admin code procedures are forbidden to regular users", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: userClerkId }));
+    await expect(caller.admin.codes.listCoupons()).rejects.toThrow(/FORBIDDEN/);
+    await expect(caller.admin.codes.flaggedReferrals()).rejects.toThrow(/FORBIDDEN/);
+    await expect(
+      caller.admin.codes.createCoupon({ code: "HACKED", credits: 1_000_000 }),
+    ).rejects.toThrow(/FORBIDDEN/);
   });
 });

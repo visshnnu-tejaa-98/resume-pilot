@@ -33,6 +33,17 @@ export const pricingConfig = pgTable(
     creditValueInr: numeric("credit_value_inr", { precision: 10, scale: 4 })
       .notNull()
       .default("0.0500"),
+    /**
+     * Per paid action: model, fixed prompt overhead (system prompt +
+     * schema, in tokens) and max output budget. The output budget is
+     * both the estimate's output size and the AI call's
+     * max_output_tokens cap, so actual cost can't exceed it (§3.4).
+     */
+    actionSettings: jsonb("action_settings").notNull().default(sql`'{
+      "jd_analysis": {"model": "gpt-5.1", "promptOverheadTokens": 1500, "maxOutputTokens": 2000},
+      "generation": {"model": "gpt-5.1", "promptOverheadTokens": 2500, "maxOutputTokens": 6000},
+      "ats_scoring": {"model": "gpt-5.1", "promptOverheadTokens": 2000, "maxOutputTokens": 2500}
+    }'::jsonb`),
     active: boolean("active").notNull().default(true),
     /** Admin who created this version; null for seeded rows. */
     createdByUserId: uuid("created_by_user_id").references(() => users.id),

@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 import { creditAccounts, referralCodes, users, type Database } from "@resume-pilot/database";
+import { getWalletBalance } from "./credits";
 
 export interface ClerkUserCreatedInput {
   clerkUserId: string;
@@ -107,17 +108,18 @@ export async function getUserByClerkId(
 
 export interface WalletSummary {
   balance: number;
+  /** Credits reserved by active holds (prd.md §3.5). */
+  held: number;
+  /** balance − held: what the user can spend right now. */
+  available: number;
   referralCode: string | null;
 }
 
 export async function getWalletSummary(db: Database, userId: string): Promise<WalletSummary> {
-  const [account, referral] = await Promise.all([
-    db.query.creditAccounts.findFirst({ where: (a, { eq }) => eq(a.userId, userId) }),
+  const [wallet, referral] = await Promise.all([
+    getWalletBalance(db, userId),
     db.query.referralCodes.findFirst({ where: (r, { eq }) => eq(r.userId, userId) }),
   ]);
 
-  return {
-    balance: account?.balance ?? 0,
-    referralCode: referral?.code ?? null,
-  };
+  return { ...wallet, referralCode: referral?.code ?? null };
 }
