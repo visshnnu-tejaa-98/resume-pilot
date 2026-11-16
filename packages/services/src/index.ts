@@ -69,3 +69,4 @@ export {
   type RedeemCodeInput,
   type RedeemCodeResult,
 } from "./codes";
+export { cleanupExpiredUploads, UPLOAD_RETENTION_DAYS, type CleanupResult } from "./uploads";

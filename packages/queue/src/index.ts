@@ -22,6 +22,8 @@ export const MAINTENANCE_JOBS = {
   expireHolds: { name: "expire-holds", everyMs: 60_000 },
   /** Logs any wallet whose cached balance differs from its ledger (prd.md §3.5). */
   reconcileWallets: { name: "reconcile-wallets", everyMs: 60 * 60_000 },
+  /** Deletes original uploads older than 30 days from ImageKit (prd.md §5.2). */
+  cleanupUploads: { name: "cleanup-uploads", everyMs: 24 * 60 * 60_000 },
 } as const;
 
 export type MaintenanceJobName = (typeof MAINTENANCE_JOBS)[keyof typeof MAINTENANCE_JOBS]["name"];

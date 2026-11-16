@@ -10,7 +10,9 @@ import {
   transactionalEmailJobSchema,
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
+import { getStorage } from "@resume-pilot/storage";
 import {
+  cleanupExpiredUploads,
   expireStaleHolds,
   findWalletMismatches,
   processTransactionalEmail,
@@ -89,10 +91,21 @@ export function createTransactionalEmailWorker(db: Database, config: WorkerConfi
 }
 
 /** Runs one maintenance job by name. Exported for tests. */
-export async function handleMaintenanceJob(name: string, deps: { db: Database }) {
+export async function handleMaintenanceJob(
+  name: string,
+  deps: { db: Database; deleteFile?: (storageFileId: string) => Promise<void> },
+) {
   switch (name) {
     case MAINTENANCE_JOBS.expireHolds.name:
       return expireStaleHolds(deps.db);
+    case MAINTENANCE_JOBS.cleanupUploads.name: {
+      const deleteFile = deps.deleteFile ?? ((id: string) => getStorage().deleteFile(id));
+      const result = await cleanupExpiredUploads(deps.db, deleteFile);
+      if (result.deleted || result.failed) {
+        console.log(`[worker] cleanup-uploads: deleted ${result.deleted}, failed ${result.failed}`);
+      }
+      return result;
+    }
     case MAINTENANCE_JOBS.reconcileWallets.name: {
       const mismatches = await findWalletMismatches(deps.db);
       for (const m of mismatches) {

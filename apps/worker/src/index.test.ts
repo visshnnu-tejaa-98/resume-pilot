@@ -4,11 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 const processTransactionalEmail = vi.fn().mockResolvedValue({ status: "sent", messageId: "m" });
 const expireStaleHolds = vi.fn().mockResolvedValue({ expired: 2 });
 const findWalletMismatches = vi.fn().mockResolvedValue([]);
+const cleanupExpiredUploads = vi.fn().mockResolvedValue({ deleted: 1, failed: 0 });
 vi.mock("@resume-pilot/services", () => ({
   processTransactionalEmail,
   expireStaleHolds,
   findWalletMismatches,
+  cleanupExpiredUploads,
 }));
+vi.mock("@resume-pilot/storage", () => ({ getStorage: () => ({ deleteFile: vi.fn() }) }));
 
 const {
   finishEmailJob,
@@ -107,6 +110,14 @@ describe("handleMaintenanceJob", () => {
       expect.stringContaining('"ledgerSum":4'),
     );
     spy.mockRestore();
+  });
+
+  it("runs the 30-day upload cleanup with the storage delete for cleanup-uploads", async () => {
+    const deleteFile = vi.fn();
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const result = await handleMaintenanceJob("cleanup-uploads", { db: deps.db, deleteFile });
+    expect(cleanupExpiredUploads).toHaveBeenCalledWith(deps.db, deleteFile);
+    expect(result).toEqual({ deleted: 1, failed: 0 });
   });
 
   it("fails an unknown job without retrying", async () => {
