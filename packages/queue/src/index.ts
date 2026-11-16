@@ -76,14 +76,31 @@ export function createTransactionalEmailQueue(connection: IORedis): Queue<Transa
   return new Queue<TransactionalEmailJob>(QUEUE_NAMES.emailTransactional, { connection });
 }
 
-/** Validates the payload, then enqueues with the idempotent job id. */
+/**
+ * Validates the payload, then enqueues with the idempotent job id.
+ *
+ * BullMQ silently ignores `add` when a job with the same id still
+ * exists. That's what we want for waiting/active/completed jobs (the
+ * email is in flight or sent), but a job that exhausted its attempts
+ * is kept for 30 days and would block any re-enqueue, so a failed job
+ * is retried instead. `email_messages` still guarantees one send.
+ */
 export async function enqueueTransactionalEmail(
-  queue: Pick<Queue<TransactionalEmailJob>, "add">,
+  queue: Pick<Queue<TransactionalEmailJob>, "add" | "getJob">,
   job: TransactionalEmailJob,
-): Promise<void> {
+): Promise<"added" | "retried" | "exists"> {
   const data = transactionalEmailJobSchema.parse(job);
-  await queue.add(data.templateKey, data, {
-    ...TRANSACTIONAL_EMAIL_JOB_OPTIONS,
-    jobId: emailJobId(data),
-  });
+  const jobId = emailJobId(data);
+
+  const existing = await queue.getJob(jobId);
+  if (existing) {
+    if (await existing.isFailed()) {
+      await existing.retry("failed");
+      return "retried";
+    }
+    return "exists";
+  }
+
+  await queue.add(data.templateKey, data, { ...TRANSACTIONAL_EMAIL_JOB_OPTIONS, jobId });
+  return "added";
 }

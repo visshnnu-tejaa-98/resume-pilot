@@ -4,7 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 const processTransactionalEmail = vi.fn().mockResolvedValue({ status: "sent", messageId: "m" });
 vi.mock("@resume-pilot/services", () => ({ processTransactionalEmail }));
 
-const { handleTransactionalEmailJob, REDIS_URL, workerConfigFromEnv } = await import("./index");
+const { finishEmailJob, handleTransactionalEmailJob, REDIS_URL, workerConfigFromEnv } =
+  await import("./index");
+const { UnrecoverableError } = await import("bullmq");
 
 const userId = "8a5f0f0e-2b8e-4c1e-9d3f-0a1b2c3d4e5f";
 const deps = {
@@ -54,5 +56,23 @@ describe("handleTransactionalEmailJob", () => {
       ),
     ).rejects.toThrow();
     expect(processTransactionalEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe("finishEmailJob", () => {
+  it("passes sent / skipped / already_sent through (job completes)", () => {
+    for (const r of [
+      { status: "sent", messageId: "m" },
+      { status: "skipped", reason: "x" },
+      { status: "already_sent" },
+    ] as const) {
+      expect(finishEmailJob(r)).toBe(r);
+    }
+  });
+
+  it("throws UnrecoverableError on a permanent failure so the job is marked failed, not completed", () => {
+    expect(() =>
+      finishEmailJob({ status: "failed_permanent", reason: "550 no such user" }),
+    ).toThrow(UnrecoverableError);
   });
 });

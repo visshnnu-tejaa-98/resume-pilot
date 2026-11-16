@@ -1,3 +1,4 @@
+/** @jsxRuntime automatic @jsxImportSource react */
 import { Img, Row, Section, Text } from "@react-email/components";
 import { FONT_DISPLAY, FONT_SANS } from "./theme";
 

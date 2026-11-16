@@ -7,7 +7,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 // The real queue needs Redis; capture enqueues instead. The worker side
 // (sending, idempotency, retries) is covered in services/worker tests.
 const queueAdd = vi.hoisted(() => vi.fn());
-vi.mock("@/server/queue", () => ({ getTransactionalEmailQueue: () => ({ add: queueAdd }) }));
+vi.mock("@/server/queue", () => ({
+  getTransactionalEmailQueue: () => ({ add: queueAdd, getJob: async () => undefined }),
+}));
+vi.mock("@clerk/nextjs/server", () => ({
+  clerkClient: async () => ({ users: { updateUserMetadata: async () => undefined } }),
+}));
 
 const connectionString = process.env.DATABASE_URL;
 

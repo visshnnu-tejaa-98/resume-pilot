@@ -5,6 +5,7 @@ import {
   type UserProfile,
 } from "@resume-pilot/services";
 import { getDb } from "@/server/db";
+import { enqueueWelcomeEmail } from "@/server/welcome";
 
 /**
  * The `user.created` webhook (app/api/webhooks/clerk/route.ts) is the
@@ -33,7 +34,17 @@ export async function ensureUserSynced(clerkUserId: string): Promise<UserProfile
     throw new Error(`Clerk user ${clerkUserId} has no email address`);
   }
 
-  await createUserFromClerkWebhook(db, { clerkUserId, email });
+  const result = await createUserFromClerkWebhook(db, { clerkUserId, email });
+
+  // Same welcome email the webhook sends: without this, users
+  // provisioned here (no webhook reachable) never got one. Failure is
+  // logged, not thrown: the user is already created and must still
+  // reach the dashboard. A later webhook delivery re-enqueues anyway.
+  try {
+    await enqueueWelcomeEmail(result.userId, clerkUser.firstName);
+  } catch (err) {
+    console.error("[ensure-user] failed to enqueue welcome email:", err);
+  }
 
   const created = await getUserByClerkId(db, clerkUserId);
   if (!created) {

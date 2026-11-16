@@ -27,7 +27,12 @@ describe("email job ids", () => {
 describe("enqueueTransactionalEmail", () => {
   it("adds with the idempotent job id and 3 attempts with backoff", async () => {
     const add = vi.fn().mockResolvedValue(undefined);
-    await enqueueTransactionalEmail({ add }, { templateKey: "welcome", userId, firstName: "Asha" });
+    const getJob = vi.fn().mockResolvedValue(undefined);
+    const result = await enqueueTransactionalEmail(
+      { add, getJob },
+      { templateKey: "welcome", userId, firstName: "Asha" },
+    );
+    expect(result).toBe("added");
     expect(add).toHaveBeenCalledWith(
       "welcome",
       { templateKey: "welcome", userId, firstName: "Asha" },
@@ -38,12 +43,40 @@ describe("enqueueTransactionalEmail", () => {
 
   it("rejects an invalid payload before touching the queue", async () => {
     const add = vi.fn();
+    const getJob = vi.fn();
     await expect(
       enqueueTransactionalEmail(
-        { add },
+        { add, getJob },
         { templateKey: "welcome", userId: "nope", firstName: null },
       ),
     ).rejects.toThrow();
+    expect(add).not.toHaveBeenCalled();
+    expect(getJob).not.toHaveBeenCalled();
+  });
+
+  it("retries a job that exhausted its attempts instead of being silently ignored", async () => {
+    const retry = vi.fn().mockResolvedValue(undefined);
+    const add = vi.fn();
+    const getJob = vi.fn().mockResolvedValue({ isFailed: async () => true, retry });
+    const result = await enqueueTransactionalEmail(
+      { add, getJob },
+      { templateKey: "welcome", userId, firstName: null },
+    );
+    expect(result).toBe("retried");
+    expect(retry).toHaveBeenCalledWith("failed");
+    expect(add).not.toHaveBeenCalled();
+  });
+
+  it("leaves a waiting/active/completed job alone", async () => {
+    const retry = vi.fn();
+    const add = vi.fn();
+    const getJob = vi.fn().mockResolvedValue({ isFailed: async () => false, retry });
+    const result = await enqueueTransactionalEmail(
+      { add, getJob },
+      { templateKey: "welcome", userId, firstName: null },
+    );
+    expect(result).toBe("exists");
+    expect(retry).not.toHaveBeenCalled();
     expect(add).not.toHaveBeenCalled();
   });
 });

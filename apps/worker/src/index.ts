@@ -7,8 +7,12 @@ import {
   transactionalEmailJobSchema,
   type TransactionalEmailJob,
 } from "@resume-pilot/queue";
-import { processTransactionalEmail, type EmailProcessContext } from "@resume-pilot/services";
-import { Worker, type Job } from "bullmq";
+import {
+  processTransactionalEmail,
+  type EmailProcessContext,
+  type EmailProcessResult,
+} from "@resume-pilot/services";
+import { UnrecoverableError, Worker, type Job } from "bullmq";
 
 export const REDIS_URL = redisUrlFromEnv();
 
@@ -45,13 +49,28 @@ export async function handleTransactionalEmailJob(
   });
 }
 
+/**
+ * A permanent failure (hard bounce, or the final attempt of a transient
+ * error) is already recorded in `email_messages`; throwing
+ * UnrecoverableError marks the BullMQ job *failed* without spending
+ * more attempts. Returning normally would mark it completed, and
+ * enqueueTransactionalEmail only re-runs failed jobs, so the email
+ * could never be re-triggered.
+ */
+export function finishEmailJob(result: EmailProcessResult): EmailProcessResult {
+  if (result.status === "failed_permanent") {
+    throw new UnrecoverableError(result.reason);
+  }
+  return result;
+}
+
 export function createTransactionalEmailWorker(db: Database, config: WorkerConfig): Worker {
   const worker = new Worker<TransactionalEmailJob>(
     QUEUE_NAMES.emailTransactional,
     async (job) => {
       const result = await handleTransactionalEmailJob(job, { db, send: sendEmail, config });
       console.log(`[worker] email ${job.id}: ${result.status}`);
-      return result;
+      return finishEmailJob(result);
     },
     { connection: createRedisConnection(REDIS_URL), concurrency: 5 },
   );

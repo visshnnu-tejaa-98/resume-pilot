@@ -1,9 +1,8 @@
 import { createUserFromClerkWebhook } from "@resume-pilot/services";
-import { enqueueTransactionalEmail } from "@resume-pilot/queue";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Webhook, type WebhookRequiredHeaders } from "svix";
 import { getDb } from "@/server/db";
-import { getTransactionalEmailQueue } from "@/server/queue";
+import { enqueueWelcomeEmail } from "@/server/welcome";
 
 interface ClerkWebhookEvent {
   type: string;
@@ -102,11 +101,7 @@ export async function POST(req: Request) {
   // Clerk retries, and the retry (created=false) still enqueues. The
   // job id and email_messages.idempotency_key make duplicates no-ops.
   try {
-    await enqueueTransactionalEmail(getTransactionalEmailQueue(), {
-      templateKey: "welcome",
-      userId: result.userId,
-      firstName: event.data.first_name,
-    });
+    await enqueueWelcomeEmail(result.userId, event.data.first_name);
   } catch (err) {
     console.error("[clerk-webhook] failed to enqueue welcome email:", err);
     return new Response("Failed to enqueue welcome email", { status: 500 });

@@ -18,8 +18,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // Clerk-rendered component left to theme. ClerkProvider is still
     // required: it's what makes the hooks and `auth()` work at all.
     <ClerkProvider>
-      <html lang="en" className={inter.variable}>
-        <body style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}>{children}</body>
+      {/* suppressHydrationWarning: browser extensions (Grammarly,
+          ColorZilla, password managers, ...) inject attributes into
+          <html>/<body> before React hydrates. It only silences attribute
+          mismatches on these two elements, never on their children. */}
+      <html lang="en" className={inter.variable} suppressHydrationWarning>
+        <body
+          style={{ fontFamily: "var(--font-inter), system-ui, sans-serif" }}
+          suppressHydrationWarning
+        >
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );
