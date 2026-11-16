@@ -50,6 +50,13 @@
       "when": 1794818824626,
       "tag": "0006_lucky_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794819762650,
+      "tag": "0007_careless_sleeper",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,15 @@
-/**
- * LaTeX, PDF, DOCX and image text extraction. Empty at scaffold time —
- * see tasks/todo/m3-upload-storage/03-file-processing-pipeline.md.
- */
-export const packageName = "@resume-pilot/file-processing";
+export {
+  countPdfPages,
+  isOcrQualityAcceptable,
+  MAX_PAGES,
+  MAX_UPLOAD_BYTES,
+  MIN_OCR_CONFIDENCE,
+  OCR_LOW_QUALITY_MESSAGE,
+  UploadValidationError,
+  validateUpload,
+  type ResumeFormat,
+  type UploadInputFile,
+  type UploadRejection,
+  type ValidatedFile,
+  type ValidatedUpload,
+} from "./validate";

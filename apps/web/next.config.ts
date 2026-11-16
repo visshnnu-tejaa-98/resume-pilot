@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
     "@resume-pilot/database",
     "@resume-pilot/queue",
   ],
+  // pdf.js loads its worker and wasm at runtime; bundling it breaks that.
+  serverExternalPackages: ["pdfjs-dist"],
 };
 
 export default nextConfig;

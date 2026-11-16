@@ -1,8 +1,28 @@
 import { randomUUID } from "node:crypto";
-import { createDatabase, referralCodes, users, type Database } from "@resume-pilot/database";
+import {
+  createDatabase,
+  referralCodes,
+  resumeFiles,
+  resumes,
+  users,
+  type Database,
+} from "@resume-pilot/database";
 import { eq, inArray } from "drizzle-orm";
 import { createUserFromClerkWebhook, grantCredits } from "@resume-pilot/services";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("@resume-pilot/storage", async (orig) => {
+  const real = await orig<typeof import("@resume-pilot/storage")>();
+  // Real ownership check, fake signing: no ImageKit credentials in tests.
+  const storage = real.createImageKitStorage(
+    { privateKey: "test", urlEndpoint: "https://ik.example" },
+    {
+      files: { upload: vi.fn(), delete: vi.fn() },
+      helper: { buildSrc: (o: { src: string }) => `https://ik.example${o.src}?ik-s=sig` },
+    } as never,
+  );
+  return { ...real, getStorage: () => storage };
+});
 import { createContext } from "./context";
 import { appRouter } from "./router";
 
@@ -237,5 +257,68 @@ describe.skipIf(!connectionString)("appRouter codes (real DB)", () => {
     await expect(
       caller.admin.codes.createCoupon({ code: "HACKED", credits: 1_000_000 }),
     ).rejects.toThrow(/FORBIDDEN/);
+  });
+});
+
+describe.skipIf(!connectionString)("appRouter.resumes (real DB)", () => {
+  let db: Database;
+  const owner = `clerk_${randomUUID()}`;
+  const intruder = `clerk_${randomUUID()}`;
+  const ids: string[] = [];
+  let resumeId: string;
+
+  beforeAll(async () => {
+    db = createDatabase(connectionString ?? "");
+    const o = await createUserFromClerkWebhook(db, {
+      clerkUserId: owner,
+      email: "res-owner@example.com",
+    });
+    const i = await createUserFromClerkWebhook(db, {
+      clerkUserId: intruder,
+      email: "res-intruder@example.com",
+    });
+    ids.push(o.userId, i.userId);
+    const key = `/users/${o.userId}/uploads/${randomUUID()}.pdf`;
+    const [r] = await db
+      .insert(resumes)
+      .values({
+        userId: o.userId,
+        fileKey: key,
+        fileName: "cv.pdf",
+        fileFormat: "pdf",
+        fileHash: randomUUID(),
+      })
+      .returning();
+    resumeId = r!.id;
+    await db.insert(resumeFiles).values({
+      resumeId,
+      pageIndex: 0,
+      storageKey: key,
+      storageFileId: "file_1",
+      mimeType: "application/pdf",
+      sizeBytes: 100,
+    });
+  });
+
+  afterAll(async () => {
+    await db.delete(users).where(inArray(users.id, ids));
+    await db.$client.end();
+  });
+
+  it("the owner gets their resume and a signed URL for its file", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: owner }));
+    expect((await caller.resumes.list()).map((r) => r.id)).toEqual([resumeId]);
+    const urls = await caller.resumes.fileUrls({ resumeId });
+    expect(urls).toEqual([
+      expect.objectContaining({ pageIndex: 0, url: expect.stringContaining("ik-s=") }),
+    ]);
+  });
+
+  it("another user gets NOT_FOUND for the same resume id, and sees no resumes", async () => {
+    const caller = appRouter.createCaller(createContext({ db, userId: intruder }));
+    await expect(caller.resumes.fileUrls({ resumeId })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    expect(await caller.resumes.list()).toEqual([]);
   });
 });

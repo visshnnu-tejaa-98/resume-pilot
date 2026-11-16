@@ -27,7 +27,7 @@
   - `getSignedUrl` defaults to 300 s and is capped at 1 hour.
   - `deleteFile` treats ImageKit's 404 as success; other errors surface.
   - `getStorage()` builds lazily from env (`IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`). Importing the package never needs the env.
-- **`packages/services/src/uploads.ts`**: `cleanupExpiredUploads(db, deleteFile)` processes `resumes` older than 30 days that still have a `storage_file_id`, in batches of 500. It deletes the file, then clears the column. The row and its extracted JSON stay.
+- **`packages/services/src/uploads.ts`**: `cleanupExpiredUploads(db, deleteFile)` processes the `resume_files` of resumes older than 30 days that still have a `storage_file_id`, in batches of 500. It deletes the file, then clears the column. The resume row and its extracted JSON stay. (It originally used `resumes.storage_file_id`; M3-02 moved files to `resume_files` so multi-image uploads fit, and dropped that column.)
 - **Worker**: a `cleanup-uploads` maintenance job runs daily. `IMAGEKIT_*` was added to `apps/worker/.env.example` and the local `.env.local`.
 
 ## Verified

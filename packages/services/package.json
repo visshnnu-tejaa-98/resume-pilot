@@ -15,6 +15,7 @@
     "@resume-pilot/credits": "workspace:*",
     "@resume-pilot/database": "workspace:*",
     "@resume-pilot/emails": "workspace:*",
+    "@resume-pilot/file-processing": "workspace:*",
     "@resume-pilot/queue": "workspace:*",
     "@resume-pilot/validators": "workspace:*",
     "drizzle-orm": "0.45.4"

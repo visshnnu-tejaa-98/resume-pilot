@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./fixtures": "./src/fixtures.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -12,7 +13,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@types/node": "26.6.6",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "file-type": "22.2.0",
+    "pdfjs-dist": "6.4.299"
   }
 }

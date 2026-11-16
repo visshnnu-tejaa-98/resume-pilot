@@ -1,4 +1,5 @@
 import {
+  integer,
   type AnyPgColumn,
   jsonb,
   pgTable,
@@ -19,9 +20,8 @@ export const resumes = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    /** Storage key of the first file; every file (incl. extra image pages) is in `resume_files`. */
     fileKey: text("file_key").notNull(),
-    /** ImageKit fileId for the original upload — needed for 30-day deletion (prd.md §5.2). */
-    storageFileId: text("storage_file_id"),
     fileName: text("file_name").notNull(),
     fileFormat: resumeFormatEnum("file_format").notNull(),
     fileHash: text("file_hash").notNull(),
@@ -30,6 +30,28 @@ export const resumes = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("resumes_user_id_file_hash_key").on(table.userId, table.fileHash)],
+);
+
+/**
+ * The stored files behind one upload, in page order: one row for a
+ * PDF/DOCX/TeX, up to five for images (prd.md §5.1). `storage_file_id`
+ * is cleared when the 30-day cleanup deletes the file (§5.2).
+ */
+export const resumeFiles = pgTable(
+  "resume_files",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resumeId: uuid("resume_id")
+      .notNull()
+      .references(() => resumes.id, { onDelete: "cascade" }),
+    pageIndex: integer("page_index").notNull(),
+    storageKey: text("storage_key").notNull(),
+    storageFileId: text("storage_file_id"),
+    mimeType: text("mime_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("resume_files_resume_page_key").on(table.resumeId, table.pageIndex)],
 );
 
 /**

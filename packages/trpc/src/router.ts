@@ -11,9 +11,11 @@ import {
   reviewFlaggedReferral,
   updateCoupon,
   getActivePricingConfig,
+  getResumeFileKeys,
   getWalletPage,
   getWalletSummary,
   listPricingConfigs,
+  listResumes,
 } from "@resume-pilot/services";
 import {
   createCouponInputSchema,
@@ -24,7 +26,9 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
+import { getStorage } from "@resume-pilot/storage";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { adminProcedure, authProcedure, publicProcedure, router } from "./trpc";
 
 /**
@@ -97,6 +101,31 @@ export const appRouter = router({
   walletHistory: authProcedure
     .input(walletHistoryInputSchema)
     .query(({ ctx, input }) => getWalletPage(ctx.db, ctx.user.id, input)),
+
+  /** The caller's own uploads — prd.md §5. */
+  resumes: router({
+    list: authProcedure.query(({ ctx }) => listResumes(ctx.db, ctx.user.id)),
+    /**
+     * 5-minute signed URLs for a resume's original files. Ownership is
+     * checked here (NOT_FOUND for anyone else's resume, so ids can't be
+     * probed) and again inside the storage wrapper.
+     */
+    fileUrls: authProcedure
+      .input(z.object({ resumeId: z.uuid() }))
+      .query(async ({ ctx, input }) => {
+        const files = await getResumeFileKeys(ctx.db, {
+          userId: ctx.user.id,
+          resumeId: input.resumeId,
+        });
+        if (!files) throw new TRPCError({ code: "NOT_FOUND" });
+        const storage = getStorage();
+        return files.map((f) => ({
+          pageIndex: f.pageIndex,
+          mimeType: f.mimeType,
+          url: storage.getSignedUrl({ userId: ctx.user.id, storageKey: f.storageKey }),
+        }));
+      }),
+  }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */
   redeemCode: authProcedure.input(redeemCodeInputSchema).mutation(({ ctx, input }) =>
