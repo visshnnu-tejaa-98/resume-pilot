@@ -22,6 +22,13 @@ import {
   type TransactionalEmailJob,
   pdfJobSchema,
   type PdfJob,
+  campaignRatePerMinute,
+  enqueueMarketingEmails,
+  enqueueTransactionalEmail,
+  getMarketingEmailQueue,
+  getTransactionalEmailQueue,
+  marketingEmailJobSchema,
+  type MarketingEmailJob,
 } from "@resume-pilot/queue";
 import {
   analyzeJobDescription,
@@ -56,6 +63,10 @@ import {
   type EmailProcessResult,
   processPdfExport,
   type PdfProcessDeps,
+  dispatchDueCampaigns,
+  findInactiveNudges,
+  findMissingTransactionalEmails,
+  processMarketingEmail,
 } from "@resume-pilot/services";
 import { closeBrowser, renderResumePdf } from "./pdf";
 import { UnrecoverableError, Worker, type Job } from "bullmq";
@@ -141,9 +152,29 @@ export function createTransactionalEmailWorker(db: Database, config: WorkerConfi
 /** Runs one maintenance job by name. Exported for tests. */
 export async function handleMaintenanceJob(
   name: string,
-  deps: { db: Database; deleteFile?: (storageFileId: string) => Promise<void> },
+  deps: {
+    db: Database;
+    deleteFile?: (storageFileId: string) => Promise<void>;
+    enqueueTransactional?: (job: TransactionalEmailJob) => Promise<unknown>;
+    enqueueMarketing?: (jobs: MarketingEmailJob[]) => Promise<unknown>;
+  },
 ) {
+  const enqueueTransactional = deps.enqueueTransactional ?? ((job: TransactionalEmailJob) => enqueueTransactionalEmail(getTransactionalEmailQueue(), job));
+  const enqueueMarketing = deps.enqueueMarketing ?? ((jobs: MarketingEmailJob[]) => enqueueMarketingEmails(getMarketingEmailQueue(), jobs));
   switch (name) {
+    case MAINTENANCE_JOBS.emailOutbox.name: {
+      const jobs = await findMissingTransactionalEmails(deps.db);
+      for (const job of jobs) await enqueueTransactional(job);
+      if (jobs.length) console.log(`[worker] email-outbox: queued ${jobs.length} missing email(s)`);
+      return { queued: jobs.length };
+    }
+    case MAINTENANCE_JOBS.dispatchCampaigns.name:
+      return dispatchDueCampaigns(deps.db, enqueueMarketing);
+    case MAINTENANCE_JOBS.inactiveNudges.name: {
+      const jobs = await findInactiveNudges(deps.db);
+      await enqueueMarketing(jobs);
+      return { queued: jobs.length };
+    }
     case MAINTENANCE_JOBS.expireHolds.name:
       return expireStaleHolds(deps.db);
     case MAINTENANCE_JOBS.cleanupUploads.name: {
@@ -388,6 +419,34 @@ export function createPdfWorker(db: Database): Worker {
   return worker;
 }
 
+// --- Marketing email (prd.md §13.2) ------------------------------------------
+
+/** Turns a marketing job into a processMarketingEmail call. Exported for tests. */
+export async function handleMarketingEmailJob(
+  job: Pick<Job<MarketingEmailJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database; send: EmailProcessContext["send"]; config: WorkerConfig },
+) {
+  const data = marketingEmailJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processMarketingEmail(deps.db, data, { send: deps.send, ...deps.config, isFinalAttempt });
+}
+
+/**
+ * Own queue + BullMQ rate limiter (EMAIL_CAMPAIGN_PER_MINUTE, shared
+ * across worker instances via Redis), so campaigns stay under the SMTP
+ * provider's limit and never hold up the transactional queue.
+ */
+export function createMarketingEmailWorker(db: Database, config: WorkerConfig): Worker {
+  const worker = new Worker<MarketingEmailJob>(
+    QUEUE_NAMES.emailMarketing,
+    async (job) => finishEmailJob(await handleMarketingEmailJob(job, { db, send: sendEmail, config })),
+    { connection: createRedisConnection(REDIS_URL), concurrency: 2, limiter: { max: campaignRatePerMinute(), duration: 60_000 } },
+  );
+  worker.on("failed", (job, err) => console.error(`[worker] marketing ${job?.id} attempt ${job?.attemptsMade} failed:`, err.message));
+  worker.on("error", (err) => console.error("[worker] marketing worker error:", err.message));
+  return worker;
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -404,6 +463,7 @@ async function main() {
     createExtractionWorker(db),
     createAiWorker(db),
     createPdfWorker(db),
+    createMarketingEmailWorker(db, config),
   ];
 
   const maintenanceConnection = createRedisConnection(REDIS_URL);
@@ -413,7 +473,7 @@ async function main() {
   await maintenanceConnection.quit();
 
   console.log(
-    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction, QUEUE_NAMES.ai, QUEUE_NAMES.pdf].map((q) => `"${q}"`).join(", ")}`,
+    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction, QUEUE_NAMES.ai, QUEUE_NAMES.pdf, QUEUE_NAMES.emailMarketing].map((q) => `"${q}"`).join(", ")}`,
   );
 
   const shutdown = async () => {

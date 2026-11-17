@@ -7,6 +7,8 @@ export interface SendEmailInput {
   to: string;
   subject: string;
   element: ReactElement;
+  /** Extra headers, e.g. List-Unsubscribe / List-Unsubscribe-Post on marketing mail (prd.md §13.5). */
+  headers?: Record<string, string>;
 }
 
 export interface SendEmailResult {
@@ -70,10 +72,13 @@ export async function sendEmail({
   to,
   subject,
   element,
+  headers,
 }: SendEmailInput): Promise<SendEmailResult> {
   const [html, text] = await Promise.all([render(element), render(element, { plainText: true })]);
 
   const from = process.env.EMAIL_FROM_ADDRESS || "Resume Pilot <noreply@resumepilot.app>";
-  const info = await getTransporter().sendMail({ from, to, subject, html, text });
+  // Replies go to support, not the no-reply sender (prd.md §13.7).
+  const replyTo = process.env.EMAIL_REPLY_TO || process.env.SUPPORT_EMAIL || undefined;
+  const info = await getTransporter().sendMail({ from, to, subject, html, text, replyTo, headers });
   return { messageId: info.messageId };
 }

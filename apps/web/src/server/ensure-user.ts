@@ -34,7 +34,7 @@ export async function ensureUserSynced(clerkUserId: string): Promise<UserProfile
     throw new Error(`Clerk user ${clerkUserId} has no email address`);
   }
 
-  const result = await createUserFromClerkWebhook(db, { clerkUserId, email });
+  const result = await createUserFromClerkWebhook(db, { clerkUserId, email, firstName: clerkUser.firstName });
 
   // Same welcome email the webhook sends: without this, users
   // provisioned here (no webhook reachable) never got one. Failure is

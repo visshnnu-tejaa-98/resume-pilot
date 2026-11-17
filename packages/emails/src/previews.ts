@@ -6,6 +6,7 @@ import { PaymentFailedEmail, paymentFailedEmailSubject } from "./templates/Payme
 import { PaymentPendingEmail, paymentPendingEmailSubject } from "./templates/PaymentPending";
 import { PaymentSuccessEmail, paymentSuccessEmailSubject } from "./templates/PaymentSuccess";
 import { PromoEmail, promoEmailSubject } from "./templates/Promo";
+import { ReferralRewardEmail, referralRewardEmailSubject } from "./templates/ReferralReward";
 import { WelcomeEmail, welcomeEmailSubject } from "./templates/Welcome";
 
 export interface EmailPreview {
@@ -37,21 +38,28 @@ export const EMAIL_PREVIEWS: EmailPreview[] = [
     render: (dark) => CodeAppliedEmail({ ...CodeAppliedEmail.PreviewProps, dark }),
   },
   {
-    key: "payment_success",
+    key: "referral_reward",
+    name: "Referral reward",
+    kind: "transactional",
+    subject: referralRewardEmailSubject(ReferralRewardEmail.PreviewProps),
+    render: (dark) => ReferralRewardEmail({ ...ReferralRewardEmail.PreviewProps, dark }),
+  },
+  {
+    key: "recharge_success",
     name: "Recharge successful",
     kind: "transactional",
     subject: paymentSuccessEmailSubject(PaymentSuccessEmail.PreviewProps),
     render: (dark) => PaymentSuccessEmail({ ...PaymentSuccessEmail.PreviewProps, dark }),
   },
   {
-    key: "payment_failed",
+    key: "recharge_failed",
     name: "Recharge failed",
     kind: "transactional",
     subject: paymentFailedEmailSubject(PaymentFailedEmail.PreviewProps),
     render: (dark) => PaymentFailedEmail({ ...PaymentFailedEmail.PreviewProps, dark }),
   },
   {
-    key: "payment_pending",
+    key: "recharge_pending",
     name: "Recharge pending",
     kind: "transactional",
     subject: paymentPendingEmailSubject(PaymentPendingEmail.PreviewProps),

@@ -27,6 +27,8 @@ export interface NewFeaturesEmailProps {
   /** Up to three features (prd.md §13.4). */
   features: FeatureItem[];
   unsubscribeUrl: string;
+  /** Inbox preview text; set per campaign (prd.md §13.3). */
+  preheader?: string;
   links: EmailLinks;
   dark?: boolean;
 }
@@ -75,7 +77,7 @@ export function NewFeaturesEmail(p: NewFeaturesEmailProps) {
   return (
     <EmailLayout
       dark={dark}
-      preview={`${features.length} updates to help you send stronger applications.`}
+      preview={p.preheader || `${features.length} updates to help you send stronger applications.`}
       tag="Product update"
       marketing
       links={links}

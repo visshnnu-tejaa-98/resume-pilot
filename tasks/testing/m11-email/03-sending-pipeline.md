@@ -1,7 +1,7 @@
 # Email sending pipeline
 
 **Milestone:** M11 · prd.md §13.2
-**Status:** todo (partly built: the transactional queue and the `welcome` email work end to end; see "Progress")
+**Status:** testing
 
 ## Scope
 
@@ -38,3 +38,26 @@ The `welcome` email is built on this pipeline (prd.md §13.1):
 - The welcome template reads the launch coupon from `coupons` (`LAUNCH_COUPON_CODE`, default EARLYBIRD) and hides the gift block if the coupon is inactive. It also offers the 100-credit friend referral option.
 
 Still to do here: a marketing queue with a campaign throttle, the remaining 5 transactional templates, the daily inactive-user scheduler, and the pending-payment delayed job.
+
+## Completed (m11)
+
+- **Marketing queue** (`email-marketing`): separate from transactional, with a BullMQ rate limiter of `EMAIL_CAMPAIGN_PER_MINUTE` (default 60), shared across worker instances. 3 attempts with backoff.
+- **Checked at send time** for every marketing job, inside the per-key lock: consent for the category, any suppression, suspended user, and the admin template switch. An unsubscribe or switch-off mid-campaign stops all later sends.
+- **Campaigns** ([email-marketing.ts](../../../packages/services/src/email-marketing.ts)):
+  - Audience filters from §13.4, with a live count after exclusions.
+  - Send now or schedule (IST), with an audit log entry.
+  - The audience is frozen at start (one job per recipient, key `campaign:<id>:<user>`).
+  - Cancel before start.
+  - A `dispatch-campaigns` job (every minute) starts due campaigns and closes finished ones with sent/skipped counts.
+  - "Send test to me" uses the admin's own merge data.
+- **Inactive nudge:** a daily `inactive-nudges` job. `users.last_active_at` is touched at most hourly on app pages.
+  - Nudge n is due after n × 30 days away, max 3 per absence. Signing in resets the clock, and a stale job is skipped.
+  - After the first nudge, users with no credits who never topped up are skipped.
+- **Pending payments:** a delayed `recharge_pending` job per order, plus the outbox sweep.
+- **Replies** go to `EMAIL_REPLY_TO` / `SUPPORT_EMAIL` (Reply-To header).
+
+## How to test
+
+- `apps/worker`: `npx vitest run src/email-queues.test.ts` (needs local Redis). 2,000 throttled campaign jobs, then a receipt: the receipt is processed in seconds, and the campaign stays at its per-minute limit.
+- `packages/services`: `email-m11.test.ts` covers campaigns, scheduling/cancel, mid-send unsubscribe and nudges.
+- Manual: Admin → Emails → New campaign. Watch the live count, send a test to yourself, schedule one and cancel it, then send one.

@@ -252,3 +252,40 @@ export {
   type RazorpayClient,
   type RazorpayPayment,
 } from "./razorpay";
+export {
+  applyUnsubscribe,
+  getEmailPreferences,
+  hasEmailPreferencesRow,
+  MARKETING_CATEGORIES,
+  setEmailPreferences,
+  signUnsubscribeToken,
+  TEMPLATE_CATEGORY,
+  unsubscribeUrl,
+  verifyUnsubscribeToken,
+  type EmailPrefs,
+  type MarketingCategory,
+  type UnsubscribeScope,
+} from "./email-prefs";
+export { findMissingTransactionalEmails } from "./email-transactional";
+export {
+  applyMergeFields,
+  audienceFiltersSchema,
+  CampaignError,
+  campaignContentSchema,
+  cancelCampaign,
+  countAudience,
+  createCampaign,
+  createCampaignSchema,
+  dispatchDueCampaigns,
+  findInactiveNudges,
+  listCampaigns,
+  processMarketingEmail,
+  sendCampaignTest,
+  startCampaign,
+  touchUserActivity,
+  type AudienceFilters,
+  type CampaignContent,
+  type CreateCampaignInput,
+  type EnqueueMarketing,
+} from "./email-marketing";
+export { checkSendingDomain, sendingDomain, type DnsCheck, type DnsResolver, type DnsStatus } from "./email-dns";

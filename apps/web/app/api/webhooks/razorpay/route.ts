@@ -44,6 +44,10 @@ export async function POST(req: Request) {
       // Receipt (§13.1 recharge_success): on every delivery, deduped by key, so a failed enqueue is retried next time.
       await enqueueTransactionalEmail(getTransactionalEmailQueue(), { templateKey: "recharge_success", userId: outcome.grant.userId, paymentId: outcome.grant.id });
     }
+    if (outcome.failed) {
+      // §13.1 recharge_failed; the worker re-checks the payment is still failed before sending.
+      await enqueueTransactionalEmail(getTransactionalEmailQueue(), { templateKey: "recharge_failed", userId: outcome.failed.userId, paymentId: outcome.failed.id });
+    }
     return Response.json({ handled: outcome.handled, duplicate: outcome.duplicate });
   } catch (err) {
     if (err instanceof PaymentError && (err.code === "not_found" || err.code === "mismatch")) {

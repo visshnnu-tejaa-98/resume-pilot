@@ -11,5 +11,6 @@ export { NewFeaturesEmail, newFeaturesEmailSubject, type FeatureItem, type Featu
 export { PaymentFailedEmail, paymentFailedEmailSubject, type PaymentFailedEmailProps } from "./templates/PaymentFailed";
 export { PaymentPendingEmail, paymentPendingEmailSubject, type PaymentPendingEmailProps } from "./templates/PaymentPending";
 export { fmtRupees, PaymentSuccessEmail, paymentSuccessEmailSubject, type PaymentSuccessEmailProps } from "./templates/PaymentSuccess";
+export { ReferralRewardEmail, referralRewardEmailSubject, type ReferralRewardEmailProps } from "./templates/ReferralReward";
 export { PromoEmail, promoEmailSubject, type PromoEmailProps } from "./templates/Promo";
 export { WelcomeEmail, welcomeEmailSubject, type WelcomeEmailProps } from "./templates/Welcome";

@@ -3,6 +3,7 @@ import {
   coupons,
   creditLedger,
   emailMessages,
+  emailTemplateSettings,
   payments,
   emailSuppressions,
   users,
@@ -10,6 +11,8 @@ import {
 } from "@resume-pilot/database";
 import { buildEmailLinks, PaymentSuccessEmail, paymentSuccessEmailSubject, WelcomeEmail, welcomeEmailSubject, type SendEmailInput } from "@resume-pilot/emails";
 import { emailIdempotencyKey, type TransactionalEmailJob } from "@resume-pilot/queue";
+import { processCodeAppliedEmail, processRechargeFailedEmail, processRechargePendingEmail, processReferralRewardEmail } from "./email-transactional";
+import { getEmailPreferences, type MarketingCategory } from "./email-prefs";
 import { REFUND_WINDOW_MONTHS } from "./payments";
 import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
 
@@ -103,12 +106,21 @@ export async function processTransactionalEmail(
       return processWelcomeEmail(db, job, ctx);
     case "recharge_success":
       return processRechargeEmail(db, job, ctx);
+    case "recharge_failed":
+      return processRechargeFailedEmail(db, job, ctx);
+    case "recharge_pending":
+      return processRechargePendingEmail(db, job, ctx);
+    case "code_applied":
+      return processCodeAppliedEmail(db, job, ctx);
+    case "referral_reward":
+      return processReferralRewardEmail(db, job, ctx);
   }
 }
 
-interface Rendered {
+export interface Rendered {
   subject: string;
   element: SendEmailInput["element"];
+  headers?: Record<string, string>;
   /** Stored on the email_messages row once sent (admin email log). */
   mergeData: Record<string, unknown>;
 }
@@ -118,7 +130,7 @@ interface Rendered {
  * lock, terminal-state checks, suppression, send, then mark sent /
  * failed. `render` runs inside the lock, right before sending.
  */
-async function deliverOnce(
+export async function deliverOnce(
   db: Database,
   ctx: EmailProcessContext,
   opts: {
@@ -128,6 +140,12 @@ async function deliverOnce(
     /** Money emails go to suspended users too (prd.md §13.1). */
     skipSuspended: boolean;
     queuedMergeData: Record<string, unknown>;
+    /**
+     * Marketing: consent for this category, every suppression reason and
+     * the template's on/off switch are checked inside the lock, at send
+     * time, so an unsubscribe mid-campaign stops every later send.
+     */
+    marketing?: { category: MarketingCategory; campaignId?: string };
     render: () => Promise<Rendered>;
   },
 ): Promise<EmailProcessResult> {
@@ -136,7 +154,7 @@ async function deliverOnce(
   // a transient failure's rollback and the admin log shows it retrying.
   await db
     .insert(emailMessages)
-    .values({ userId: user.id, templateKey: opts.templateKey, status: "queued", idempotencyKey, mergeData: opts.queuedMergeData })
+    .values({ userId: user.id, templateKey: opts.templateKey, campaignId: opts.marketing?.campaignId ?? null, status: "queued", idempotencyKey, mergeData: opts.queuedMergeData })
     .onConflictDoNothing({ target: emailMessages.idempotencyKey });
 
   return db.transaction(async (tx) => {
@@ -163,10 +181,17 @@ async function deliverOnce(
       .limit(1);
     // Hard bounces block every email. Complaints / unsubscribe-all only block marketing.
     if (suppressed?.reason === "hard_bounce") return markSkipped("address suppressed (hard bounce)");
+    if (opts.marketing) {
+      if (suppressed) return markSkipped(`address suppressed (${suppressed.reason.replace("_", " ")})`);
+      const prefs = await getEmailPreferences(tx, user.id);
+      if (!prefs[opts.marketing.category]) return markSkipped(`no consent for ${opts.marketing.category === "reminders" ? "reminders" : "product updates"}`);
+      const [setting] = await tx.select({ enabled: emailTemplateSettings.enabled }).from(emailTemplateSettings).where(eq(emailTemplateSettings.templateKey, opts.templateKey));
+      if (setting && !setting.enabled) return markSkipped("template switched off by admin");
+    }
 
     const rendered = await opts.render();
     try {
-      const { messageId } = await ctx.send({ to: user.email, subject: rendered.subject, element: rendered.element });
+      const { messageId } = await ctx.send({ to: user.email, subject: rendered.subject, element: rendered.element, headers: rendered.headers });
       await tx
         .update(emailMessages)
         .set({ status: "sent", providerMessageId: messageId, error: null, mergeData: rendered.mergeData, updatedAt: new Date() })
@@ -189,12 +214,12 @@ async function deliverOnce(
   });
 }
 
-async function findUser(db: Database, userId: string) {
-  const [user] = await db.select({ id: users.id, email: users.email, status: users.status }).from(users).where(eq(users.id, userId)).limit(1);
+export async function findUser(db: Database, userId: string) {
+  const [user] = await db.select({ id: users.id, email: users.email, status: users.status, firstName: users.firstName }).from(users).where(eq(users.id, userId)).limit(1);
   return user ?? null;
 }
 
-const links = (ctx: EmailProcessContext) => buildEmailLinks(ctx.appUrl, { supportEmail: ctx.supportEmail, address: ctx.postalAddress, logoUrl: ctx.logoUrl });
+export const links = (ctx: EmailProcessContext) => buildEmailLinks(ctx.appUrl, { supportEmail: ctx.supportEmail, address: ctx.postalAddress, logoUrl: ctx.logoUrl });
 
 async function processWelcomeEmail(
   db: Database,
@@ -226,7 +251,7 @@ async function processWelcomeEmail(
 }
 
 const METHOD_LABEL: Record<string, string> = { upi: "UPI", card: "Card", netbanking: "Netbanking", wallet: "Wallet", emi: "EMI", paylater: "Pay later" };
-const fmtIst = (d: Date) =>
+export const fmtIst = (d: Date) =>
   `${new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).format(d)} IST`;
 
 /** Receipt for a captured payment (prd.md §11.3, §13.1). Balance is the ledger row's, not today's. */
@@ -262,8 +287,7 @@ async function processRechargeEmail(
     queuedMergeData: merge,
     render: async () => {
       const props = {
-        // users has no name column; the welcome email gets it from Clerk's payload instead.
-        firstName: "there",
+        firstName: user.firstName || "there",
         amountPaise: merge.amount_paise,
         credits: merge.credits,
         newBalance: merge.new_balance,

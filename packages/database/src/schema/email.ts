@@ -74,6 +74,10 @@ export const emailCampaigns = pgTable("email_campaigns", {
     .references(() => users.id),
   recipientCount: integer("recipient_count"),
   sentCount: integer("sent_count"),
+  /** Users frozen into the audience who were left out at send time (opted out mid-send, suppressed…). */
+  skippedCount: integer("skipped_count"),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

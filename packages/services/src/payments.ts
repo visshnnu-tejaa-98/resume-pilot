@@ -42,6 +42,8 @@ export class RefundError extends Error {
 // ─── Top-up ────────────────────────────────────────────────────────────────
 
 export interface TopUpOrder {
+  /** payments.id — for the delayed recharge_pending check. */
+  paymentRowId: string;
   keyId: string;
   orderId: string;
   amountPaise: number;
@@ -66,8 +68,8 @@ export async function createTopUpOrder(db: Database, input: { userId: string; pa
   });
   if (order.amount !== pack.pricePaise) throw new PaymentError("mismatch", "Razorpay created the order for a different amount");
 
-  await db.insert(payments).values({ userId: input.userId, packageId: pack.id, orderId: order.id, amountPaise: pack.pricePaise, credits });
-  return { keyId: razorpay.keyId, orderId: order.id, amountPaise: pack.pricePaise, credits, currency: "INR" };
+  const [row] = await db.insert(payments).values({ userId: input.userId, packageId: pack.id, orderId: order.id, amountPaise: pack.pricePaise, credits }).returning({ id: payments.id });
+  return { paymentRowId: row!.id, keyId: razorpay.keyId, orderId: order.id, amountPaise: pack.pricePaise, credits, currency: "INR" };
 }
 
 export interface GrantResult {
@@ -132,11 +134,13 @@ export async function confirmCheckout(
 }
 
 /** Marks an unpaid order failed (payment.failed). A later success on the same order still grants. */
-export async function markPaymentFailed(db: Database, p: Pick<RazorpayPayment, "order_id" | "error_description" | "method">) {
-  await db
+export async function markPaymentFailed(db: Database, p: Pick<RazorpayPayment, "order_id" | "error_description" | "method">): Promise<{ id: string; userId: string } | undefined> {
+  const [row] = await db
     .update(payments)
     .set({ status: "failed", failureReason: p.error_description?.slice(0, 500) ?? null, method: p.method ?? null, updatedAt: new Date() })
-    .where(and(eq(payments.orderId, p.order_id), eq(payments.status, "created")));
+    .where(and(eq(payments.orderId, p.order_id), eq(payments.status, "created")))
+    .returning({ id: payments.id, userId: payments.userId });
+  return row;
 }
 
 // ─── Webhook ───────────────────────────────────────────────────────────────
@@ -149,7 +153,13 @@ export interface RazorpayWebhookEvent {
   };
 }
 
-export type WebhookOutcome = { handled: "granted" | "already_granted" | "failed_marked" | "refund_updated" | "ignored"; duplicate: boolean; grant?: GrantResult };
+export type WebhookOutcome = {
+  handled: "granted" | "already_granted" | "failed_marked" | "refund_updated" | "ignored";
+  duplicate: boolean;
+  grant?: GrantResult;
+  /** The payments row marked failed, for the recharge_failed email. */
+  failed?: { id: string; userId: string };
+};
 
 /**
  * Handles one verified webhook delivery (§11.3). The work is idempotent
@@ -162,12 +172,13 @@ export async function handleRazorpayWebhook(db: Database, input: { eventId: stri
   const payment = event.payload.payment?.entity;
   let outcome: WebhookOutcome["handled"] = "ignored";
   let grant: GrantResult | undefined;
+  let failed: { id: string; userId: string } | undefined;
 
   if ((event.event === "payment.captured" || event.event === "order.paid") && payment) {
     grant = await grantPayment(db, payment);
     outcome = grant.granted ? "granted" : "already_granted";
   } else if (event.event === "payment.failed" && payment) {
-    await markPaymentFailed(db, payment);
+    failed = await markPaymentFailed(db, payment);
     outcome = "failed_marked";
   } else if ((event.event === "refund.processed" || event.event === "refund.failed") && event.payload.refund) {
     const r = event.payload.refund.entity;
@@ -184,7 +195,7 @@ export async function handleRazorpayWebhook(db: Database, input: { eventId: stri
     .values({ eventId: input.eventId, eventType: event.event, paymentId: ours?.id ?? null, payload: event })
     .onConflictDoNothing({ target: paymentEvents.eventId })
     .returning({ id: paymentEvents.id });
-  return { handled: outcome, duplicate: stored.length === 0, grant };
+  return { handled: outcome, duplicate: stored.length === 0, grant, failed };
 }
 
 // ─── Refunds (§11.2) ───────────────────────────────────────────────────────

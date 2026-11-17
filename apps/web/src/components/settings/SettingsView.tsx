@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/Field";
 import { Switch } from "@/components/ui/Switch";
 import { Tabs } from "@/components/ui/Tabs";
 import { cn } from "@/lib/cn";
+import { trpc, trpcErrorMessage } from "@/lib/trpc-client";
 import { routes, SUPPORT_EMAIL } from "@/lib/routes";
 import { TEMPLATES, usePreferencesStore, type TemplateName } from "@/stores/preferences-store";
 import { useThemeStore, type ThemeMode } from "@/stores/theme-store";
@@ -20,11 +21,16 @@ const THEMES: { mode: ThemeMode; name: string; swatch: string }[] = [
   { mode: "system", name: "Match system", swatch: "linear-gradient(90deg, #F4F6F8 50%, #0A1119 50%)" },
 ];
 
-const NOTIFS = [
-  { h: "Generation finished", p: "When a tailored resume is ready", on: true },
-  { h: "Payment receipts", p: "After every wallet top-up", on: true },
-  { h: "Product updates", p: "New templates and features, monthly at most", on: false },
+/** Always-on account emails (prd.md §13.1), listed so users know what they'll still get. */
+const ALWAYS_ON = [
+  { h: "Account and payment emails", p: "Receipts, failed or pending payments, codes applied, referral rewards" },
 ];
+
+/** Marketing categories (prd.md §13.5): opt-in, saved server-side. */
+const MARKETING = [
+  { key: "reminders", h: "Reminders", p: "A nudge if you haven't signed in for 30 days, with your balance" },
+  { key: "productUpdates", h: "Product updates", p: "New templates and features, a few times a year" },
+] as const;
 
 const card = "rounded-xl border border-border bg-surface";
 
@@ -104,17 +110,7 @@ function PreferencesTab() {
 
       <section className={cn(card, "overflow-hidden")}>
         <h2 className="m-0 px-6 py-[18px] font-display text-lg font-bold">Email notifications</h2>
-        {NOTIFS.map((n) => (
-          <div key={n.h} className="flex items-center justify-between gap-4 border-t border-border px-6 py-3.5">
-            <span className="flex flex-col gap-0.5">
-              <strong className="text-[15px]">{n.h}</strong>
-              <span className="text-[13px] text-text-2">{n.p}</span>
-            </span>
-            {/* Email preferences need a server-side setting (tasks/todo/m11-email); shown read-only until then. */}
-            <Switch checked={n.on} onChange={() => undefined} label={n.h} disabled />
-          </div>
-        ))}
-        <p className="m-0 border-t border-border px-6 py-3 text-xs text-text-2">Notification choices will be editable here soon.</p>
+        <EmailPrefsRows />
       </section>
     </div>
   );
@@ -166,5 +162,56 @@ function PrivacyTab() {
         </a>
       </section>
     </div>
+  );
+}
+
+function EmailPrefsRows() {
+  const [prefs, setPrefs] = useState<{ reminders: boolean; productUpdates: boolean } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    trpc.emailPreferences.get
+      .query()
+      .then((p) => setPrefs({ reminders: p.reminders, productUpdates: p.productUpdates }))
+      .catch(() => setError("Couldn't load your email choices."));
+  }, []);
+
+  async function toggle(key: "reminders" | "productUpdates") {
+    if (!prefs) return;
+    const value = !prefs[key];
+    setPrefs({ ...prefs, [key]: value });
+    setError(null);
+    try {
+      const p = await trpc.emailPreferences.set.mutate({ [key]: value });
+      setPrefs({ reminders: p.reminders, productUpdates: p.productUpdates });
+    } catch (err) {
+      setPrefs((cur) => (cur ? { ...cur, [key]: !value } : cur));
+      setError(trpcErrorMessage(err));
+    }
+  }
+
+  return (
+    <>
+      {ALWAYS_ON.map((n) => (
+        <div key={n.h} className="flex items-center justify-between gap-4 border-t border-border px-6 py-3.5">
+          <span className="flex flex-col gap-0.5">
+            <strong className="text-[15px]">{n.h}</strong>
+            <span className="text-[13px] text-text-2">{n.p}</span>
+          </span>
+          <span className="text-[13px] font-semibold text-text-2">Always on</span>
+        </div>
+      ))}
+      {MARKETING.map((n) => (
+        <div key={n.key} className="flex items-center justify-between gap-4 border-t border-border px-6 py-3.5">
+          <span className="flex flex-col gap-0.5">
+            <strong className="text-[15px]">{n.h}</strong>
+            <span className="text-[13px] text-text-2">{n.p}</span>
+          </span>
+          <Switch checked={prefs?.[n.key] ?? false} onChange={() => void toggle(n.key)} label={n.h} disabled={!prefs} />
+        </div>
+      ))}
+      <p className="m-0 border-t border-border px-6 py-3 text-xs text-text-2" role={error ? "alert" : undefined}>
+        {error ?? "Every marketing email also has a one-click unsubscribe link."}
+      </p>
+    </>
   );
 }

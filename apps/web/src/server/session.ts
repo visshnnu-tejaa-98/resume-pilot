@@ -1,6 +1,6 @@
 import "server-only";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getWalletSummary } from "@resume-pilot/services";
+import { getWalletSummary, touchUserActivity } from "@resume-pilot/services";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getDb } from "@/server/db";
@@ -16,6 +16,8 @@ export const requireAppUser = cache(async () => {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) redirect("/sign-in");
   const [user, clerkUser] = await Promise.all([ensureUserSynced(clerkUserId), currentUser()]);
+  // Inactive-nudge clock (prd.md §13.1). Throttled in SQL; never blocks the page.
+  void touchUserActivity(getDb(), user.id, clerkUser?.firstName ?? null).catch(() => undefined);
   return {
     user,
     clerkUserId,

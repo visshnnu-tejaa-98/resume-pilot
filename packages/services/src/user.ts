@@ -5,6 +5,7 @@ import { getWalletBalance } from "./credits";
 export interface ClerkUserCreatedInput {
   clerkUserId: string;
   email: string;
+  firstName?: string | null;
 }
 
 export interface CreateUserResult {
@@ -43,7 +44,7 @@ export async function createUserFromClerkWebhook(
   return db.transaction(async (tx) => {
     const inserted = await tx
       .insert(users)
-      .values({ clerkUserId: input.clerkUserId, email: input.email })
+      .values({ clerkUserId: input.clerkUserId, email: input.email, firstName: input.firstName?.trim().slice(0, 100) || null })
       .onConflictDoNothing({ target: users.clerkUserId })
       .returning();
 

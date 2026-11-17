@@ -39,7 +39,8 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueTransactionalEmail, getTransactionalEmailQueue, enqueuePdfExport, getPdfQueue, isPdfJobFailed, enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
+import { sendEmail } from "@resume-pilot/emails";
+import { enqueueMarketingEmails, getMarketingEmailQueue, RECHARGE_PENDING_DELAY_MS, type TransactionalEmailJob, enqueueTransactionalEmail, getTransactionalEmailQueue, enqueuePdfExport, getPdfQueue, isPdfJobFailed, enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import { SCORING_METHOD_VERSION } from "@resume-pilot/ai";
 import {
@@ -56,6 +57,16 @@ import {
   deleteVersion,
   setVersionTemplate,
   getPdfExportStatus,
+  audienceFiltersSchema,
+  CampaignError,
+  cancelCampaign,
+  countAudience,
+  createCampaign,
+  createCampaignSchema,
+  getEmailPreferences,
+  listCampaigns,
+  sendCampaignTest,
+  setEmailPreferences,
   adminCreateCreditPackage,
   adminListCreditPackages,
   adminUpdateCreditPackage,
@@ -131,6 +142,9 @@ function toTRPCError(err: unknown): never {
   }
   if (err instanceof ScoringError) {
     throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "CONFLICT", message: err.message, cause: err });
+  }
+  if (err instanceof CampaignError) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: err.message, cause: err });
   }
   if (err instanceof PaymentError) {
     const code = err.code === "not_found" ? "NOT_FOUND" : err.code === "pack_unavailable" ? "PRECONDITION_FAILED" : err.code === "not_configured" ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST";
@@ -224,8 +238,17 @@ const adminContentRouter = router({
  */
 export async function queueRechargeEmail(g: GrantResult): Promise<void> {
   if (g.status !== "captured" || !g.id) return;
-  await enqueueTransactionalEmail(getTransactionalEmailQueue(), { templateKey: "recharge_success", userId: g.userId, paymentId: g.id }).catch((err: unknown) => {
-    console.error("[payments] could not queue receipt email:", (err as Error).message);
+  await queueEmail({ templateKey: "recharge_success", userId: g.userId, paymentId: g.id });
+}
+
+/**
+ * Best-effort enqueue right after the triggering write. Never fails the
+ * request: the worker's email-outbox sweep re-queues anything missed
+ * within a minute, and the idempotency key stops double sends.
+ */
+async function queueEmail(job: TransactionalEmailJob, delayMs?: number): Promise<void> {
+  await enqueueTransactionalEmail(getTransactionalEmailQueue(), job, { delayMs }).catch((err: unknown) => {
+    console.error(`[email] could not queue ${job.templateKey}:`, (err as Error).message);
   });
 }
 
@@ -250,6 +273,28 @@ const adminPaymentsRouter = router({
     .input(z.object({ paymentRowId: z.uuid(), credits: z.number().int().positive().optional(), reason }))
     .mutation(({ ctx, input }) => refundPayment(ctx.db, { adminUserId: ctx.user.id, ...input }, getRazorpay()).catch(toTRPCError)),
   retryRefund: adminProcedure.input(z.object({ refundId: z.uuid() })).mutation(({ ctx, input }) => retryRefund(ctx.db, input, getRazorpay()).catch(toTRPCError)),
+});
+
+const emailCtx = () => ({
+  appUrl: process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  supportEmail: process.env.SUPPORT_EMAIL || undefined,
+  postalAddress: process.env.POSTAL_ADDRESS || undefined,
+  logoUrl: process.env.EMAIL_LOGO_URL || undefined,
+});
+
+/** Campaigns (prd.md §13.4). Every send/schedule/cancel is audit-logged by the service. */
+const adminEmailsRouter = router({
+  campaigns: adminProcedure.query(({ ctx }) => listCampaigns(ctx.db)),
+  audienceCount: adminProcedure.input(z.object({ filters: audienceFiltersSchema })).query(({ ctx, input }) => countAudience(ctx.db, input.filters)),
+  createCampaign: adminProcedure
+    .input(createCampaignSchema)
+    .mutation(({ ctx, input }) => createCampaign(ctx.db, { adminUserId: ctx.user.id, ...input }, (jobs) => enqueueMarketingEmails(getMarketingEmailQueue(), jobs)).catch(toTRPCError)),
+  cancelCampaign: adminProcedure
+    .input(z.object({ campaignId: z.uuid(), reason }))
+    .mutation(({ ctx, input }) => cancelCampaign(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  sendTest: adminProcedure
+    .input(createCampaignSchema.pick({ subject: true, preheader: true, content: true }))
+    .mutation(({ ctx, input }) => sendCampaignTest(ctx.db, { adminUserId: ctx.user.id, ...input }, { ...emailCtx(), send: sendEmail }).catch(toTRPCError)),
 });
 
 const adminPricingRouter = router({
@@ -288,6 +333,14 @@ export const appRouter = router({
     email: ctx.user.email,
     role: ctx.user.role,
   })),
+
+  /** Settings → Notifications (prd.md §13.5). Transactional email is always on and not listed here. */
+  emailPreferences: router({
+    get: authProcedure.query(({ ctx }) => getEmailPreferences(ctx.db, ctx.user.id)),
+    set: authProcedure
+      .input(z.object({ reminders: z.boolean().optional(), productUpdates: z.boolean().optional() }))
+      .mutation(({ ctx, input }) => setEmailPreferences(ctx.db, { userId: ctx.user.id, source: "settings", ...input })),
+  }),
 
   /** Backs the Dashboard's wallet balance + referral code (prd.md §4.1, §12.1). */
   wallet: authProcedure.query(({ ctx }) => getWalletSummary(ctx.db, ctx.user.id)),
@@ -538,7 +591,12 @@ export const appRouter = router({
   payments: router({
     createOrder: authProcedure
       .input(z.object({ packageId: z.uuid() }))
-      .mutation(({ ctx, input }) => createTopUpOrder(ctx.db, { userId: ctx.user.id, packageId: input.packageId }, getRazorpay()).catch(toTRPCError)),
+      .mutation(async ({ ctx, input }) => {
+        const order = await createTopUpOrder(ctx.db, { userId: ctx.user.id, packageId: input.packageId }, getRazorpay()).catch(toTRPCError);
+        // §13.1 recharge_pending: checked 10 minutes from now; sends only if still neither captured nor failed.
+        await queueEmail({ templateKey: "recharge_pending", userId: ctx.user.id, paymentId: order.paymentRowId }, RECHARGE_PENDING_DELAY_MS);
+        return order;
+      }),
     /** Checkout's success handler. The webhook confirms independently; whichever lands first grants. */
     confirm: authProcedure
       .input(z.object({ orderId: z.string().min(1).max(64), paymentId: z.string().min(1).max(64), signature: z.string().regex(/^[0-9a-f]{64}$/i) }))
@@ -557,14 +615,17 @@ export const appRouter = router({
   }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */
-  redeemCode: authProcedure.input(redeemCodeInputSchema).mutation(({ ctx, input }) =>
-    redeemCode(ctx.db, {
+  redeemCode: authProcedure.input(redeemCodeInputSchema).mutation(async ({ ctx, input }) => {
+    const r = await redeemCode(ctx.db, {
       userId: ctx.user.id,
       code: input.code,
       ip: ctx.clientIp,
       deviceId: ctx.deviceId,
-    }).catch(toTRPCError),
-  ),
+    }).catch(toTRPCError);
+    // §13.1 code_applied. The referrer's referral_reward is picked up by the outbox sweep (≤ 1 min).
+    await queueEmail({ templateKey: "code_applied", userId: ctx.user.id, redemptionId: r.redemptionId });
+    return r;
+  }),
 
   admin: router({
     pricing: adminPricingRouter,
@@ -572,6 +633,7 @@ export const appRouter = router({
     users: adminUsersRouter,
     content: adminContentRouter,
     payments: adminPaymentsRouter,
+    emails: adminEmailsRouter,
   }),
 });
 

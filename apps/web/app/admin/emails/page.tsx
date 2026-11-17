@@ -1,9 +1,9 @@
-import { adminEmailStats } from "@resume-pilot/services";
+import { adminEmailStats, checkSendingDomain } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmailTemplateToggle } from "@/components/admin/EmailTemplateToggle";
 import { adminRoutes } from "@/components/admin/nav";
-import { AdminCard, AdminTable, Kpi, KpiGrid } from "@/components/admin/ui";
+import { AdminCard, AdminTable, Kpi, KpiGrid, StatusPill } from "@/components/admin/ui";
 import { AppMain } from "@/components/app/PageHeader";
 import { ButtonLink } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
@@ -14,11 +14,15 @@ import { getDb } from "@/server/db";
 import { requireAdmin } from "@/server/admin";
 
 export const metadata: Metadata = { title: "Email templates" };
+export const dynamic = "force-dynamic";
 
 /** design/screens/AdminEmails.dc.html */
 export default async function AdminEmailsPage() {
   await requireAdmin();
-  const s = await adminEmailStats(getDb());
+  const [s, dnsResult] = await Promise.all([
+    adminEmailStats(getDb()),
+    checkSendingDomain({ fromAddress: process.env.EMAIL_FROM_ADDRESS, dkimSelector: process.env.EMAIL_DKIM_SELECTOR }).catch(() => null),
+  ]);
   const sent = Object.values(s.byStatus).reduce((a, b) => a + b, 0);
   const st = (k: string) => s.byStatus[k] ?? 0;
   const from = process.env.EMAIL_FROM_ADDRESS ?? "[SENDER EMAIL]";
@@ -85,7 +89,8 @@ export default async function AdminEmailsPage() {
             <strong className="font-display text-base">Sender</strong>
             {[
               ["From", from],
-              ["Reply-to", SUPPORT_EMAIL],
+              ["Reply-to", process.env.EMAIL_REPLY_TO || SUPPORT_EMAIL],
+              ["Campaign limit", `${process.env.EMAIL_CAMPAIGN_PER_MINUTE || 60} / min`],
               ["SMTP host", smtpHost || "not configured"],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 text-sm">
@@ -94,11 +99,27 @@ export default async function AdminEmailsPage() {
               </div>
             ))}
           </AdminCard>
-          <AdminCard className="flex flex-col gap-2 p-5">
-            <strong className="font-display text-base">Domain checks</strong>
-            <span className="text-[13px] leading-normal text-text-2">
-              SPF, DKIM and DMARC are verified at the SMTP provider; check them there before sending campaigns.
-            </span>
+          <AdminCard className="flex flex-col gap-2.5 p-5">
+            <strong className="font-display text-base">Domain checks{dnsResult?.domain ? ` · ${dnsResult.domain}` : ""}</strong>
+            {dnsResult ? (
+              dnsResult.checks.map((c) => (
+                <div key={c.name} className="flex flex-col gap-0.5 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold">{c.name}</span>
+                    <StatusPill
+                      status={c.status === "verified" ? "succeeded" : c.status === "not_configured" ? "skipped" : "failed"}
+                      label={c.status === "verified" ? "Verified" : c.status === "missing" ? "Missing" : c.status === "error" ? "Lookup failed" : "Not set up"}
+                    />
+                  </div>
+                  <span className="font-mono text-[11px] break-all text-text-2" title={c.detail}>
+                    {c.host} · {c.detail.length > 80 ? `${c.detail.slice(0, 80)}…` : c.detail}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span className="text-[13px] text-text-2">DNS lookup failed. Try reloading.</span>
+            )}
+            <span className="text-xs leading-normal text-text-2">Live DNS lookups. All three must be verified before sending campaigns (prd.md §13.7).</span>
           </AdminCard>
         </aside>
       </div>

@@ -33,6 +33,12 @@ export default function SignUpPage() {
   const [referralCode, setReferralCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [code, setCode] = useState("");
+  // Marketing consent: opt-in, unticked by default (DPDP Act, prd.md §13.5).
+  const [marketing, setMarketing] = useState(false);
+  const signupMetadata = () => ({
+    ...(referralCode.trim() ? { referralCodeAtSignup: referralCode.trim() } : {}),
+    ...(marketing ? { marketingConsentAtSignup: true } : {}),
+  });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -61,7 +67,7 @@ export default function SignUpPage() {
         strategy,
         redirectUrl: "/sign-up/sso-callback",
         redirectUrlComplete: AFTER_SIGN_UP,
-        unsafeMetadata: referralCode.trim() ? { referralCodeAtSignup: referralCode.trim() } : undefined,
+        unsafeMetadata: signupMetadata(),
       });
     });
   }
@@ -79,7 +85,7 @@ export default function SignUpPage() {
         password,
         firstName,
         lastName: rest.join(" ") || undefined,
-        unsafeMetadata: referralCode.trim() ? { referralCodeAtSignup: referralCode.trim() } : undefined,
+        unsafeMetadata: signupMetadata(),
       });
       await signUp!.prepareEmailAddressVerification({ strategy: "email_code" });
       setStep("verify");
@@ -168,6 +174,17 @@ export default function SignUpPage() {
               />
               <span>
                 I agree to the <LegalLinks />, and consent to my resume being processed to provide the service.
+              </span>
+            </label>
+            <label className="flex items-start gap-2.5 text-sm leading-normal">
+              <input
+                type="checkbox"
+                checked={marketing}
+                onChange={(e) => setMarketing(e.target.checked)}
+                className="mt-0.5 size-[18px] flex-none accent-link"
+              />
+              <span>
+                Send me occasional reminders and product updates. <span className="text-text-2">Optional; unsubscribe any time.</span>
               </span>
             </label>
             {/* Clerk mounts its bot-protection widget here. */}

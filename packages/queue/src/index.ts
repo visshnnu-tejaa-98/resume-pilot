@@ -12,6 +12,8 @@ import { z } from "zod";
  */
 export const QUEUE_NAMES = {
   emailTransactional: "email-transactional",
+  /** Campaigns and inactive nudges; rate-limited, never shares a queue with receipts. */
+  emailMarketing: "email-marketing",
   /** Raw-text extraction for uploaded resumes (prd.md §5.3). */
   extraction: "resume-extraction",
   /** Scheduled housekeeping (hold expiry, later: upload cleanup, inactive nudges). */
@@ -32,6 +34,12 @@ export const MAINTENANCE_JOBS = {
   cleanupUploads: { name: "cleanup-uploads", everyMs: 24 * 60 * 60_000 },
   /** Hard-deletes versions soft-deleted more than 30 days ago (prd.md §8.5). */
   purgeVersions: { name: "purge-versions", everyMs: 24 * 60 * 60_000 },
+  /** Backstop: queues any transactional email whose ledger row / payment has none yet (prd.md §13.1). */
+  emailOutbox: { name: "email-outbox", everyMs: 60_000 },
+  /** Starts campaigns whose scheduled time has come (prd.md §13.4). */
+  dispatchCampaigns: { name: "dispatch-campaigns", everyMs: 60_000 },
+  /** Daily: users with no sign-in for 30 days (prd.md §13.2). */
+  inactiveNudges: { name: "inactive-nudges", everyMs: 24 * 60 * 60_000 },
 } as const;
 
 export type MaintenanceJobName = (typeof MAINTENANCE_JOBS)[keyof typeof MAINTENANCE_JOBS]["name"];
@@ -69,6 +77,14 @@ export const transactionalEmailJobSchema = z.discriminatedUnion("templateKey", [
     userId: z.uuid(),
     paymentId: z.uuid(),
   }),
+  /** `payment.failed` — once per order (`paymentId` = payments.id). */
+  z.object({ templateKey: z.literal("recharge_failed"), userId: z.uuid(), paymentId: z.uuid() }),
+  /** Still neither captured nor failed 10 minutes after the order (delayed job). */
+  z.object({ templateKey: z.literal("recharge_pending"), userId: z.uuid(), paymentId: z.uuid() }),
+  /** Coupon or referral code applied to `userId`'s wallet (`redemptionId` = code_redemptions.id). */
+  z.object({ templateKey: z.literal("code_applied"), userId: z.uuid(), redemptionId: z.uuid() }),
+  /** The referrer's reward was granted (`userId` = the referrer). */
+  z.object({ templateKey: z.literal("referral_reward"), userId: z.uuid(), redemptionId: z.uuid() }),
 ]);
 export type TransactionalEmailJob = z.infer<typeof transactionalEmailJobSchema>;
 
@@ -83,7 +99,12 @@ export function emailIdempotencyKey(job: TransactionalEmailJob): string {
     case "welcome":
       return `welcome:${job.userId}`;
     case "recharge_success":
-      return `recharge_success:${job.paymentId}`;
+    case "recharge_failed":
+    case "recharge_pending":
+      return `${job.templateKey}:${job.paymentId}`;
+    case "code_applied":
+    case "referral_reward":
+      return `${job.templateKey}:${job.redemptionId}`;
   }
 }
 
@@ -157,16 +178,73 @@ export async function addUniqueJob<T>(
   return "added";
 }
 
-/** Validates the payload, then enqueues with the idempotent job id. */
+/** Validates the payload, then enqueues with the idempotent job id. `delayMs` for recharge_pending. */
 export async function enqueueTransactionalEmail(
   queue: Pick<Queue<TransactionalEmailJob>, "add" | "getJob">,
   job: TransactionalEmailJob,
+  opts: { delayMs?: number } = {},
 ): Promise<"added" | "retried" | "replaced" | "exists"> {
   const data = transactionalEmailJobSchema.parse(job);
   return addUniqueJob(queue, data.templateKey, data, {
     ...TRANSACTIONAL_EMAIL_JOB_OPTIONS,
     jobId: emailJobId(data),
+    ...(opts.delayMs ? { delay: opts.delayMs } : {}),
   });
+}
+
+/** recharge_pending fires this long after the order is created (prd.md §13.1). */
+export const RECHARGE_PENDING_DELAY_MS = 10 * 60_000;
+
+// --- Marketing email ---------------------------------------------------------
+
+/**
+ * Marketing sends (prd.md §13.2, §13.4): their own queue so a campaign
+ * never delays a receipt, and throttled by the worker's rate limiter.
+ * Consent, unsubscribe and suppression are checked when each job runs,
+ * so an opt-out mid-campaign takes effect for every send not yet made.
+ */
+export const marketingEmailJobSchema = z.discriminatedUnion("templateKey", [
+  /** `period` = the nudge number since the user's last activity (1–3), part of the key. */
+  z.object({ templateKey: z.literal("inactive_nudge"), userId: z.uuid(), activeAtMs: z.number().int(), nudge: z.number().int().min(1).max(3) }),
+  z.object({ templateKey: z.literal("new_features"), userId: z.uuid(), campaignId: z.uuid() }),
+]);
+export type MarketingEmailJob = z.infer<typeof marketingEmailJobSchema>;
+
+export function marketingIdempotencyKey(job: MarketingEmailJob): string {
+  switch (job.templateKey) {
+    case "inactive_nudge":
+      // One per inactivity spell and nudge number: signing in starts a new spell.
+      return `inactive_nudge:${job.userId}:${job.activeAtMs}:${job.nudge}`;
+    case "new_features":
+      return `campaign:${job.campaignId}:${job.userId}`;
+  }
+}
+
+export const MARKETING_EMAIL_JOB_OPTIONS: JobsOptions = {
+  attempts: 3,
+  backoff: { type: "exponential", delay: 30_000 },
+  removeOnComplete: { age: 7 * 24 * 3600 },
+  removeOnFail: { age: 30 * 24 * 3600 },
+};
+
+/** Sends per minute across all workers (BullMQ limiter). Set below the SMTP provider's limit (prd.md §13.7). */
+export function campaignRatePerMinute(env: NodeJS.ProcessEnv = process.env): number {
+  const n = Number(env.EMAIL_CAMPAIGN_PER_MINUTE);
+  return Number.isInteger(n) && n > 0 ? n : 60;
+}
+
+export function createMarketingEmailQueue(connection: IORedis): Queue<MarketingEmailJob> {
+  return new Queue<MarketingEmailJob>(QUEUE_NAMES.emailMarketing, { connection });
+}
+
+export async function enqueueMarketingEmails(queue: Pick<Queue<MarketingEmailJob>, "addBulk">, jobs: MarketingEmailJob[]): Promise<number> {
+  const data = jobs.map((j) => marketingEmailJobSchema.parse(j));
+  for (let i = 0; i < data.length; i += 500) {
+    await queue.addBulk(
+      data.slice(i, i + 500).map((d) => ({ name: d.templateKey, data: d, opts: { ...MARKETING_EMAIL_JOB_OPTIONS, jobId: marketingIdempotencyKey(d).replaceAll(":", "-") } })),
+    );
+  }
+  return data.length;
 }
 
 // --- Resume extraction ---------------------------------------------------
@@ -311,6 +389,7 @@ let transactionalEmailQueue: Queue<TransactionalEmailJob> | undefined;
 let extractionQueue: Queue<ExtractionJob> | undefined;
 let aiQueue: Queue<AiQueueJob> | undefined;
 let pdfQueue: Queue<PdfJob> | undefined;
+let marketingQueue: Queue<MarketingEmailJob> | undefined;
 
 /** One Redis connection shared by every producer queue in this process (web app). */
 function producer(): IORedis {
@@ -326,6 +405,11 @@ export function getTransactionalEmailQueue(): Queue<TransactionalEmailJob> {
 export function getAiQueue(): Queue<AiQueueJob> {
   aiQueue ??= createAiQueue(producer());
   return aiQueue;
+}
+
+export function getMarketingEmailQueue(): Queue<MarketingEmailJob> {
+  marketingQueue ??= createMarketingEmailQueue(producer());
+  return marketingQueue;
 }
 
 export function getPdfQueue(): Queue<PdfJob> {

@@ -77,6 +77,7 @@ export async function POST(req: Request) {
   const result = await createUserFromClerkWebhook(getDb(), {
     clerkUserId: event.data.id,
     email,
+    firstName: event.data.first_name,
   });
 
   if (result.created) {
