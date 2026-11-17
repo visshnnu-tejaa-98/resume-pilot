@@ -200,3 +200,18 @@ export {
   type ScoringStatus,
   type StartScoringResult,
 } from "./scoring";
+export {
+  DEFAULT_TEMPLATE_KEY,
+  getPdfExportStatus,
+  PDF_FAILED_MESSAGE,
+  PdfExportError,
+  pdfFileName,
+  pdfJobId,
+  processPdfExport,
+  requestPdfExport,
+  resolvePdfTarget,
+  type PdfExportStatus,
+  type PdfJobPayload,
+  type PdfProcessDeps,
+  type ProcessPdfResult,
+} from "./pdf";

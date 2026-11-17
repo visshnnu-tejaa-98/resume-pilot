@@ -39,7 +39,7 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueuePdfExport, getPdfQueue, isPdfJobFailed, enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import { SCORING_METHOD_VERSION } from "@resume-pilot/ai";
 import {
@@ -55,6 +55,9 @@ import {
   type StartScoringResult,
   deleteVersion,
   setVersionTemplate,
+  getPdfExportStatus,
+  PdfExportError,
+  requestPdfExport,
   duplicateVersion,
   estimateGeneration,
   GenerationError,
@@ -112,6 +115,9 @@ function toTRPCError(err: unknown): never {
   }
   if (err instanceof ScoringError) {
     throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "CONFLICT", message: err.message, cause: err });
+  }
+  if (err instanceof PdfExportError) {
+    throw new TRPCError({ code: "NOT_FOUND", message: err.message, cause: err });
   }
   if (err instanceof VersionError) {
     throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "BAD_REQUEST", message: err.message, cause: err });
@@ -448,6 +454,19 @@ export const appRouter = router({
     duplicate: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => duplicateVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
     delete: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => deleteVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
     restore: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => restoreVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    /** Free PDF download (§10.3): cached file → signed URL now; otherwise a render job to poll with pdfStatus. */
+    exportPdf: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) =>
+      requestPdfExport(ctx.db, { userId: ctx.user.id, ...input }, {
+        signUrl: (f) => getStorage().getSignedUrl(f),
+        enqueue: (job, jobId) => enqueuePdfExport(getPdfQueue(), job, jobId),
+      }).catch(toTRPCError),
+    ),
+    pdfStatus: authProcedure.input(z.object({ versionId: z.uuid() })).query(({ ctx, input }) =>
+      getPdfExportStatus(ctx.db, { userId: ctx.user.id, ...input }, {
+        signUrl: (f) => getStorage().getSignedUrl(f),
+        jobFailed: (jobId) => isPdfJobFailed(getPdfQueue(), jobId),
+      }).catch(toTRPCError),
+    ),
   }),
 
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */

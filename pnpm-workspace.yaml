@@ -6,6 +6,8 @@ allowBuilds:
   tesseract.js: false
   esbuild: true
   msgpackr-extract: true
+  # Downloads the Chromium build Puppeteer pins (PDF export, m9).
+  puppeteer: true
 minimumReleaseAgeExclude:
   - "@turbo/darwin-64@2.11.11"
   - "@turbo/darwin-arm64@2.11.11"

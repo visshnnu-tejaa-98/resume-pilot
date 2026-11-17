@@ -20,6 +20,8 @@ import {
   transactionalEmailJobSchema,
   type ExtractionJob,
   type TransactionalEmailJob,
+  pdfJobSchema,
+  type PdfJob,
 } from "@resume-pilot/queue";
 import {
   analyzeJobDescription,
@@ -52,7 +54,10 @@ import {
   type StructuringDeps,
   type EmailProcessContext,
   type EmailProcessResult,
+  processPdfExport,
+  type PdfProcessDeps,
 } from "@resume-pilot/services";
+import { closeBrowser, renderResumePdf } from "./pdf";
 import { UnrecoverableError, Worker, type Job } from "bullmq";
 
 export const REDIS_URL = redisUrlFromEnv();
@@ -352,6 +357,37 @@ export function createAiWorker(db: Database): Worker {
   return worker;
 }
 
+// --- PDF export (prd.md §10.3) -------------------------------------------
+
+/** Turns a PDF job into a processPdfExport call. Exported for tests. */
+export async function handlePdfJob(job: Pick<Job<PdfJob>, "data">, deps: { db: Database } & PdfProcessDeps) {
+  const data = pdfJobSchema.parse(job.data);
+  return processPdfExport(deps.db, data, deps);
+}
+
+export function createPdfWorker(db: Database): Worker {
+  const worker = new Worker<PdfJob>(
+    QUEUE_NAMES.pdf,
+    async (job) => {
+      const outcome = await handlePdfJob(job, {
+        db,
+        render: renderResumePdf,
+        upload: ({ userId, data }) => getStorage().uploadFile({ userId, kind: "pdf", data, extension: "pdf" }),
+        deleteFile: (id) => getStorage().deleteFile(id),
+      });
+      console.log(`[worker] pdf ${job.data.versionId}: ${outcome.status}`);
+      return outcome;
+    },
+    // Each render holds a Chromium tab; a few at a time per instance.
+    { connection: createRedisConnection(REDIS_URL), concurrency: 3 },
+  );
+  worker.on("failed", (job, err) => {
+    console.error(`[worker] pdf ${job?.data.versionId} attempt ${job?.attemptsMade} failed:`, err.message);
+  });
+  worker.on("error", (err) => console.error("[worker] pdf worker error:", err.message));
+  return worker;
+}
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -367,6 +403,7 @@ async function main() {
     createMaintenanceWorker(db),
     createExtractionWorker(db),
     createAiWorker(db),
+    createPdfWorker(db),
   ];
 
   const maintenanceConnection = createRedisConnection(REDIS_URL);
@@ -376,13 +413,14 @@ async function main() {
   await maintenanceConnection.quit();
 
   console.log(
-    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction, QUEUE_NAMES.ai].map((q) => `"${q}"`).join(", ")}`,
+    `[worker] listening on queues ${[QUEUE_NAMES.emailTransactional, QUEUE_NAMES.maintenance, QUEUE_NAMES.extraction, QUEUE_NAMES.ai, QUEUE_NAMES.pdf].map((q) => `"${q}"`).join(", ")}`,
   );
 
   const shutdown = async () => {
     console.log("[worker] shutting down...");
     await Promise.all(workers.map((w) => w.close()));
     await (await ocrEngine?.catch(() => undefined))?.terminate();
+    await closeBrowser();
     await db.$client.end();
     process.exit(0);
   };

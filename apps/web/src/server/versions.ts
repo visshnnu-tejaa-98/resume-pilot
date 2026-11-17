@@ -1,6 +1,6 @@
 import "server-only";
 import { SCORING_METHOD_VERSION, type StoredReport } from "@resume-pilot/ai";
-import { currentReport, getGenerationStatus, getJobDescription, getVersion, listJobDescriptions, listVersionReports, type GenerationMeta } from "@resume-pilot/services";
+import { pdfFileName, currentReport, getGenerationStatus, getJobDescription, getVersion, listJobDescriptions, listVersionReports, type GenerationMeta } from "@resume-pilot/services";
 import type { Provenance } from "@resume-pilot/validators/resume";
 import { DEMO_ID, demoCompare, demoReport } from "@/features/versions/demo";
 import type { AtsReportView, CompareView, GenerationView, VersionView } from "@/features/versions/types";
@@ -60,7 +60,7 @@ export async function loadVersion(userId: string, versionId: string): Promise<Ve
     sourceBulletTexts,
     gaps: meta.gaps ?? [],
     score: v.score === null ? null : { value: v.score, outdated: v.scoreOutdated },
-    fileName: `${[v.content.personalInfo.firstName, v.content.personalInfo.lastName, v.jobTitle].filter(Boolean).join("-").replace(/\s+/g, "-") || "resume"}.pdf`,
+    fileName: pdfFileName(v.content, v.jobTitle),
   };
 }
 

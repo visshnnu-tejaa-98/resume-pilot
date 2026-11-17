@@ -18,6 +18,8 @@ export const QUEUE_NAMES = {
   maintenance: "maintenance",
   /** Paid AI actions run under a credit hold (JD analysis; later generation, scoring). */
   ai: "ai-jobs",
+  /** Free PDF export: Puppeteer render + ImageKit upload (prd.md §10.3). */
+  pdf: "pdf-export",
 } as const;
 
 /** Maintenance job names, each run on a schedule by the worker. */
@@ -256,12 +258,51 @@ export async function enqueueJdAnalysis(
   return addUniqueJob(queue, "jd-analysis", data, { ...AI_JOB_OPTIONS, jobId: `jd-analysis-${data.aiJobId}` });
 }
 
+// --- PDF export ---------------------------------------------------------------
+
+/** One render of one version in one template at one content hash (prd.md §10.3). */
+export const pdfJobSchema = z.object({ versionId: z.uuid(), templateId: z.uuid(), contentHash: z.string().min(16).max(128) });
+export type PdfJob = z.infer<typeof pdfJobSchema>;
+
+/** Free and user-waited: one quick retry for a browser/storage blip. */
+export const PDF_JOB_OPTIONS: JobsOptions = {
+  attempts: 2,
+  backoff: { type: "fixed", delay: 3_000 },
+  removeOnComplete: { age: 24 * 3600 },
+  removeOnFail: { age: 7 * 24 * 3600 },
+};
+
+export function createPdfQueue(connection: IORedis): Queue<PdfJob> {
+  return new Queue<PdfJob>(QUEUE_NAMES.pdf, { connection });
+}
+
+/**
+ * `jobId` comes from the service (`pdfJobId`): repeated clicks while a
+ * render runs collapse into one job; a failed render is retried; a
+ * completed one is replaced (its cached file is checked first anyway).
+ */
+export async function enqueuePdfExport(
+  queue: Pick<Queue<PdfJob>, "add" | "getJob">,
+  job: PdfJob,
+  jobId: string,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = pdfJobSchema.parse(job);
+  return addUniqueJob(queue, "render", data, { ...PDF_JOB_OPTIONS, jobId }, true);
+}
+
+/** True when this exact render exhausted its attempts. */
+export async function isPdfJobFailed(queue: Pick<Queue<PdfJob>, "getJob">, jobId: string): Promise<boolean> {
+  const job = await queue.getJob(jobId);
+  return job ? job.isFailed() : false;
+}
+
 // --- Process-wide producers ------------------------------------------------
 
 let producerConnection: IORedis | undefined;
 let transactionalEmailQueue: Queue<TransactionalEmailJob> | undefined;
 let extractionQueue: Queue<ExtractionJob> | undefined;
 let aiQueue: Queue<AiQueueJob> | undefined;
+let pdfQueue: Queue<PdfJob> | undefined;
 
 /** One Redis connection shared by every producer queue in this process (web app). */
 function producer(): IORedis {
@@ -277,6 +318,11 @@ export function getTransactionalEmailQueue(): Queue<TransactionalEmailJob> {
 export function getAiQueue(): Queue<AiQueueJob> {
   aiQueue ??= createAiQueue(producer());
   return aiQueue;
+}
+
+export function getPdfQueue(): Queue<PdfJob> {
+  pdfQueue ??= createPdfQueue(producer());
+  return pdfQueue;
 }
 
 export function getExtractionQueue(): Queue<ExtractionJob> {

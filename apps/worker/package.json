@@ -8,7 +8,8 @@
     "start": "tsx src/index.ts",
     "build": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:visual": "playwright test"
   },
   "dependencies": {
     "@resume-pilot/ai": "workspace:*",
@@ -16,12 +17,21 @@
     "@resume-pilot/emails": "workspace:*",
     "@resume-pilot/file-processing": "workspace:*",
     "@resume-pilot/queue": "workspace:*",
+    "@resume-pilot/resume-templates": "workspace:*",
     "@resume-pilot/services": "workspace:*",
     "@resume-pilot/storage": "workspace:*",
-    "bullmq": "6.7.5"
+    "@resume-pilot/validators": "workspace:*",
+    "bullmq": "6.7.5",
+    "puppeteer": "25.16.0"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "1.1.0",
+    "@playwright/test": "1.64.1",
     "@types/node": "26.6.6",
+    "@types/pngjs": "6.0.5",
+    "pdfjs-dist": "6.4.299",
+    "pixelmatch": "8.0.0",
+    "pngjs": "7.0.0",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "vitest": "5.1.0"
