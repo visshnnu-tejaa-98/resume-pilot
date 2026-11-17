@@ -1,8 +1,11 @@
 import "server-only";
-import { getGenerationStatus, getVersion, type GenerationMeta } from "@resume-pilot/services";
+import { SCORING_METHOD_VERSION, type StoredReport } from "@resume-pilot/ai";
+import { currentReport, getGenerationStatus, getJobDescription, getVersion, listJobDescriptions, listVersionReports, type GenerationMeta } from "@resume-pilot/services";
 import type { Provenance } from "@resume-pilot/validators/resume";
 import { DEMO_ID, demoCompare, demoReport } from "@/features/versions/demo";
 import type { AtsReportView, CompareView, GenerationView, VersionView } from "@/features/versions/types";
+import { fmtRelative } from "@/lib/format";
+import { appRoutes } from "@/lib/routes";
 import { getDb } from "@/server/db";
 
 /**
@@ -85,12 +88,133 @@ export async function loadGeneration(userId: string, jobId: string): Promise<Gen
   };
 }
 
-export async function loadAtsReport(_userId: string, versionId: string): Promise<AtsReportView | null> {
-  if (isDemo(versionId)) return demoReport;
-  return null; // TODO(m7-ats-scoring)
+type ReportRecord = NonNullable<Awaited<ReturnType<typeof currentReport>>>;
+const jobName = (r: { companyName: string | null; jobTitle: string | null }) => [r.companyName, r.jobTitle].filter(Boolean).join(" · ") || "Untitled job";
+const versionName = (v: { kind: string; fileName: string | null; companyName: string | null; jobTitle: string | null }) =>
+  v.kind === "original" ? `${v.fileName ?? "Resume"} · Original` : [v.companyName, v.jobTitle].filter(Boolean).join(" · ") || "Tailored version";
+
+/** Stored report (ai/scoring StoredReport) → the report screen. Every matched keyword links to its resume line. */
+function toReportView(versionId: string, title: string, r: ReportRecord, history: ReportRecord[]): AtsReportView {
+  const rep = r.report as StoredReport;
+  const dims = r.breakdown as { label: string; weightPct: number; points: number; max: number }[];
+  const reqs = rep.requirements;
+  const matched = reqs
+    .filter((q) => q.status !== "missing" && q.evidence.length)
+    .flatMap((q) => (q.keywordsFound.length ? q.keywordsFound : [q.keywords[0] ?? q.text]).map((k) => ({ keyword: k, evidence: q.evidence[0]!.line, href: `${appRoutes.version(versionId)}#item-${q.evidence[0]!.id}` })));
+  const uniq = [...new Map(matched.map((m) => [m.keyword.toLowerCase(), m])).values()];
+  const missing = reqs
+    .filter((q) => q.status !== "matched")
+    .map((q) => ({ keyword: q.keywordsMissing[0] ?? q.keywords[0] ?? q.text, priority: q.priority === "required" ? ("Required" as const) : ("Preferred" as const), why: q.reason || q.text, partial: q.status === "partial" }));
+  const count = (p: string) => {
+    const xs = reqs.filter((q) => q.priority === p);
+    return { all: xs.length, hit: xs.filter((q) => q.status === "matched").length, part: xs.filter((q) => q.status === "partial").length };
+  };
+  const req = count("required");
+  const pref = count("preferred");
+  const failed = rep.checks.filter((c) => !c.passed);
+  return {
+    versionId,
+    title,
+    subtitle: `Against ${jobName(r)} · scored ${fmtRelative(r.createdAt).toLowerCase()}`,
+    jdId: r.jdId,
+    outdated: r.outdated,
+    score: r.overallScore,
+    band: rep.band,
+    dimensions: dims.map((d) => ({ label: d.label, weightPct: d.weightPct, value: d.points, max: d.max })),
+    summary: rep.assessment,
+    matched: uniq,
+    matchedTotal: uniq.length,
+    missing,
+    skillStats: [
+      { label: "Required requirements", value: `${req.hit} / ${req.all}`, sub: req.part ? `${req.part} partly met` : "met in full" },
+      { label: "Preferred requirements", value: `${pref.hit} / ${pref.all}`, sub: pref.part ? `${pref.part} partly met` : "met in full" },
+      { label: "Experience", value: `${rep.years.toFixed(1)} yrs`, sub: rep.minYears ? `job asks for ${rep.minYears}+` : "no minimum stated" },
+      { label: "Format checks", value: `${rep.checks.length - failed.length} / ${rep.checks.length}`, sub: failed.length ? failed.map((c) => c.label).join(", ") : "all passed" },
+    ],
+    recommendations: rep.recommendations.map((x) => ({ title: x.title, body: x.detail })),
+    history: history.map((h) => ({ when: fmtRelative(h.createdAt), note: `${jobName(h)}${h.outdated ? " · earlier content" : ""}`, score: h.overallScore })),
+  };
 }
 
-export async function loadCompare(_userId: string, versionId: string): Promise<CompareView | null> {
-  if (isDemo(versionId)) return demoCompare;
-  return null; // TODO(m7-ats-scoring)
+export interface AtsReportPage {
+  versionId: string;
+  title: string;
+  jdId: string | null;
+  jobs: { id: string; name: string }[];
+  report: AtsReportView | null;
+}
+
+/** Report for a version + JD (default: the version's own JD, else the latest scored one). */
+export async function loadAtsReport(userId: string, versionId: string, q: { jd?: string } = {}): Promise<AtsReportPage | null> {
+  if (isDemo(versionId)) return { versionId, title: demoReport.title, jdId: DEMO_ID, jobs: [], report: demoReport };
+  if (!UUID.test(versionId)) return null;
+  const db = getDb();
+  const v = await getVersion(db, { userId, versionId }).catch(() => null);
+  if (!v) return null;
+  const [history, jds] = await Promise.all([listVersionReports(db, { userId, versionId }), listJobDescriptions(db, userId)]);
+  const jobs = jds.map((j) => ({ id: j.id, name: jobName(j) }));
+  const jdId = (q.jd && jobs.some((j) => j.id === q.jd) ? q.jd : null) ?? v.jdId ?? history[0]?.jdId ?? null;
+  const title = versionName(v);
+  const forJd = history.filter((h) => h.jdId === jdId);
+  const latest = forJd[0];
+  return { versionId, title, jdId, jobs, report: latest ? toReportView(versionId, title, latest, forJd) : null };
+}
+
+export type ComparePage =
+  | { ready: true; view: CompareView }
+  | { ready: false; versionId: string; aVersionId: string; jdId: string; aLabel: string; bLabel: string; jobLabel: string };
+
+/** §9.4: A = parent/original (or ?a), B = this version, against the version's JD (or ?jd). */
+export async function loadCompare(userId: string, versionId: string, q: { a?: string; jd?: string } = {}): Promise<ComparePage | null> {
+  if (isDemo(versionId)) return { ready: true, view: demoCompare };
+  if (!UUID.test(versionId)) return null;
+  const db = getDb();
+  const b = await getVersion(db, { userId, versionId }).catch(() => null);
+  if (!b) return null;
+  const aId = q.a && UUID.test(q.a) ? q.a : b.parentVersionId;
+  const a = aId ? await getVersion(db, { userId, versionId: aId }).catch(() => null) : null;
+  const jdId = q.jd && UUID.test(q.jd) ? q.jd : b.jdId;
+  if (!a || !jdId) return null;
+
+  const [ra, rb] = await Promise.all([
+    currentReport(db, { userId, versionId: a.id, jdId, methodVersion: SCORING_METHOD_VERSION }).catch(() => null),
+    currentReport(db, { userId, versionId: b.id, jdId, methodVersion: SCORING_METHOD_VERSION }).catch(() => null),
+  ]);
+  const aLabel = versionName(a);
+  const bLabel = versionName(b);
+  if (!ra || !rb) {
+    const jd = await getJobDescription(db, { userId, jdId }).catch(() => null);
+    if (!jd) return null;
+    return { ready: false, versionId, aVersionId: a.id, jdId, aLabel, bLabel, jobLabel: jobName(jd) };
+  }
+
+  const repA = ra.report as StoredReport;
+  const repB = rb.report as StoredReport;
+  const dimsA = ra.breakdown as { label: string; points: number; max: number }[];
+  const dimsB = rb.breakdown as { label: string; points: number; max: number }[];
+  const found = (r: StoredReport) => new Set(r.requirements.filter((x) => x.status !== "missing").flatMap((x) => x.keywordsFound.map((k) => k.toLowerCase())));
+  const inA = found(repA);
+  const gained = [...new Set(repB.requirements.filter((x) => x.status !== "missing").flatMap((x) => x.keywordsFound).filter((k) => !inA.has(k.toLowerCase())))];
+
+  // One rewritten bullet, original vs tailored, from B's provenance.
+  const bv = await loadVersion(userId, versionId);
+  const bulletText = new Map([...b.content.workExperience, ...b.content.projects].flatMap((x) => x.bullets.map((bl) => [bl.id, bl.text] as const)));
+  const firstDiff = Object.entries(bv?.sourceBulletTexts ?? {}).find(([id]) => bulletText.has(id));
+
+  return {
+    ready: true,
+    view: {
+      versionId,
+      aVersionId: a.id,
+      jdId,
+      a: { label: aLabel, score: ra.overallScore },
+      b: { label: bLabel, score: rb.overallScore },
+      jobLabel: jobName(rb),
+      free: true,
+      rows: dimsB.map((d, i) => ({ label: d.label, a: dimsA[i]?.points ?? 0, b: d.points, max: d.max })),
+      gained,
+      stillMissing: repB.requirements.filter((x) => x.status !== "matched").map((x) => ({ keyword: x.keywordsMissing[0] ?? x.keywords[0] ?? x.text, partial: x.status === "partial" })),
+      bulletDiff: firstDiff ? { original: firstDiff[1], tailored: bulletText.get(firstDiff[0])! } : { original: "", tailored: "" },
+    },
+  };
 }

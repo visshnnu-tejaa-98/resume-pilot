@@ -58,9 +58,10 @@ export const atsReports = pgTable(
     versionId: uuid("version_id")
       .notNull()
       .references(() => resumeVersions.id, { onDelete: "cascade" }),
+    // Reports go with their JD (and the user's account) — otherwise deleting a user fails.
     jdId: uuid("jd_id")
       .notNull()
-      .references(() => jobDescriptions.id),
+      .references(() => jobDescriptions.id, { onDelete: "cascade" }),
     contentHash: text("content_hash").notNull(),
     methodVersion: text("method_version").notNull(),
     overallScore: integer("overall_score").notNull(),

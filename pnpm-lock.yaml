@@ -50,6 +50,9 @@ importers:
       '@react-email/render':
         specifier: 2.3.1
         version: 2.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@resume-pilot/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@resume-pilot/credits':
         specifier: workspace:*
         version: link:../../packages/credits
@@ -402,6 +405,9 @@ importers:
 
   packages/trpc:
     dependencies:
+      '@resume-pilot/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@resume-pilot/credits':
         specifier: workspace:*
         version: link:../credits

@@ -107,12 +107,13 @@ export function CompareScores({ c }: { c: CompareView }) {
               </Chip>
             ))}
           </div>
-          <TextLink href={appRoutes.versionReport(c.versionId)} className="text-sm">
+          <TextLink href={appRoutes.versionReport(c.versionId, { jd: c.jdId })} className="text-sm">
             See recommendations
           </TextLink>
         </section>
       </div>
 
+      {c.bulletDiff.original ? (
       <section className={cn(card, "flex flex-col gap-3 p-5")}>
         <h2 className="m-0 font-display text-lg font-bold">What changed in one bullet</h2>
         <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))" }}>
@@ -127,6 +128,7 @@ export function CompareScores({ c }: { c: CompareView }) {
         </div>
         <span className="text-[13px] text-text-2">Same role, same facts. The fact check confirmed nothing was added.</span>
       </section>
+      ) : null}
     </>
   );
 }

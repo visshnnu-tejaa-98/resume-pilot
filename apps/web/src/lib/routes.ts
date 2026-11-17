@@ -30,8 +30,14 @@ export const appRoutes = {
   job: (jdId: string) => `/jobs/${jdId}`,
   version: (versionId: string) => `/versions/${versionId}`,
   versionPreview: (versionId: string) => `/versions/${versionId}/preview`,
-  versionReport: (versionId: string) => `/versions/${versionId}/report`,
-  versionCompare: (versionId: string) => `/versions/${versionId}/compare`,
+  versionReport: (versionId: string, q: { jd?: string; job?: string } = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter((e): e is [string, string] => !!e[1])).toString();
+    return `/versions/${versionId}/report${qs ? `?${qs}` : ""}`;
+  },
+  versionCompare: (versionId: string, q: { jd?: string; a?: string } = {}) => {
+    const qs = new URLSearchParams(Object.entries(q).filter((e): e is [string, string] => !!e[1])).toString();
+    return `/versions/${versionId}/compare${qs ? `?${qs}` : ""}`;
+  },
   generation: (jobId: string) => `/generate/${jobId}`,
   paymentResult: (orderId: string) => `/wallet/payments/${orderId}`,
 } as const;

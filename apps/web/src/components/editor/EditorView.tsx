@@ -84,7 +84,7 @@ function Editor({ version }: { version: VersionView }) {
         const original = version.sourceBulletTexts[b.id];
         const showing = showOriginal.has(b.id);
         return (
-          <div key={b.id} className="flex flex-col gap-1.5 rounded-lg bg-surface-2 p-3">
+          <div key={b.id} id={`item-${b.id}`} className="flex scroll-mt-24 flex-col gap-1.5 rounded-lg bg-surface-2 p-3 target:ring-2 target:ring-accent">
             <div className="flex items-start gap-2">
               <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" className="mt-2.5 flex-none text-border-strong">
                 <path d={GRIP_PATH} stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />

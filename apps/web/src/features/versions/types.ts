@@ -65,13 +65,14 @@ export interface AtsReportView {
   versionId: string;
   title: string;
   subtitle: string;
+  jdId: string;
   outdated: boolean;
-  rescoreEstimate: number;
   score: number;
   band: "Strong match" | "Good match" | "Needs work";
   dimensions: AtsDimension[];
   summary: string;
-  matched: { keyword: string; evidence: string }[];
+  /** Each keyword links to the resume line that proves it (editor anchor). */
+  matched: { keyword: string; evidence: string; href: string }[];
   matchedTotal: number;
   missing: { keyword: string; priority: "Required" | "Preferred"; why: string; partial: boolean }[];
   skillStats: { label: string; value: string; sub: string }[];
@@ -81,6 +82,8 @@ export interface AtsReportView {
 
 export interface CompareView {
   versionId: string;
+  aVersionId: string;
+  jdId: string;
   a: { label: string; score: number };
   b: { label: string; score: number };
   jobLabel: string;

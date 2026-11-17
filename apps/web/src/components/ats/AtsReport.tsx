@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/app/PageHeader";
-import { Button, ButtonLink, TextLink } from "@/components/ui/Button";
+import { ScoreButton } from "@/components/ats/ScoreRunner";
+import { ButtonLink, TextLink } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Chip } from "@/components/ui/Chip";
 import { ScoreRing } from "@/components/ui/ScoreRing";
@@ -24,13 +25,10 @@ export function AtsReport({ r }: { r: AtsReportView }) {
         subtitle={r.subtitle}
         actions={
           <>
-            <ButtonLink href={appRoutes.versionCompare(r.versionId)} variant="outline" className="h-[42px] px-4 text-sm">
+            <ButtonLink href={appRoutes.versionCompare(r.versionId, { jd: r.jdId })} variant="outline" className="h-[42px] px-4 text-sm">
               Compare with original
             </ButtonLink>
-            {/* Scoring jobs arrive with m7; the estimate→hold→capture flow gates this button. */}
-            <Button className="h-[42px] px-[18px] text-sm" disabled title="Scoring opens soon">
-              Re-score · up to {r.rescoreEstimate}
-            </Button>
+            <ScoreButton versionId={r.versionId} jdId={r.jdId} label="Re-score" className="h-[42px] px-[18px] text-sm" />
           </>
         }
       />
@@ -108,7 +106,9 @@ export function AtsReport({ r }: { r: AtsReportView }) {
               <Chip tone="good" className="self-start px-[9px] py-1 font-semibold">
                 {m.keyword}
               </Chip>
-              <span className="text-[13px] leading-normal text-text-2">“{m.evidence}”</span>
+              <Link href={m.href} className="text-[13px] leading-normal text-text-2 underline-offset-2 hover:text-text hover:underline">
+                “{m.evidence}”
+              </Link>
             </div>
           ))}
         </section>

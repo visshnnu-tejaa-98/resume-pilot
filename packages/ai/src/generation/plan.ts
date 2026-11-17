@@ -1,4 +1,5 @@
-import { BUILT_IN_SECTIONS, strictify, type JsonSchema } from "@resume-pilot/validators/resume";
+import { BUILT_IN_SECTIONS } from "@resume-pilot/validators/resume";
+import { strictResponseFormat } from "../strict-schema";
 import { z } from "zod";
 
 /**
@@ -38,23 +39,8 @@ export const generationPlanSchema = z.object({
 
 export type GenerationPlan = z.infer<typeof generationPlanSchema>;
 
-const STRIP = ["maxItems", "minItems", "minimum", "maximum", "pattern"];
-
-function strip(node: JsonSchema): JsonSchema {
-  const out: JsonSchema = {};
-  for (const [k, v] of Object.entries(node)) {
-    if (STRIP.includes(k)) continue;
-    if (k === "properties") out.properties = Object.fromEntries(Object.entries(v as Record<string, JsonSchema>).map(([n, p]) => [n, strip(p)]));
-    else if (k === "items") out.items = strip(v as JsonSchema);
-    else if (k === "anyOf") out.anyOf = (v as JsonSchema[]).map(strip);
-    else out[k] = v;
-  }
-  return out;
-}
-
 export function generationPlanResponseFormat() {
-  const schema = z.toJSONSchema(generationPlanSchema, { target: "draft-7", io: "input", reused: "inline" }) as JsonSchema;
-  return { type: "json_schema" as const, name: "tailoring_plan", strict: true, schema: strip(strictify(schema)) };
+  return strictResponseFormat("tailoring_plan", generationPlanSchema);
 }
 
 export class PlanOutputError extends Error {

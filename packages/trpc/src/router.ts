@@ -39,9 +39,20 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueueExtraction, enqueueGeneration, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
+import { SCORING_METHOD_VERSION } from "@resume-pilot/ai";
 import {
+  currentReport,
+  estimateCompare,
+  estimateScoring,
+  getReport,
+  getScoringStatus,
+  listVersionReports,
+  ScoringError,
+  startCompare,
+  startScoring,
+  type StartScoringResult,
   deleteVersion,
   duplicateVersion,
   estimateGeneration,
@@ -97,6 +108,9 @@ function toTRPCError(err: unknown): never {
   if (err instanceof GenerationError) {
     const code = err.code === "not_found" ? "NOT_FOUND" : err.code === "not_ready" ? "PRECONDITION_FAILED" : "CONFLICT";
     throw new TRPCError({ code, message: err.message, cause: err });
+  }
+  if (err instanceof ScoringError) {
+    throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "CONFLICT", message: err.message, cause: err });
   }
   if (err instanceof VersionError) {
     throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "BAD_REQUEST", message: err.message, cause: err });
@@ -173,6 +187,18 @@ const adminPricingRouter = router({
     .input(createPricingConfigVersionInputSchema)
     .mutation(({ ctx, input }) => createPricingConfigVersion(ctx.db, ctx.user.id, input)),
 });
+
+/** Queues a started scoring run; on failure releases its holds so nothing is charged. */
+async function queueScoring(db: Parameters<typeof releaseHold>[0], r: StartScoringResult) {
+  if (r.status !== "running") return;
+  try {
+    await enqueueScoring(getAiQueue(), { aiJobId: r.aiJobId });
+  } catch (err) {
+    if (r.created) await releaseHold(db, { aiJobId: r.aiJobId, reason: "could not queue the scoring" });
+    if (r.analysisCreated && r.analysisAiJobId) await releaseHold(db, { aiJobId: r.analysisAiJobId, reason: "could not queue the scoring" });
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Couldn't start scoring. You weren't charged; please try again.", cause: err });
+  }
+}
 
 export const appRouter = router({
   health: publicProcedure.query(() => ({
@@ -351,6 +377,57 @@ export const appRouter = router({
       if (!s) throw new TRPCError({ code: "NOT_FOUND" });
       return s;
     }),
+  }),
+
+  /** ATS scoring — prd.md §9. Cached content + JD is free (16.2.6). */
+  scoring: router({
+    estimate: authProcedure
+      .input(z.object({ versionId: z.uuid(), jdId: z.uuid() }))
+      .query(({ ctx, input }) => estimateScoring(ctx.db, { userId: ctx.user.id, ...input, methodVersion: SCORING_METHOD_VERSION }).catch(toTRPCError)),
+    /** Confirm. A cache hit returns the report and charges nothing. */
+    start: authProcedure
+      .input(z.object({ versionId: z.uuid(), jdId: z.uuid(), confirmedCredits: z.number().int().nonnegative(), requestId: z.uuid() }))
+      .mutation(async ({ ctx, input }) => {
+        const r = await startScoring(ctx.db, { userId: ctx.user.id, ...input, methodVersion: SCORING_METHOD_VERSION }).catch(toTRPCError);
+        await queueScoring(ctx.db, r);
+        return r.status === "cached" ? { status: "cached" as const, reportId: r.reportId } : { status: "running" as const, aiJobId: r.aiJobId };
+      }),
+    status: authProcedure.input(z.object({ aiJobId: z.uuid() })).query(async ({ ctx, input }) => {
+      const s = await getScoringStatus(ctx.db, { userId: ctx.user.id, aiJobId: input.aiJobId });
+      if (!s) throw new TRPCError({ code: "NOT_FOUND" });
+      return s;
+    }),
+  }),
+
+  reports: router({
+    get: authProcedure.input(z.object({ reportId: z.uuid() })).query(async ({ ctx, input }) => {
+      const r = await getReport(ctx.db, { userId: ctx.user.id, reportId: input.reportId });
+      if (!r) throw new TRPCError({ code: "NOT_FOUND" });
+      return r;
+    }),
+    /** Score history for a version (§9.3). */
+    history: authProcedure
+      .input(z.object({ versionId: z.uuid(), jdId: z.uuid().optional() }))
+      .query(({ ctx, input }) => listVersionReports(ctx.db, { userId: ctx.user.id, ...input })),
+    current: authProcedure
+      .input(z.object({ versionId: z.uuid(), jdId: z.uuid() }))
+      .query(({ ctx, input }) => currentReport(ctx.db, { userId: ctx.user.id, ...input, methodVersion: SCORING_METHOD_VERSION }).catch(toTRPCError)),
+  }),
+
+  /** Original vs tailored (§9.4): only sides without a current report cost anything. */
+  compare: router({
+    estimate: authProcedure
+      .input(z.object({ aVersionId: z.uuid(), bVersionId: z.uuid(), jdId: z.uuid() }))
+      .query(({ ctx, input }) => estimateCompare(ctx.db, { userId: ctx.user.id, ...input, methodVersion: SCORING_METHOD_VERSION }).catch(toTRPCError)),
+    start: authProcedure
+      .input(z.object({ aVersionId: z.uuid(), bVersionId: z.uuid(), jdId: z.uuid(), confirmedCredits: z.number().int().nonnegative(), requestId: z.uuid() }))
+      .mutation(async ({ ctx, input }) => {
+        const r = await startCompare(ctx.db, { userId: ctx.user.id, ...input, methodVersion: SCORING_METHOD_VERSION }).catch(toTRPCError);
+        await queueScoring(ctx.db, r.a);
+        await queueScoring(ctx.db, r.b);
+        const view = (x: StartScoringResult) => (x.status === "cached" ? { status: "cached" as const, reportId: x.reportId } : { status: "running" as const, aiJobId: x.aiJobId });
+        return { a: view(r.a), b: view(r.b) };
+      }),
   }),
 
   /** Resume versions — prd.md §8.5, §8.6. Always the caller's own. */

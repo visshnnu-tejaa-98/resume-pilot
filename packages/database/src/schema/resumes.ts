@@ -82,7 +82,8 @@ export const resumeVersions = pgTable(
     // from. The `AnyPgColumn` return type avoids a circular
     // type-inference issue Drizzle has with self-references.
     parentVersionId: uuid("parent_version_id").references((): AnyPgColumn => resumeVersions.id),
-    jdId: uuid("jd_id").references(() => jobDescriptions.id),
+    // A version keeps its own content if its JD is deleted.
+    jdId: uuid("jd_id").references(() => jobDescriptions.id, { onDelete: "set null" }),
     contentHash: text("content_hash").notNull(),
     templateId: uuid("template_id").references(() => resumeTemplates.id),
     /**

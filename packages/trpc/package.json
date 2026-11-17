@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@resume-pilot/ai": "workspace:*",
     "@resume-pilot/credits": "workspace:*",
     "@resume-pilot/database": "workspace:*",
     "@resume-pilot/queue": "workspace:*",

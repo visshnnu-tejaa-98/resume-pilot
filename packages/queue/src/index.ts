@@ -218,8 +218,20 @@ export const AI_JOB_OPTIONS: JobsOptions = {
 export const generationJobSchema = z.object({ aiJobId: z.uuid() });
 export type GenerationJob = z.infer<typeof generationJobSchema>;
 
+/** ATS scoring (prd.md §9.1). Inputs live on the ai_jobs row. */
+export const scoringJobSchema = z.object({ aiJobId: z.uuid() });
+export type ScoringJob = z.infer<typeof scoringJobSchema>;
+
 /** Everything on the AI queue; the BullMQ job name says which. */
-export type AiQueueJob = JdAnalysisJob | GenerationJob;
+export type AiQueueJob = JdAnalysisJob | GenerationJob | ScoringJob;
+
+export async function enqueueScoring(
+  queue: Pick<Queue<AiQueueJob>, "add" | "getJob">,
+  job: ScoringJob,
+): Promise<"added" | "retried" | "replaced" | "exists"> {
+  const data = scoringJobSchema.parse(job);
+  return addUniqueJob(queue, "ats-scoring", data, { ...AI_JOB_OPTIONS, jobId: `ats-scoring-${data.aiJobId}` });
+}
 
 export function createAiQueue(connection: IORedis): Queue<AiQueueJob> {
   return new Queue<AiQueueJob>(QUEUE_NAMES.ai, { connection });

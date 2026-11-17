@@ -12,7 +12,7 @@ export const demoReport: AtsReportView = {
   title: "Acme Corp · Frontend Engineer",
   subtitle: "Tailored version vs Acme Corp · Frontend Engineer · scored today, 6:14 pm",
   outdated: true,
-  rescoreEstimate: 150,
+  jdId: DEMO_ID,
   score: 82,
   band: "Strong match",
   dimensions: [
@@ -25,10 +25,10 @@ export const demoReport: AtsReportView = {
   summary:
     "Your React, TypeScript and design-system experience covers most of what Acme asks for. The main gaps are GraphQL and Kubernetes, and CI/CD is only partly shown.",
   matched: [
-    { keyword: "React", evidence: "Lead development of Northwind’s React and TypeScript design system…" },
-    { keyword: "TypeScript", evidence: "Lead development of Northwind’s React and TypeScript design system…" },
-    { keyword: "Design systems", evidence: "Maintained the shared component library and its documentation." },
-    { keyword: "Accessibility", evidence: "Partner with product designers on tokens, theming and accessible components." },
+    { keyword: "React", evidence: "Lead development of Northwind’s React and TypeScript design system…", href: "#" },
+    { keyword: "TypeScript", evidence: "Lead development of Northwind’s React and TypeScript design system…", href: "#" },
+    { keyword: "Design systems", evidence: "Maintained the shared component library and its documentation.", href: "#" },
+    { keyword: "Accessibility", evidence: "Partner with product designers on tokens, theming and accessible components.", href: "#" },
   ],
   matchedTotal: 9,
   missing: [
@@ -55,6 +55,8 @@ export const demoReport: AtsReportView = {
 
 export const demoCompare: CompareView = {
   versionId: DEMO_ID,
+  aVersionId: DEMO_ID,
+  jdId: DEMO_ID,
   a: { label: "Asha Rao · Original", score: 61 },
   b: { label: "Acme Corp · Frontend Engineer", score: 82 },
   jobLabel: "Acme Corp · Frontend Engineer",

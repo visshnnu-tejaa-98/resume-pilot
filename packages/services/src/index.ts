@@ -180,3 +180,22 @@ export {
   VersionError,
   type GenerationMeta,
 } from "./versions";
+export {
+  currentReport,
+  estimateCompare,
+  estimateScoring,
+  getReport,
+  getScoringStatus,
+  listVersionReports,
+  processScoring,
+  ScoringError,
+  scoringInputSchema,
+  startCompare,
+  startScoring,
+  type AtsReportRecord,
+  type ProcessScoringResult,
+  type ScoreFn,
+  type ScoringEstimate,
+  type ScoringStatus,
+  type StartScoringResult,
+} from "./scoring";

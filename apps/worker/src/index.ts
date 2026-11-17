@@ -7,6 +7,8 @@ import {
   extractionJobSchema,
   getExtractionQueue,
   generationJobSchema,
+  scoringJobSchema,
+  type ScoringJob,
   jdAnalysisJobSchema,
   type AiQueueJob,
   type GenerationJob,
@@ -22,6 +24,8 @@ import {
 import {
   analyzeJobDescription,
   generateTailoredResume,
+  scoreResume,
+  SCORING_METHOD_VERSION,
   createOpenAIClient,
   structureResume,
   StructuringError,
@@ -36,6 +40,8 @@ import {
   findWalletMismatches,
   processExtraction,
   processGeneration,
+  processScoring,
+  type ScoreFn,
   processJdAnalysis,
   processStructuring,
   purgeDeletedVersions,
@@ -299,6 +305,16 @@ export async function handleGenerationJob(
   return processGeneration(deps.db, data, { generate: deps.generate, analyze: deps.analyze, isFinalAttempt });
 }
 
+/** Turns a scoring job into a processScoring call. Exported for tests. */
+export async function handleScoringJob(
+  job: Pick<Job<ScoringJob>, "data" | "attemptsMade" | "opts">,
+  deps: { db: Database; score: ScoreFn; analyze: JdAnalyzeFn },
+) {
+  const data = scoringJobSchema.parse(job.data);
+  const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+  return processScoring(deps.db, data, { score: deps.score, analyze: deps.analyze, isFinalAttempt, methodVersion: SCORING_METHOD_VERSION });
+}
+
 export function createAiWorker(db: Database): Worker {
   const analyze: JdAnalyzeFn = async (input) => {
     const r = await analyzeJobDescription(getOpenAI(), input);
@@ -307,10 +323,17 @@ export function createAiWorker(db: Database): Worker {
   // generateTailoredResume runs the deterministic grounding check (prd.md §8.3) and
   // throws GroundingFailedError after its one retry — nothing ungrounded is returned.
   const generate: GenerateFn = (input) => generateTailoredResume(getOpenAI(), input);
+  // AI judges evidence; the score is computed in code (prd.md §9.1).
+  const score: ScoreFn = (input) => scoreResume(getOpenAI(), input);
 
   const worker = new Worker<AiQueueJob>(
     QUEUE_NAMES.ai,
     async (job) => {
+      if (job.name === "ats-scoring") {
+        const outcome = await handleScoringJob(job as Job<ScoringJob>, { db, score, analyze });
+        console.log(`[worker] ats-scoring ${job.data.aiJobId}: ${outcome.status}`);
+        return outcome;
+      }
       if (job.name === "generation") {
         const outcome = await handleGenerationJob(job as Job<GenerationJob>, { db, generate, analyze });
         console.log(`[worker] generation ${job.data.aiJobId}: ${outcome.status}${outcome.status === "failed" ? ` (${outcome.reason})` : ""}`);

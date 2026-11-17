@@ -72,8 +72,13 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
     setConfirming(true);
     setConfirmError(null);
     try {
-      const r = await trpc.generation.start.mutate({ sourceVersionId: source, jdId: job, confirmedCredits: estimate.total, requestId });
-      router.push(appRoutes.generation(r.aiJobId));
+      if (tailor) {
+        const r = await trpc.generation.start.mutate({ sourceVersionId: source, jdId: job, confirmedCredits: estimate.total, requestId });
+        router.push(appRoutes.generation(r.aiJobId));
+      } else {
+        const r = await trpc.scoring.start.mutate({ versionId: source, jdId: job, confirmedCredits: estimate.total, requestId });
+        router.push(appRoutes.versionReport(source, { jd: job, job: r.status === "running" ? r.aiJobId : undefined }));
+      }
     } catch (err) {
       const msg = trpcErrorMessage(err);
       setConfirmError(msg);
@@ -185,16 +190,9 @@ export function GenerateView({ mode, sources, jobs, initialSource, initialJob, b
             <Button variant="ghost" className="h-11 px-[18px]" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            {tailor ? (
-              <Button className="h-11 px-5" disabled={!estimate?.ok || confirming || live < (estimate?.ok ? estimate.total : 0)} onClick={() => void confirm()}>
-                {confirming ? "Starting…" : "Confirm and generate"}
-              </Button>
-            ) : (
-              // Scoring jobs arrive with m7; nothing is held or charged until then.
-              <Button className="h-11 px-5" disabled title="Opening soon">
-                Confirm and score
-              </Button>
-            )}
+            <Button className="h-11 px-5" disabled={!estimate?.ok || confirming || live < (estimate?.ok ? estimate.total : 0)} onClick={() => void confirm()}>
+              {confirming ? "Starting…" : tailor ? "Confirm and generate" : estimate?.ok && estimate.cachedReportId ? "Open report · free" : "Confirm and score"}
+            </Button>
           </>
         }
       >

@@ -1,4 +1,4 @@
-import { getWalletPage, listJobDescriptions, listResumes } from "@resume-pilot/services";
+import { getWalletPage, listJobDescriptions, listResumes, listVersions } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -34,12 +34,15 @@ export default async function DashboardPage() {
     console.error("[dashboard] failed to apply signup code:", err);
   }
 
-  const [wallet, resumes, jobs, activity] = await Promise.all([
+  const [wallet, resumes, jobs, activity, versions] = await Promise.all([
     getAppWallet(user.id),
     listResumes(db, user.id),
     listJobDescriptions(db, user.id),
     getWalletPage(db, user.id, { limit: 5 }),
+    listVersions(db, user.id),
   ]);
+  const scored = versions.filter((v) => v.score !== null && !v.scoreOutdated).sort((a, b) => b.score! - a.score!);
+  const best = scored[0];
   const failed = resumes.find((r) => r.status === "failed");
   const ready = resumes.filter((r) => r.status === "ready").length;
 
@@ -67,7 +70,11 @@ export default async function DashboardPage() {
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))" }}>
         <StatCard hero label="Credit balance" value={fmtCredits(wallet.balance)} action={{ href: routes.wallet, label: "Add money" }} />
         <StatCard label="Resumes" value={resumes.length} sub={`${ready} ready to tailor`} />
-        <StatCard label="Best ATS score" value="—" sub="Score a version to see it here" />
+        <StatCard
+          label="Best ATS score"
+          value={best ? best.score! : "—"}
+          sub={best ? [best.companyName, best.jobTitle].filter(Boolean).join(" · ") || "Original resume" : "Score a version to see it here"}
+        />
         <StatCard label="Saved jobs" value={jobs.length} sub="Reusable for new versions" />
       </div>
 

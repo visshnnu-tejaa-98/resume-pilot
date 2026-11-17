@@ -1,4 +1,4 @@
-import { resumes, resumeVersions, type Database } from "@resume-pilot/database";
+import { atsReports, resumes, resumeVersions, type Database } from "@resume-pilot/database";
 import {
   extractionMetaSchema,
   resumeSchema,
@@ -7,7 +7,7 @@ import {
   type ExtractionMeta,
   type Resume,
 } from "@resume-pilot/validators/resume";
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { resumeContentHash } from "./structuring";
 
 /**
@@ -101,6 +101,12 @@ export async function saveOriginalReview(
       updatedAt: new Date(),
     })
     .where(eq(resumeVersions.id, original.id));
+  // §9.3: an edit makes any score of the old content outdated (history is kept).
+  const newHash = resumeContentHash(parsed.data);
+  await db
+    .update(atsReports)
+    .set({ status: "outdated" })
+    .where(and(eq(atsReports.versionId, original.id), ne(atsReports.contentHash, newHash)));
 
   return { unreviewed: unreviewedLowConfidence(meta), extractionMeta: meta };
 }
