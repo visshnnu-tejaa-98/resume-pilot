@@ -5,7 +5,7 @@ import { useState } from "react";
 import { ResumeDocument } from "@/components/resume/ResumeDocument";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Field";
-import { resumeToDoc } from "@/features/versions/doc";
+import { trpc } from "@/lib/trpc-client";
 import type { VersionView } from "@/features/versions/types";
 import { appRoutes } from "@/lib/routes";
 import { TEMPLATES, type TemplateName } from "@/stores/preferences-store";
@@ -18,6 +18,12 @@ import { TEMPLATES, type TemplateName } from "@/stores/preferences-store";
 export function PreviewView({ version }: { version: VersionView }) {
   const [template, setTemplate] = useState<TemplateName>(version.template);
   const [notice, setNotice] = useState(false);
+  const [pages, setPages] = useState(1);
+  const pick = (t: TemplateName) => {
+    setTemplate(t);
+    // Remember the choice on the version; the preview doesn't wait for it.
+    void trpc.versions.setTemplate.mutate({ versionId: version.id, template: t.toLowerCase() }).catch(() => undefined);
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-64px)] flex-col bg-canvas">
@@ -33,7 +39,7 @@ export function PreviewView({ version }: { version: VersionView }) {
         </strong>
         <label className="ml-auto flex items-center gap-2 text-sm text-text-2">
           Template
-          <Select fieldSize="sm" value={template} onChange={(e) => setTemplate(e.target.value as TemplateName)} className="h-[38px] w-auto bg-surface font-medium">
+          <Select fieldSize="sm" value={template} onChange={(e) => pick(e.target.value as TemplateName)} className="h-[38px] w-auto bg-surface font-medium">
             {TEMPLATES.map((t) => (
               <option key={t}>{t}</option>
             ))}
@@ -56,10 +62,10 @@ export function PreviewView({ version }: { version: VersionView }) {
         ) : null}
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[13px] text-text-2">
           <span className="font-mono">{version.fileName}</span>
-          <span>A4 · 1 page · selectable text · ATS-friendly single column</span>
+          <span>A4 · {pages} {pages === 1 ? "page" : "pages"} · selectable text · ATS-friendly single column</span>
           <span>Downloads are free</span>
         </div>
-        <ResumeDocument doc={resumeToDoc(version.content)} template={template} />
+        <ResumeDocument resume={version.content} template={template} onPages={setPages} className="max-w-full" />
       </div>
     </div>
   );

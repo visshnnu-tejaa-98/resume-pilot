@@ -11,6 +11,10 @@
   },
   "dependencies": {
     "@clerk/nextjs": "7.9.26",
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.1",
+    "@fontsource/space-grotesk": "^5.3.0",
     "@hookform/resolvers": "5.2.2",
     "@react-email/render": "2.3.1",
     "@resume-pilot/ai": "workspace:*",
@@ -19,6 +23,7 @@
     "@resume-pilot/emails": "workspace:*",
     "@resume-pilot/file-processing": "workspace:*",
     "@resume-pilot/queue": "workspace:*",
+    "@resume-pilot/resume-templates": "workspace:*",
     "@resume-pilot/services": "workspace:*",
     "@resume-pilot/storage": "workspace:*",
     "@resume-pilot/trpc": "workspace:*",

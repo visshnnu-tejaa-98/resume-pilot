@@ -54,6 +54,7 @@ import {
   startScoring,
   type StartScoringResult,
   deleteVersion,
+  setVersionTemplate,
   duplicateVersion,
   estimateGeneration,
   GenerationError,
@@ -437,8 +438,12 @@ export const appRouter = router({
     get: authProcedure.input(z.object({ versionId: z.uuid() })).query(({ ctx, input }) => getVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
     /** Hand edits are the user's own claims (§8.6); marks cached ATS scores outdated. */
     save: authProcedure
-      .input(z.object({ versionId: z.uuid(), content: z.unknown() }))
-      .mutation(({ ctx, input }) => saveVersionContent(ctx.db, { userId: ctx.user.id, versionId: input.versionId, content: input.content }).catch(toTRPCError)),
+      .input(z.object({ versionId: z.uuid(), content: z.unknown(), template: z.string().max(40).optional() }))
+      .mutation(({ ctx, input }) => saveVersionContent(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
+    /** Template choice only (also for the original, which isn't edited here). */
+    setTemplate: authProcedure
+      .input(z.object({ versionId: z.uuid(), template: z.string().max(40) }))
+      .mutation(({ ctx, input }) => setVersionTemplate(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
     /** No AI call, no charge. */
     duplicate: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => duplicateVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),
     delete: authProcedure.input(z.object({ versionId: z.uuid() })).mutation(({ ctx, input }) => deleteVersion(ctx.db, { userId: ctx.user.id, ...input }).catch(toTRPCError)),

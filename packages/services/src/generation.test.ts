@@ -12,7 +12,7 @@ import type { JdAnalyzeFn } from "./jd-analysis";
 import { saveOriginalReview } from "./review";
 import { resumeContentHash } from "./structuring";
 import { createUserFromClerkWebhook } from "./user";
-import { deleteVersion, duplicateVersion, getVersion, listVersions, purgeDeletedVersions, restoreVersion, saveVersionContent, VersionError } from "./versions";
+import { deleteVersion, duplicateVersion, getVersion, listVersions, purgeDeletedVersions, restoreVersion, saveVersionContent, setVersionTemplate, VersionError } from "./versions";
 
 const connectionString = process.env.DATABASE_URL;
 const SOURCE = RESUMES.frontend!;
@@ -194,6 +194,23 @@ describe.skipIf(!connectionString)("generation + versioning (real DB)", () => {
     const plan = { ...goodPlan(), skills: [{ category: "Frontend", items: ["React", "GraphQL"] }], gaps: [] };
     const second = await run(s, model(plan), v.id);
     expect(second.result.status).toBe("succeeded");
+  });
+
+  it("template choice (§10.2): saved per version, presentation only, copied by duplicate, unknown rejected", async () => {
+    const s = await setup();
+    const { result } = await run(s);
+    if (result.status !== "succeeded") throw new Error("expected success");
+    const before = await getVersion(db, { userId: s.userId, versionId: result.versionId });
+    expect(before.templateKey).toBeNull();
+    await setVersionTemplate(db, { userId: s.userId, versionId: before.id, template: "technical" });
+    const after = await getVersion(db, { userId: s.userId, versionId: before.id });
+    expect(after.templateKey).toBe("technical");
+    expect(resumeContentHash(after.content)).toBe(resumeContentHash(before.content));
+    const dup = await duplicateVersion(db, { userId: s.userId, versionId: before.id });
+    expect((await getVersion(db, { userId: s.userId, versionId: dup.versionId })).templateKey).toBe("technical");
+    await expect(setVersionTemplate(db, { userId: s.userId, versionId: before.id, template: "fancy" })).rejects.toBeInstanceOf(VersionError);
+    const other = await setup();
+    await expect(setVersionTemplate(db, { userId: other.userId, versionId: before.id, template: "modern" })).rejects.toBeInstanceOf(VersionError);
   });
 
   it("duplicate costs nothing; delete → restore within 30 days; expired restore fails; purge removes it", async () => {

@@ -7,6 +7,8 @@ import type { AtsReportView, CompareView, GenerationView, VersionView } from "@/
 import { fmtRelative } from "@/lib/format";
 import { appRoutes } from "@/lib/routes";
 import { getDb } from "@/server/db";
+import { TEMPLATE_NAMES, toTemplateKey } from "@resume-pilot/resume-templates";
+import type { TemplateName } from "@/stores/preferences-store";
 
 /**
  * Loaders for the version screens. Every one is scoped to `userId`
@@ -51,7 +53,7 @@ export async function loadVersion(userId: string, versionId: string): Promise<Ve
     company: v.companyName ?? (v.kind === "original" ? v.fileName : "Tailored resume"),
     role: v.jobTitle ?? (v.kind === "original" ? "Original" : ""),
     sourceLabel,
-    template: "Classic",
+    template: TEMPLATE_NAMES[toTemplateKey(v.templateKey)] as TemplateName,
     savedAt: v.updatedAt,
     content: v.content,
     provenance,

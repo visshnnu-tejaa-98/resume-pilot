@@ -10,25 +10,6 @@ import type { TemplateName } from "@/stores/preferences-store";
 
 export type BulletOrigin = "ai" | "user" | "original";
 
-export interface DocItem {
-  title?: string;
-  date?: string;
-  lines: string[];
-}
-
-export interface DocSection {
-  id: string;
-  heading: string;
-  items: DocItem[];
-}
-
-/** A resume laid out for rendering (preview / PDF). */
-export interface ResumeDoc {
-  name: string;
-  contact: string;
-  sections: DocSection[];
-}
-
 export interface VersionGap {
   requirementId: string | null;
   keyword: string;

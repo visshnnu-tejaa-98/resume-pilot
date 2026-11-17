@@ -176,6 +176,7 @@ export {
   purgeDeletedVersions,
   restoreVersion,
   saveVersionContent,
+  setVersionTemplate,
   VERSION_RESTORE_DAYS,
   VersionError,
   type GenerationMeta,

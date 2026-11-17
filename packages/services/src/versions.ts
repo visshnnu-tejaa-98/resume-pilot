@@ -1,4 +1,4 @@
-import { atsReports, jobDescriptions, resumes, resumeVersions, type Database } from "@resume-pilot/database";
+import { atsReports, jobDescriptions, resumes, resumeTemplates, resumeVersions, type Database } from "@resume-pilot/database";
 import { resumeSchema, type Resume } from "@resume-pilot/validators/resume";
 import { and, desc, eq, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { resumeContentHash } from "./structuring";
@@ -47,6 +47,8 @@ const cols = {
   parentVersionId: resumeVersions.parentVersionId,
   jdId: resumeVersions.jdId,
   generationMeta: resumeVersions.generationMeta,
+  /** Chosen template key (resume_templates.key); null = default (Classic). */
+  templateKey: sql<string | null>`(select ${resumeTemplates.key} from ${resumeTemplates} where ${resumeTemplates.id} = ${resumeVersions.templateId})`,
   deletedAt: resumeVersions.deletedAt,
   createdAt: resumeVersions.createdAt,
   updatedAt: resumeVersions.updatedAt,
@@ -102,8 +104,9 @@ export async function getVersion(db: Database, input: { userId: string; versionI
  * review screen (it also tracks extraction flags), so this is for
  * generated versions. Any cached ATS score becomes outdated (§9).
  */
-export async function saveVersionContent(db: Database, input: { userId: string; versionId: string; content: unknown }) {
+export async function saveVersionContent(db: Database, input: { userId: string; versionId: string; content: unknown; template?: string }) {
   const row = await owned(db, input.userId, input.versionId);
+  if (input.template !== undefined) await setVersionTemplate(db, { userId: input.userId, versionId: row.id, template: input.template });
   if (row.kind === "original") throw new VersionError("original", "Edit the original from its review screen");
   const parsed = resumeSchema.safeParse(input.content);
   if (!parsed.success) throw new VersionError("invalid", parsed.error.issues[0]?.message ?? "Invalid resume", { cause: parsed.error });
@@ -113,6 +116,18 @@ export async function saveVersionContent(db: Database, input: { userId: string; 
     await tx.update(atsReports).set({ status: "outdated" }).where(and(eq(atsReports.versionId, row.id), sql`${atsReports.contentHash} <> ${contentHash}`));
   });
   return { contentHash };
+}
+
+/**
+ * Pick the template (§10.2). Presentation only: content and its hash are
+ * untouched, so it's allowed on the original too and never outdates a score.
+ */
+export async function setVersionTemplate(db: Database, input: { userId: string; versionId: string; template: string }) {
+  const row = await owned(db, input.userId, input.versionId);
+  const [t] = await db.select({ id: resumeTemplates.id }).from(resumeTemplates).where(and(eq(resumeTemplates.key, input.template), eq(resumeTemplates.active, true)));
+  if (!t) throw new VersionError("invalid", "That template isn't available");
+  await db.update(resumeVersions).set({ templateId: t.id }).where(eq(resumeVersions.id, row.id));
+  return { template: input.template };
 }
 
 /** Duplicate: a copy with no AI call and no charge (§8.5). */
@@ -130,6 +145,7 @@ export async function duplicateVersion(db: Database, input: { userId: string; ve
       parentVersionId: row.id,
       jdId: row.jdId,
       contentHash: resumeContentHash(content),
+      templateId: sql`(select ${resumeTemplates.id} from ${resumeTemplates} where ${resumeTemplates.key} = ${row.templateKey})`,
       generationMeta: { gaps: meta.gaps ?? [], duplicatedFrom: row.id } satisfies GenerationMeta,
     })
     .returning({ id: resumeVersions.id });
