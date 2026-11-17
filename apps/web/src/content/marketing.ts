@@ -59,10 +59,10 @@ export const pricing = {
     "Comparing cached scores",
   ],
   actions: [
-    { name: "Job description analysis", cost: "~[N]", note: "Runs once per job description, then reused for free" },
-    { name: "Tailored resume generation", cost: "~[N]", note: "Creates a new version; your original is never changed" },
-    { name: "ATS score and report", cost: "~[N]", note: "Free again if the resume and job haven’t changed" },
-    { name: "Original vs tailored comparison", cost: "0 to 2 scores", note: "Only the scores that aren’t cached are charged" },
+    { name: "Job description analysis", type: "jd_analysis", cost: "Shown after launch", note: "Runs once per job description, then reused for free" },
+    { name: "Tailored resume generation", type: "generation", cost: "Shown after launch", note: "Creates a new version; your original is never changed" },
+    { name: "ATS score and report", type: "ats_scoring", cost: "Shown after launch", note: "Free again if the resume and job haven’t changed" },
+    { name: "Original vs tailored comparison", type: null, cost: "0 to 2 scores", note: "Only the scores that aren’t cached are charged" },
   ],
   howCharging: [
     { title: "See the estimate", body: "Before any paid action, a confirmation shows what will run, the credits it will use at most, and your balance after." },

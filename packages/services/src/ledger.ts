@@ -4,6 +4,7 @@ import {
   creditAccounts,
   creditHolds,
   creditLedger,
+  payments,
   type Database,
 } from "@resume-pilot/database";
 import { and, desc, eq, gt, sql } from "drizzle-orm";
@@ -269,6 +270,10 @@ export interface WalletHistoryEntry {
   balanceAfter: number;
   note: string | null;
   createdAt: Date;
+  /** What the row links to (§12.1): the version made or scored, the job analysed, or the top-up order. */
+  versionId: string | null;
+  jdId: string | null;
+  orderId: string | null;
 }
 
 export interface WalletActiveHold {
@@ -339,12 +344,16 @@ export async function getWalletPage(
       balanceAfter: creditLedger.balanceAfter,
       note: creditLedger.note,
       createdAt: creditLedger.createdAt,
+      versionId: sql<string | null>`coalesce(${aiJobs.resultVersionId}::text, ${aiJobs.input} ->> 'versionId')`,
+      jdId: sql<string | null>`case when ${aiJobs.type} = 'jd_analysis' then ${aiJobs.input} ->> 'jdId' end`,
+      orderId: payments.orderId,
     })
     .from(creditLedger)
     .leftJoin(
       aiJobs,
       and(eq(creditLedger.sourceType, "ai_job"), eq(aiJobs.id, creditLedger.sourceId)),
     )
+    .leftJoin(payments, and(eq(creditLedger.sourceType, "payment"), eq(payments.id, creditLedger.sourceId)))
     .where(
       and(
         eq(creditLedger.userId, userId),

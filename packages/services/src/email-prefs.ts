@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { emailPreferences, emailSuppressions, users, type Database } from "@resume-pilot/database";
+import { emailEvents, emailPreferences, emailSuppressions, users, type Database } from "@resume-pilot/database";
 import { and, eq, sql } from "drizzle-orm";
 
 /**
@@ -59,6 +59,12 @@ export async function setEmailPreferences(
       .insert(emailPreferences)
       .values({ userId: input.userId, ...next, ...consent, updatedAt: now })
       .onConflictDoUpdate({ target: emailPreferences.userId, set: { ...next, ...consent, updatedAt: now } });
+    // Opt-outs are counted on the admin dashboard (§13.6) via the provider-neutral email_events log.
+    for (const cat of MARKETING_CATEGORIES) {
+      if (cur[cat] && !next[cat]) {
+        await tx.insert(emailEvents).values({ providerEventId: `optout:${input.userId}:${cat}:${now.getTime()}`, eventType: "unsubscribed", payload: { userId: input.userId, category: cat, source: input.source } }).onConflictDoNothing();
+      }
+    }
     if (optingIn) {
       const [u] = await tx.select({ email: users.email }).from(users).where(eq(users.id, input.userId));
       if (u) await tx.delete(emailSuppressions).where(and(sql`lower(${emailSuppressions.email}) = lower(${u.email})`, eq(emailSuppressions.reason, "unsubscribe_all")));

@@ -1,4 +1,4 @@
-import { adminOverview, getActivePricingConfig } from "@resume-pilot/services";
+import { adminInsights, adminOverview, getActivePricingConfig } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActionsChart } from "@/components/admin/ActionsChart";
@@ -20,7 +20,9 @@ export default async function AdminOverviewPage({ searchParams }: { searchParams
   const { days: rawDays } = await searchParams;
   const days = PERIODS.find((p) => String(p) === rawDays) ?? 14;
   const db = getDb();
-  const [o, pricing] = await Promise.all([adminOverview(db, days), getActivePricingConfig(db).catch(() => null)]);
+  const [o, pricing, x] = await Promise.all([adminOverview(db, days), getActivePricingConfig(db).catch(() => null), adminInsights(db, days)]);
+  const issued = x.credits.issued;
+  const issuedTotal = issued.purchased + issued.coupon + issued.referral + issued.admin;
   const creditValue = pricing ? Number(pricing.creditValueInr) : 0.05;
 
   const alerts = [
@@ -159,6 +161,85 @@ export default async function AdminOverviewPage({ searchParams }: { searchParams
           )}
         </AdminTable>
       </AdminCard>
+
+      <AdminCard className="overflow-hidden">
+        <CardHeader title="AI reliability" aside={<span className="text-xs text-text-2">Failed runs are never charged; their holds are released.</span>} />
+        <AdminTable head={["Action", "Runs", "Success", "Failed", "Avg latency", "Credits charged", "AI cost"]} minWidth={720}>
+          {x.byType.length === 0 ? (
+            <EmptyRow cols={7}>No AI actions in this period.</EmptyRow>
+          ) : (
+            x.byType.map((t) => (
+              <tr key={t.type}>
+                <td className="font-semibold">{aiTypeLabel(t.type)}</td>
+                <td className="font-mono">{t.total.toLocaleString("en-IN")}</td>
+                <td className={cn("font-mono", t.total && t.succeeded / t.total < 0.95 ? "text-warn" : "text-good")}>{pct(t.succeeded, t.total)}</td>
+                <td className="font-mono">{t.failed.toLocaleString("en-IN")}</td>
+                <td className="font-mono">{(t.avgLatencyMs / 1000).toFixed(1)} s</td>
+                <td className="font-mono">{t.creditsCharged.toLocaleString("en-IN")}</td>
+                <td className="font-mono">{fmtPaise(t.costPaise)}</td>
+              </tr>
+            ))
+          )}
+        </AdminTable>
+      </AdminCard>
+
+      <KpiGrid min={220}>
+        <Kpi
+          label="Grounding violations"
+          value={`${x.grounding.perHundred} / 100`}
+          sub={`${x.grounding.violations} in ${x.grounding.generations} generations · ${x.grounding.fixedByRetry} fixed by retry · ${x.grounding.blocked} blocked`}
+          tone={x.grounding.blocked > 0 ? "warn" : "good"}
+        />
+        <Kpi label="Refunds" value={fmtCompactInr(x.refunds.paise)} sub={`${x.refunds.count} refund${x.refunds.count === 1 ? "" : "s"} · net ${fmtCompactInr(o.revenuePaise - x.refunds.paise)}`} />
+        <Kpi label="Credits issued" value={fmtCompact(issuedTotal)} sub={`${fmtCompact(x.credits.consumed)} consumed by AI · ${fmtCompact(x.credits.refunded)} refunded`} />
+        <Kpi label="Email, last 30 days" value={x.email.sent.toLocaleString("en-IN")} sub={`${x.email.failed} failed · ${x.email.hardBounced} hard-bounced · ${x.email.unsubscribed} unsubscribed`} tone={x.email.failed + x.email.hardBounced > 0 ? "warn" : undefined} />
+      </KpiGrid>
+
+      <div className="grid items-start gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(360px, 100%), 1fr))" }}>
+        <AdminCard className="overflow-hidden">
+          <CardHeader title="Credits issued vs consumed" />
+          <AdminTable head={["Source", "Credits", "Share"]} minWidth={360}>
+            {[
+              ["Purchased", issued.purchased],
+              ["Coupons", issued.coupon],
+              ["Referrals", issued.referral],
+              ["Admin grants", issued.admin],
+            ].map(([k, v]) => (
+              <tr key={k as string}>
+                <td>{k}</td>
+                <td className="font-mono">+{(v as number).toLocaleString("en-IN")}</td>
+                <td className="font-mono text-text-2">{pct(v as number, issuedTotal, 0)}</td>
+              </tr>
+            ))}
+            <tr>
+              <td className="font-semibold">Consumed by AI</td>
+              <td className="font-mono">−{x.credits.consumed.toLocaleString("en-IN")}</td>
+              <td />
+            </tr>
+            <tr>
+              <td className="font-semibold">Refunded / admin removed</td>
+              <td className="font-mono">−{(x.credits.refunded + x.credits.adminRemoved).toLocaleString("en-IN")}</td>
+              <td />
+            </tr>
+          </AdminTable>
+          <p className="m-0 border-t border-border px-5 py-3 text-xs text-text-2">
+            Outstanding liability across all wallets: {fmtCompact(o.outstandingCredits)} credits (≈ {fmtCompactInr(o.outstandingCredits * creditValue * 100)}).
+          </p>
+        </AdminCard>
+        <AdminCard className="overflow-hidden">
+          <CardHeader title="Signups per day" aside={<span className="text-xs text-text-2">{o.newUsers} in {days} days</span>} />
+          {x.signups.length === 0 ? (
+            <p className="m-0 border-t border-border px-5 py-4 text-sm text-text-2">No signups in this period.</p>
+          ) : (
+            <div className="flex h-[150px] items-end gap-1 border-t border-border px-5 pt-4 pb-3" role="img" aria-label={`Signups per day: ${x.signups.map((d) => `${d.day} ${d.n}`).join(", ")}`}>
+              {x.signups.map((d) => {
+                const max = Math.max(...x.signups.map((s) => s.n));
+                return <span key={d.day} title={`${d.day}: ${d.n}`} className="min-w-[4px] flex-1 rounded-t-sm bg-link" style={{ height: `${Math.max(4, (d.n / max) * 100)}%` }} />;
+              })}
+            </div>
+          )}
+        </AdminCard>
+      </div>
     </AppMain>
   );
 }

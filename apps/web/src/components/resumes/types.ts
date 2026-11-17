@@ -23,4 +23,8 @@ export interface VersionListItem {
   scoreOutdated: boolean;
   template: string;
   updatedAt: Date;
+  createdAt: Date;
+  /** Compare needs a job and a source version (prd.md §9.4). */
+  jdId: string | null;
+  parentVersionId: string | null;
 }

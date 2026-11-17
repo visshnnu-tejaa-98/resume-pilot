@@ -7,6 +7,9 @@ export interface LedgerRow {
   note: string | null;
   /** Date from the server render, ISO string when loaded over tRPC. */
   createdAt: Date | string;
+  versionId?: string | null;
+  jdId?: string | null;
+  orderId?: string | null;
 }
 
 export interface CreditPack {

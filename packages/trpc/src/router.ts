@@ -57,6 +57,7 @@ import {
   deleteVersion,
   setVersionTemplate,
   getPdfExportStatus,
+  adminViewResumeContent,
   audienceFiltersSchema,
   CampaignError,
   cancelCampaign,
@@ -219,6 +220,10 @@ const adminUsersRouter = router({
       }),
     )
     .mutation(({ ctx, input }) => adminAdjustCredits(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  /** Logged admin access to resume content (§12.2, §14.2): the audit row is written before content is returned. */
+  viewResumeContent: adminProcedure
+    .input(z.object({ userId: z.uuid(), versionId: z.uuid(), reason }))
+    .mutation(({ ctx, input }) => adminViewResumeContent(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
 });
 
 const adminContentRouter = router({

@@ -9,7 +9,7 @@ import { Callout } from "@/components/ui/Callout";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { cn } from "@/lib/cn";
-import { formatTag, ledgerLabel, resumeStatusChip } from "@/lib/domain";
+import { formatTag, ledgerLabel, resumeStatusChip, scoreChip } from "@/lib/domain";
 import { fmtCredits, fmtRelative, fmtSignedCredits, greeting } from "@/lib/format";
 import { appRoutes, routes } from "@/lib/routes";
 import { getDb } from "@/server/db";
@@ -45,6 +45,7 @@ export default async function DashboardPage() {
   const best = scored[0];
   const failed = resumes.find((r) => r.status === "failed");
   const ready = resumes.filter((r) => r.status === "ready").length;
+  const tailored = versions.filter((v) => v.kind === "generated");
 
   return (
     <AppMain>
@@ -68,8 +69,14 @@ export default async function DashboardPage() {
       />
 
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))" }}>
-        <StatCard hero label="Credit balance" value={fmtCredits(wallet.balance)} action={{ href: routes.wallet, label: "Add money" }} />
-        <StatCard label="Resumes" value={resumes.length} sub={`${ready} ready to tailor`} />
+        <StatCard
+          hero
+          label="Credit balance"
+          value={fmtCredits(wallet.balance)}
+          sub={wallet.held > 0 ? `${fmtCredits(wallet.held)} held for running actions` : undefined}
+          action={{ href: routes.wallet, label: "Add money" }}
+        />
+        <StatCard label="Tailored versions" value={tailored.length} sub={`From ${resumes.length} resume${resumes.length === 1 ? "" : "s"} · ${ready} ready to tailor`} />
         <StatCard
           label="Best ATS score"
           value={best ? best.score! : "—"}
@@ -143,6 +150,28 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+
+        {tailored.length ? (
+          <section className="flex flex-col gap-3.5 xl:col-span-2">
+            <SectionTitle title="Recent versions" action={<TextLink href={routes.resumes} className="text-sm">My resumes</TextLink>} />
+            <div className="flex flex-col rounded-xl border border-border bg-surface">
+              {tailored.slice(0, 5).map((v, i) => {
+                const chip = scoreChip(v.score, v.scoreOutdated);
+                return (
+                  <Link key={v.id} href={appRoutes.version(v.id)} className={cn("flex items-center justify-between gap-3 px-[18px] py-3.5 text-text no-underline hover:bg-surface-2", i > 0 && "border-t border-border")}>
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <strong className="truncate">{[v.companyName, v.jobTitle].filter(Boolean).join(" · ") || "Tailored resume"}</strong>
+                      <span className="text-xs text-text-2">Updated {fmtRelative(v.updatedAt)}</span>
+                    </span>
+                    <Chip tone={chip.tone} mono className="px-2 py-1">
+                      {chip.label}
+                    </Chip>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         <section className="flex flex-col rounded-xl border border-border bg-surface">
           <div className="flex items-center justify-between border-b border-border px-[18px] py-4">

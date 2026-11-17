@@ -1,4 +1,4 @@
-import { listActiveCreditPackages } from "@resume-pilot/services";
+import { listActiveCreditPackages, typicalCreditsPerAction } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import { LaunchOfferCard } from "@/components/marketing/TopUpCard";
 import { CtaBar } from "@/components/site/CtaBar";
@@ -21,7 +21,12 @@ export const dynamic = "force-dynamic";
 
 /** design/screens/Pricing.dc.html */
 export default async function PricingPage() {
-  const packs = await listActiveCreditPackages(getDb()).catch(() => []);
+  const [packs, typical] = await Promise.all([
+    listActiveCreditPackages(getDb()).catch(() => []),
+    // Measured medians only (prd.md §3.6); missing until enough real runs exist.
+    typicalCreditsPerAction(getDb()).catch(() => ({}) as Record<string, number>),
+  ]);
+  const measured = Object.keys(typical).length > 0;
   const lead = packs[0];
   return (
     <>
@@ -119,13 +124,17 @@ export default async function PricingPage() {
               {pricing.actions.map((a) => (
                 <Tr key={a.name}>
                   <Td className="font-semibold">{a.name}</Td>
-                  <Td className="font-mono">{a.cost}</Td>
+                  <Td className="font-mono">{a.type && typical[a.type] ? `~${fmtCredits(typical[a.type]!)}` : a.cost}</Td>
                   <Td className="text-text-2">{a.note}</Td>
                 </Tr>
               ))}
             </tbody>
           </Table>
-          <span className="text-[13px] text-text-2">Typical credit numbers will be published after launch testing.</span>
+          <span className="text-[13px] text-text-2">
+            {measured
+              ? "Typical = the median actually charged over the last 30 days. Your estimate is always shown before anything runs."
+              : "Typical credit numbers are published once enough real runs have been measured."}
+          </span>
         </Container>
       </Band>
 

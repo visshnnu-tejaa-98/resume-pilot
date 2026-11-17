@@ -289,3 +289,4 @@ export {
   type EnqueueMarketing,
 } from "./email-marketing";
 export { checkSendingDomain, sendingDomain, type DnsCheck, type DnsResolver, type DnsStatus } from "./email-dns";
+export { adminEmailHealth, adminInsights, adminUserExtras, adminViewResumeContent, TYPICAL_CREDITS_MIN_RUNS, typicalCreditsPerAction } from "./admin-insights";

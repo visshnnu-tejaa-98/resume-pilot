@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { Select } from "@/components/ui/Field";
 import { cn } from "@/lib/cn";
+import { appRoutes } from "@/lib/routes";
 import { ledgerLabel } from "@/lib/domain";
 import { fmtCredits, fmtDate, fmtSignedCredits, fmtTime } from "@/lib/format";
 import { trpc, trpcErrorMessage } from "@/lib/trpc-client";
@@ -116,7 +118,22 @@ export function LedgerHistory({ initial, initialCursor }: { initial: LedgerRow[]
                   <td className="py-3.5 pr-3 pl-[18px] whitespace-nowrap text-text-2">
                     {fmtDate(l.createdAt)}, {fmtTime(l.createdAt)}
                   </td>
-                  <td className="px-3 py-3.5">{ledgerLabel(l)}</td>
+                  <td className="px-3 py-3.5">
+                    {ledgerLabel(l)}
+                    {l.versionId ? (
+                      <Link href={appRoutes.version(l.versionId)} className="ml-2 text-[13px] font-semibold text-link">
+                        Resume
+                      </Link>
+                    ) : l.jdId ? (
+                      <Link href={appRoutes.job(l.jdId)} className="ml-2 text-[13px] font-semibold text-link">
+                        Job
+                      </Link>
+                    ) : l.orderId ? (
+                      <Link href={appRoutes.paymentResult(l.orderId)} className="ml-2 text-[13px] font-semibold text-link">
+                        Payment
+                      </Link>
+                    ) : null}
+                  </td>
                   <td className="px-3 py-3.5">
                     <Chip tone="good" pill className="px-[9px] py-[3px] text-xs font-semibold">
                       Completed

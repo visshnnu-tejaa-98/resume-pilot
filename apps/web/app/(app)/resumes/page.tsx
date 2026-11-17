@@ -1,4 +1,5 @@
 import { listDeletedVersions, listResumes, listVersions, VERSION_RESTORE_DAYS } from "@resume-pilot/services";
+import { TEMPLATE_NAMES, toTemplateKey } from "@resume-pilot/resume-templates";
 import type { Metadata } from "next";
 import { AppMain, PageHeader } from "@/components/app/PageHeader";
 import { ResumesView } from "@/components/resumes/ResumesView";
@@ -25,8 +26,11 @@ export default async function MyResumesPage({ searchParams }: { searchParams: Pr
       role: v.jobTitle ?? "",
       score: v.score,
       scoreOutdated: v.scoreOutdated,
-      template: "Classic",
+      template: TEMPLATE_NAMES[toTemplateKey(v.templateKey)],
       updatedAt: v.updatedAt,
+      createdAt: v.createdAt,
+      jdId: v.jdId,
+      parentVersionId: v.parentVersionId,
     }));
 
   return (
