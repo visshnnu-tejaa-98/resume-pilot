@@ -63,6 +63,12 @@ export const transactionalEmailJobSchema = z.discriminatedUnion("templateKey", [
     /** From Clerk at signup; not stored on `users`, so it travels as merge data. */
     firstName: z.string().max(200).nullable(),
   }),
+  /** Receipt, sent once per captured payment (prd.md §13.1 `recharge_success`). `paymentId` = payments.id. */
+  z.object({
+    templateKey: z.literal("recharge_success"),
+    userId: z.uuid(),
+    paymentId: z.uuid(),
+  }),
 ]);
 export type TransactionalEmailJob = z.infer<typeof transactionalEmailJobSchema>;
 
@@ -76,6 +82,8 @@ export function emailIdempotencyKey(job: TransactionalEmailJob): string {
   switch (job.templateKey) {
     case "welcome":
       return `welcome:${job.userId}`;
+    case "recharge_success":
+      return `recharge_success:${job.paymentId}`;
   }
 }
 

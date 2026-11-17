@@ -26,6 +26,8 @@ interface WalletViewProps {
   nextCursor: string | null;
   packs: CreditPack[];
   redemption: Redemption | null;
+  /** Razorpay keys are set on the server. */
+  paymentsEnabled: boolean;
 }
 
 /** design/screens/Wallet.dc.html — tab is mirrored in ?tab= so it's linkable. */
@@ -134,7 +136,7 @@ export function WalletView(props: WalletViewProps) {
         <LedgerHistory initial={props.history} initialCursor={props.nextCursor} />
       )}
 
-      <AddMoneyDialog open={payOpen} onClose={() => setPayOpen(false)} packs={props.packs} balance={available} />
+      <AddMoneyDialog open={payOpen} onClose={() => setPayOpen(false)} packs={props.packs} balance={available} paymentsEnabled={props.paymentsEnabled} />
     </>
   );
 }

@@ -30,6 +30,7 @@ export default async function WalletPage() {
           nextCursor={wallet.nextCursor}
           packs={packs}
           redemption={redemption}
+          paymentsEnabled={Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET)}
         />
       </Suspense>
     </AppMain>

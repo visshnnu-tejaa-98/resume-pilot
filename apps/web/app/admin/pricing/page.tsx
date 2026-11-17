@@ -1,10 +1,10 @@
-import { adminOverview, getActivePricingConfig, listActiveCreditPackages, listPricingConfigs } from "@resume-pilot/services";
+import { adminListCreditPackages, adminOverview, getActivePricingConfig, listPricingConfigs } from "@resume-pilot/services";
 import type { Metadata } from "next";
+import { CreditPacksManager } from "@/components/admin/CreditPacksManager";
 import { PricingEditor } from "@/components/admin/PricingEditor";
-import { AdminCard, AdminTable, CardHeader, EmptyRow, NotWiredNote, StatusPill } from "@/components/admin/ui";
+import { AdminCard, AdminTable, CardHeader, StatusPill } from "@/components/admin/ui";
 import { AppMain } from "@/components/app/PageHeader";
-import { fmtPaise } from "@/lib/admin-format";
-import { fmtCredits, fmtDate } from "@/lib/format";
+import { fmtDate } from "@/lib/format";
 import { getDb } from "@/server/db";
 import { requireAdmin } from "@/server/admin";
 
@@ -17,7 +17,7 @@ export default async function AdminPricingPage() {
   const [active, versions, packs, overview] = await Promise.all([
     getActivePricingConfig(db).catch(() => null),
     listPricingConfigs(db),
-    listActiveCreditPackages(db),
+    adminListCreditPackages(db),
     adminOverview(db, 14),
   ]);
   const avgCostPaise = Object.fromEntries(overview.econ.map((e) => [e.type, e.avgCostPaise]));
@@ -53,27 +53,7 @@ export default async function AdminPricingPage() {
         />
       ) : null}
 
-      <AdminCard className="overflow-hidden">
-        <CardHeader title="Top-up packs" />
-        <AdminTable head={["Price", "Credits", "Bonus", "Per credit", "Status"]} minWidth={520}>
-          {packs.length === 0 ? (
-            <EmptyRow cols={5}>No active packs.</EmptyRow>
-          ) : (
-            packs.map((p) => (
-              <tr key={p.id}>
-                <td className="font-semibold">{fmtPaise(p.pricePaise)}</td>
-                <td className="font-mono">{fmtCredits(p.credits)}</td>
-                <td className="font-mono">{p.bonusCredits ? `+${fmtCredits(p.bonusCredits)}` : "—"}</td>
-                <td className="font-mono">₹{(p.pricePaise / 100 / (p.credits + p.bonusCredits)).toFixed(3)}</td>
-                <td>
-                  <StatusPill status="active" />
-                </td>
-              </tr>
-            ))
-          )}
-        </AdminTable>
-      </AdminCard>
-      <NotWiredNote>Adding or editing top-up packs from here arrives with payments (m10). Packs live in the credit_packages table meanwhile.</NotWiredNote>
+      <CreditPacksManager packs={packs} />
 
       <AdminCard className="overflow-hidden">
         <CardHeader title="Version history" />

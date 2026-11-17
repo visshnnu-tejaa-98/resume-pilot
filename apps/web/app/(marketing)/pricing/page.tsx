@@ -1,3 +1,4 @@
+import { listActiveCreditPackages } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import { LaunchOfferCard } from "@/components/marketing/TopUpCard";
 import { CtaBar } from "@/components/site/CtaBar";
@@ -10,11 +11,18 @@ import { Table, Td, Th, THead, Tr } from "@/components/ui/Table";
 import { Eyebrow, Heading } from "@/components/ui/Typography";
 import { routes } from "@/lib/routes";
 import { pricing } from "@/content/marketing";
+import { fmtCredits, fmtInr } from "@/lib/format";
+import { getDb } from "@/server/db";
 
 export const metadata: Metadata = { title: "Pricing" };
 
+// Packs are admin config (credit_packages): read per request so an added or disabled pack shows without a deploy.
+export const dynamic = "force-dynamic";
+
 /** design/screens/Pricing.dc.html */
-export default function PricingPage() {
+export default async function PricingPage() {
+  const packs = await listActiveCreditPackages(getDb()).catch(() => []);
+  const lead = packs[0];
   return (
     <>
       <Container className="flex flex-col items-center gap-4 pt-20 pb-12 text-center">
@@ -40,10 +48,24 @@ export default function PricingPage() {
             />
             <span className="relative text-sm font-semibold text-on-hero-3">Wallet top-up</span>
             <div className="relative flex flex-wrap items-baseline gap-3">
-              <span className="font-display text-[64px] leading-none font-bold">{pricing.topUpInr}</span>
+              <span className="font-display text-[64px] leading-none font-bold">{lead ? fmtInr(lead.pricePaise / 100) : pricing.topUpInr}</span>
               <span className="text-[15px] text-on-hero-3">one-time</span>
             </div>
-            <span className="relative font-mono text-[22px] font-semibold text-hero-accent">= {pricing.topUpCredits}</span>
+            <span className="relative font-mono text-[22px] font-semibold text-hero-accent">
+              = {lead ? `${fmtCredits(lead.credits + lead.bonusCredits)} credits` : pricing.topUpCredits}
+            </span>
+            {packs.length > 1 ? (
+              <ul className="relative m-0 flex list-none flex-col gap-1.5 p-0 text-[15px] text-on-hero-link" aria-label="Other top-up packs">
+                {packs.slice(1).map((p) => (
+                  <li key={p.id} className="flex justify-between gap-3 border-t border-white/10 pt-1.5">
+                    <span className="font-semibold">{fmtInr(p.pricePaise / 100)}</span>
+                    <span className="font-mono">
+                      {fmtCredits(p.credits + p.bonusCredits)} credits{p.bonusCredits ? ` (incl. ${fmtCredits(p.bonusCredits)} bonus)` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <div className="relative flex flex-col gap-2.5 text-[15px] text-on-hero-link">
               {pricing.perks.map((p) => (
                 <CheckItem key={p} tone="hero">
@@ -54,7 +76,7 @@ export default function PricingPage() {
             <ButtonLink href={routes.signUp} variant="brand" size="lg" block className="relative mt-1.5 h-[50px]">
               Create account and add money
             </ButtonLink>
-            <span className="relative text-xs text-on-hero-muted">[GST NOTE: inclusive or exclusive, to be confirmed]</span>
+            <span className="relative text-xs text-on-hero-muted">Final price. No GST is charged for now; a receipt is emailed for every payment.</span>
           </Card>
 
           <div className="flex flex-col gap-5">

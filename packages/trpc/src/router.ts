@@ -39,7 +39,7 @@ import {
   pingInputSchema,
   walletHistoryInputSchema,
 } from "@resume-pilot/validators";
-import { enqueuePdfExport, getPdfQueue, isPdfJobFailed, enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
+import { enqueueTransactionalEmail, getTransactionalEmailQueue, enqueuePdfExport, getPdfQueue, isPdfJobFailed, enqueueExtraction, enqueueGeneration, enqueueScoring, enqueueJdAnalysis, enqueueStructuring, getAiQueue, getExtractionQueue } from "@resume-pilot/queue";
 import { getStorage } from "@resume-pilot/storage";
 import { SCORING_METHOD_VERSION } from "@resume-pilot/ai";
 import {
@@ -56,6 +56,22 @@ import {
   deleteVersion,
   setVersionTemplate,
   getPdfExportStatus,
+  adminCreateCreditPackage,
+  adminListCreditPackages,
+  adminUpdateCreditPackage,
+  confirmCheckout,
+  createTopUpOrder,
+  getRazorpay,
+  PaymentError,
+  quoteRefund,
+  RazorpayApiError,
+  RazorpayConfigError,
+  razorpayConfigFromEnv,
+  RefundError,
+  refundPayment,
+  retryRefund,
+  verifyCheckoutSignature,
+  type GrantResult,
   PdfExportError,
   requestPdfExport,
   duplicateVersion,
@@ -115,6 +131,19 @@ function toTRPCError(err: unknown): never {
   }
   if (err instanceof ScoringError) {
     throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "CONFLICT", message: err.message, cause: err });
+  }
+  if (err instanceof PaymentError) {
+    const code = err.code === "not_found" ? "NOT_FOUND" : err.code === "pack_unavailable" ? "PRECONDITION_FAILED" : err.code === "not_configured" ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST";
+    throw new TRPCError({ code, message: err.message, cause: err });
+  }
+  if (err instanceof RefundError) {
+    throw new TRPCError({ code: err.code === "not_found" ? "NOT_FOUND" : "PRECONDITION_FAILED", message: err.message, cause: err });
+  }
+  if (err instanceof RazorpayConfigError) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Online payments aren't configured yet.", cause: err });
+  }
+  if (err instanceof RazorpayApiError) {
+    throw new TRPCError({ code: "BAD_GATEWAY", message: "Razorpay didn't accept the request. Please try again.", cause: err });
   }
   if (err instanceof PdfExportError) {
     throw new TRPCError({ code: "NOT_FOUND", message: err.message, cause: err });
@@ -185,6 +214,42 @@ const adminContentRouter = router({
   setResumeTemplateActive: adminProcedure
     .input(z.object({ templateId: z.uuid(), active: z.boolean(), reason }))
     .mutation(({ ctx, input }) => adminSetResumeTemplateActive(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+});
+
+/**
+ * Receipt email for a captured payment (§13.1 recharge_success). Queued on
+ * every confirmation that sees the payment captured, not just the one that
+ * granted: the job id and email_messages key make repeats no-ops, and a
+ * failed enqueue here is retried by the next webhook delivery.
+ */
+export async function queueRechargeEmail(g: GrantResult): Promise<void> {
+  if (g.status !== "captured" || !g.id) return;
+  await enqueueTransactionalEmail(getTransactionalEmailQueue(), { templateKey: "recharge_success", userId: g.userId, paymentId: g.id }).catch((err: unknown) => {
+    console.error("[payments] could not queue receipt email:", (err as Error).message);
+  });
+}
+
+const packInput = z.object({
+  pricePaise: z.number().int().min(100).max(10_000_000),
+  credits: z.number().int().positive().max(100_000_000),
+  bonusCredits: z.number().int().min(0).max(100_000_000),
+  sortOrder: z.number().int().min(0).max(1000),
+});
+
+/** Credit packs (§2, §16.4) and refunds (§11.2). Every write is audited with a reason. */
+const adminPaymentsRouter = router({
+  packages: adminProcedure.query(({ ctx }) => adminListCreditPackages(ctx.db)),
+  createPackage: adminProcedure
+    .input(packInput.extend({ reason }))
+    .mutation(({ ctx, input }) => adminCreateCreditPackage(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  updatePackage: adminProcedure
+    .input(packInput.partial().extend({ packageId: z.uuid(), active: z.boolean().optional(), reason }))
+    .mutation(({ ctx, input }) => adminUpdateCreditPackage(ctx.db, { adminUserId: ctx.user.id, ...input }).catch(toTRPCError)),
+  refundQuote: adminProcedure.input(z.object({ paymentRowId: z.uuid() })).query(({ ctx, input }) => quoteRefund(ctx.db, input.paymentRowId).catch(toTRPCError)),
+  refund: adminProcedure
+    .input(z.object({ paymentRowId: z.uuid(), credits: z.number().int().positive().optional(), reason }))
+    .mutation(({ ctx, input }) => refundPayment(ctx.db, { adminUserId: ctx.user.id, ...input }, getRazorpay()).catch(toTRPCError)),
+  retryRefund: adminProcedure.input(z.object({ refundId: z.uuid() })).mutation(({ ctx, input }) => retryRefund(ctx.db, input, getRazorpay()).catch(toTRPCError)),
 });
 
 const adminPricingRouter = router({
@@ -469,6 +534,28 @@ export const appRouter = router({
     ),
   }),
 
+  /** Wallet top-up — prd.md §11.1. Pack price and credits come from the DB, never the client. */
+  payments: router({
+    createOrder: authProcedure
+      .input(z.object({ packageId: z.uuid() }))
+      .mutation(({ ctx, input }) => createTopUpOrder(ctx.db, { userId: ctx.user.id, packageId: input.packageId }, getRazorpay()).catch(toTRPCError)),
+    /** Checkout's success handler. The webhook confirms independently; whichever lands first grants. */
+    confirm: authProcedure
+      .input(z.object({ orderId: z.string().min(1).max(64), paymentId: z.string().min(1).max(64), signature: z.string().regex(/^[0-9a-f]{64}$/i) }))
+      .mutation(async ({ ctx, input }) => {
+        const signatureValid = (() => {
+          try {
+            return verifyCheckoutSignature(razorpayConfigFromEnv().keySecret, input);
+          } catch (err) {
+            return toTRPCError(err);
+          }
+        })();
+        const g = await confirmCheckout(ctx.db, { userId: ctx.user.id, ...input, signatureValid }, getRazorpay()).catch(toTRPCError);
+        await queueRechargeEmail(g);
+        return { status: g.status, orderId: input.orderId };
+      }),
+  }),
+
   /** Apply a coupon or referral code to the caller's own wallet — prd.md §2.1. */
   redeemCode: authProcedure.input(redeemCodeInputSchema).mutation(({ ctx, input }) =>
     redeemCode(ctx.db, {
@@ -484,6 +571,7 @@ export const appRouter = router({
     codes: adminCodesRouter,
     users: adminUsersRouter,
     content: adminContentRouter,
+    payments: adminPaymentsRouter,
   }),
 });
 

@@ -60,6 +60,9 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "refunded",
 ]);
 
+/** pending = credits debited, Razorpay not yet accepted; processing = accepted; processed = money sent. */
+export const refundStatusEnum = pgEnum("refund_status", ["pending", "processing", "processed", "failed"]);
+
 export const emailSuppressionReasonEnum = pgEnum("email_suppression_reason", [
   "hard_bounce",
   "complaint",

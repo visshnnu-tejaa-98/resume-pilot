@@ -1,7 +1,8 @@
-import { adminPayments } from "@resume-pilot/services";
+import { adminPayments, listRefundsForPayments, quoteRefund } from "@resume-pilot/services";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { adminRoutes } from "@/components/admin/nav";
+import { RefundPanel } from "@/components/admin/RefundPanel";
 import { AdminCard, AdminTable, EmptyRow, Kpi, KpiGrid, StatusPill } from "@/components/admin/ui";
 import { AppMain } from "@/components/app/PageHeader";
 import { cn } from "@/lib/cn";
@@ -22,6 +23,9 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
   const sel = rows.find((r) => r.id === sp.sel) ?? rows[0];
   const selEvents = sel ? events.filter((e) => e.paymentId === sel.id) : [];
   const s = (k: string) => stats[k] ?? { n: 0, paise: 0 };
+  const [quote, refund] = sel && (sel.status === "captured" || sel.status === "refunded")
+    ? await Promise.all([quoteRefund(getDb(), sel.id).catch(() => null), listRefundsForPayments(getDb(), [sel.id]).then((r) => r[0] ?? null)])
+    : [null, null];
 
   return (
     <AppMain className="gap-5">
@@ -96,10 +100,11 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
                 );
               })
             )}
-            {sel.status === "captured" ? (
-              <p className="m-0 rounded-lg bg-surface-2 p-3 text-xs leading-normal text-text-2">
-                Refunds of unused purchased credits are issued through Razorpay with the payments work (m10); credits are debited before the refund.
-              </p>
+            {sel.status === "captured" || sel.status === "refunded" ? (
+              <>
+                <strong className="mt-1 border-t border-border pt-3 text-sm">Refund</strong>
+                <RefundPanel key={sel.id} quote={quote} refund={refund} />
+              </>
             ) : null}
           </aside>
         ) : null}
