@@ -11,10 +11,16 @@ export interface DocLine {
   text: string;
   bullet?: boolean;
 }
+/** A clickable link on the page; `label` is the visible (ATS-readable) text. */
+export interface DocLink {
+  href: string;
+  label: string;
+}
 export interface DocItem {
   id?: string;
   title?: string;
   subtitle?: string;
+  link?: DocLink;
   date?: string;
   lines: DocLine[];
   /** Skill names, rendered as a row (Technical shows them as tags). */
@@ -29,7 +35,7 @@ export interface DocSection {
 export interface ResumeDoc {
   name: string;
   headline: string;
-  contact: string[];
+  contact: { text: string; href?: string }[];
   sections: DocSection[];
 }
 
@@ -46,6 +52,15 @@ export const SECTION_LABELS: Record<string, string> = {
 const HEADINGS: Record<string, string> = { ...SECTION_LABELS, workExperience: "Experience" };
 
 const range = (a: { raw: string }, b: { raw: string }, current = false) => [a.raw, current ? "Present" : b.raw].filter(Boolean).join(" – ");
+/** Only http(s)/mailto links are rendered as anchors; bare domains get https://. */
+export function toLink(raw: string | undefined | null): DocLink | undefined {
+  const v = (raw ?? "").trim();
+  if (!v) return undefined;
+  const href = /^(https?:|mailto:)/i.test(v) ? v : /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(v) ? `https://${v}` : null;
+  if (!href || /^\s*javascript:/i.test(href)) return undefined;
+  return { href, label: v.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "") };
+}
+
 const join = (...xs: (string | undefined | null)[]) => xs.filter(Boolean).join(", ");
 
 export function resumeToDoc(r: Resume): ResumeDoc {
@@ -72,7 +87,8 @@ export function resumeToDoc(r: Resume): ResumeDoc {
           items: visible(r.projects).map((p) => ({
             id: p.id,
             title: p.name,
-            subtitle: join(p.role, p.url.replace(/^https?:\/\//, "")),
+            subtitle: p.role || undefined,
+            link: toLink(p.url),
             date: range(p.startDate, p.endDate),
             lines: [...bullets(p.bullets), ...(p.technologies.length ? [{ text: `Technologies: ${p.technologies.join(", ")}` }] : [])],
           })),
@@ -102,13 +118,13 @@ export function resumeToDoc(r: Resume): ResumeDoc {
         return {
           key,
           heading,
-          items: visible(r.certifications).map((c) => ({ id: c.id, title: c.name, subtitle: join(c.issuer, c.credentialId && `ID ${c.credentialId}`), date: c.issueDate.raw, lines: [] })),
+          items: visible(r.certifications).map((c) => ({ id: c.id, title: c.name, subtitle: join(c.issuer, c.credentialId && `ID ${c.credentialId}`), link: toLink(c.credentialUrl), date: c.issueDate.raw, lines: [] })),
         };
       default: {
         const id = key.startsWith("custom:") ? key.slice(7) : "";
         const c = r.customSections.find((s) => s.id === id);
         if (!c) return null;
-        return { key, heading: c.title || "Additional", items: visible(c.items).map((i) => ({ id: i.id, title: i.heading, subtitle: i.subheading, date: i.date.raw, lines: bullets(i.bullets) })) };
+        return { key, heading: c.title || "Additional", items: visible(c.items).map((i) => ({ id: i.id, title: i.heading, subtitle: i.subheading, link: toLink(i.url), date: i.date.raw, lines: bullets(i.bullets) })) };
       }
     }
   };
@@ -123,7 +139,15 @@ export function resumeToDoc(r: Resume): ResumeDoc {
   return {
     name: [p.firstName, p.lastName].filter(Boolean).join(" ") || "Your name",
     headline: p.headline,
-    contact: [p.location, p.email, p.phone, ...p.links.map((l) => l.url.replace(/^https?:\/\//, "").replace(/\/$/, ""))].filter(Boolean),
+    contact: [
+      p.location ? { text: p.location } : null,
+      p.email ? { text: p.email, href: `mailto:${p.email.trim()}` } : null,
+      p.phone ? { text: p.phone, href: `tel:${p.phone.replace(/[^\d+]/g, "")}` } : null,
+      ...p.links.map((l) => {
+        const link = toLink(l.url);
+        return link ? { text: link.label, href: link.href } : null;
+      }),
+    ].filter((c): c is { text: string; href?: string } => !!c),
     sections,
   };
 }

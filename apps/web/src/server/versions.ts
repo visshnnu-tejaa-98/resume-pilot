@@ -96,7 +96,7 @@ const versionName = (v: { kind: string; fileName: string | null; companyName: st
   v.kind === "original" ? `${v.fileName ?? "Resume"} · Original` : [v.companyName, v.jobTitle].filter(Boolean).join(" · ") || "Tailored version";
 
 /** Stored report (ai/scoring StoredReport) → the report screen. Every matched keyword links to its resume line. */
-function toReportView(versionId: string, title: string, r: ReportRecord, history: ReportRecord[]): AtsReportView {
+function toReportView(versionId: string, title: string, r: ReportRecord, history: ReportRecord[], editorHref = appRoutes.version(versionId)): AtsReportView {
   const rep = r.report as StoredReport;
   const dims = r.breakdown as { label: string; weightPct: number; points: number; max: number }[];
   const reqs = rep.requirements;
@@ -116,6 +116,7 @@ function toReportView(versionId: string, title: string, r: ReportRecord, history
   const failed = rep.checks.filter((c) => !c.passed);
   return {
     versionId,
+    editorHref,
     title,
     subtitle: `Against ${jobName(r)} · scored ${fmtRelative(r.createdAt).toLowerCase()}`,
     jdId: r.jdId,
@@ -159,7 +160,7 @@ export async function loadAtsReport(userId: string, versionId: string, q: { jd?:
   const title = versionName(v);
   const forJd = history.filter((h) => h.jdId === jdId);
   const latest = forJd[0];
-  return { versionId, title, jdId, jobs, report: latest ? toReportView(versionId, title, latest, forJd) : null };
+  return { versionId, title, jdId, jobs, report: latest ? toReportView(versionId, title, latest, forJd, v.kind === "original" ? appRoutes.review(v.resumeId) : appRoutes.version(versionId)) : null };
 }
 
 export type ComparePage =

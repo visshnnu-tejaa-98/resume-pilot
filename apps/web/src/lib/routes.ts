@@ -19,6 +19,7 @@ export const routes = {
   generate: "/generate",
   jobs: "/jobs",
   jobNew: "/jobs/new",
+  ats: "/ats",
   wallet: "/wallet",
   referrals: "/referrals",
   settings: "/settings",

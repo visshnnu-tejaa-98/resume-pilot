@@ -133,6 +133,8 @@ export const customSectionSchema = z.object({
         id: itemIdSchema,
         heading: text(200),
         subheading: text(200),
+        /** Optional link for the entry (e.g. an award or publication page). */
+        url: text(500),
         date: resumeDateSchema.default({ value: null, raw: "" }),
         bullets: z.array(bulletSchema).max(30).default([]),
       }),

@@ -28,12 +28,14 @@ export const RESUME_CSS = `
 .rp-title{font-weight:700}
 .rp-date{flex:none;color:#555;font-size:9.5pt;white-space:nowrap}
 .rp-sub{color:#444}
+.rp-resume a{color:inherit;text-decoration:none}
+.rp-link{font-size:9pt}
+.rp-link a{color:#1f4e8c;text-decoration:underline;text-underline-offset:0.4mm;word-break:break-all}
 .rp-lines{margin-top:0.8mm;display:flex;flex-direction:column;gap:0.6mm}
 .rp-bullet{position:relative;padding-left:4mm}
 .rp-bullet::before{content:"•";position:absolute;left:0.6mm}
-.rp-tags{display:flex;flex-wrap:wrap;gap:1mm 1.5mm}
+.rp-tags{line-height:1.3}
 .rp-tag-label{font-weight:700;margin-right:1mm}
-.rp-tags .rp-tag+.rp-tag::before{content:"· ";color:#888}
 
 .rp-t-classic{font-family:${SERIF};font-size:10.5pt}
 .rp-t-classic .rp-head{align-items:center;text-align:center}
@@ -56,7 +58,8 @@ export const RESUME_CSS = `
 .rp-t-technical{font-size:9.6pt}
 .rp-t-technical .rp-name{font-family:${MONO};font-size:20pt;letter-spacing:-.02em}
 .rp-t-technical .rp-h{font-family:${MONO};font-size:10pt;letter-spacing:.04em;border-bottom:1px dashed #9aa8b8;color:#0f1b2a}
-.rp-t-technical .rp-tags .rp-tag+.rp-tag::before{content:""}
+.rp-t-technical .rp-tags{display:flex;flex-wrap:wrap;gap:1mm 1.5mm}
+.rp-t-technical .rp-sep{display:none}
 .rp-t-technical .rp-tag{border:1px solid #c5ced8;border-radius:1mm;padding:0 1.2mm;font-family:${MONO};font-size:8.6pt}
 .rp-t-technical .rp-date{font-family:${MONO};font-size:8.6pt}
 

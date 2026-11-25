@@ -41,8 +41,39 @@ export class EvaluationOutputError extends Error {
   }
 }
 
+/**
+ * Strict structured outputs don't enforce maxItems/maxLength, so a model
+ * can overshoot a cap (e.g. 8 evidence ids). Overshooting a size cap isn't
+ * a wrong answer — trim to the cap rather than fail the whole (paid) run.
+ * Types and enums are still validated strictly afterwards.
+ */
+function clampEvaluation(json: unknown): unknown {
+  if (!json || typeof json !== "object") return json;
+  const o = json as Record<string, unknown>;
+  const cut = (s: unknown, n: number) => (typeof s === "string" ? s.trim().slice(0, n) : s);
+  const arr = (a: unknown, n: number) => (Array.isArray(a) ? a.slice(0, n) : a);
+  return {
+    ...o,
+    requirements: Array.isArray(o.requirements)
+      ? o.requirements.slice(0, 80).map((r) =>
+          r && typeof r === "object"
+            ? { ...(r as object), evidenceIds: arr((r as Record<string, unknown>).evidenceIds, 6), reason: cut((r as Record<string, unknown>).reason, 300) }
+            : r,
+        )
+      : o.requirements,
+    assessment: cut(o.assessment, 1200),
+    recommendations: Array.isArray(o.recommendations)
+      ? o.recommendations.slice(0, 8).map((r) => {
+          if (!r || typeof r !== "object") return r;
+          const x = r as Record<string, unknown>;
+          return { ...x, title: cut(x.title, 120), detail: cut(x.detail, 400) };
+        })
+      : o.recommendations,
+  };
+}
+
 export function parseScoringEvaluation(json: unknown): ScoringEvaluation {
-  const r = scoringEvaluationSchema.safeParse(json);
+  const r = scoringEvaluationSchema.safeParse(clampEvaluation(json));
   if (!r.success) throw new EvaluationOutputError(`ATS evaluation failed validation: ${r.error.issues[0]?.message ?? "invalid"}`, { cause: r.error });
   return r.data;
 }

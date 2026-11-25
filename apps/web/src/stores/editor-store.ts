@@ -99,7 +99,7 @@ function blank(section: ListSection, id: string): AnyItem {
     case "skills":
       return { id, category: "", items: [] };
     case "customSections":
-      return { id, heading: "", subheading: "", date: EMPTY_DATE, bullets: [] };
+      return { id, heading: "", subheading: "", url: "", date: EMPTY_DATE, bullets: [] };
   }
 }
 

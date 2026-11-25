@@ -79,6 +79,7 @@ export function AppSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           focus
             ? cn("fixed inset-y-0 left-0 z-40 overflow-y-auto transition-transform", open ? "translate-x-0 shadow-modal" : "-translate-x-full")
             : cn(
+                "lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:self-start lg:overflow-y-auto",
                 "max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-40 max-lg:overflow-y-auto max-lg:transition-transform",
                 open ? "max-lg:translate-x-0 max-lg:shadow-modal" : "max-lg:-translate-x-full",
               ),

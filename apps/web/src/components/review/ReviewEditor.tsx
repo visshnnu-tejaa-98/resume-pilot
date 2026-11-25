@@ -52,6 +52,25 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState("personal");
+  /** Explicit expand/collapse per entry id; unset entries fall back to "open if it has fields to check". */
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const expandProps = (id: string, hasOpen: number) => ({
+    expanded: expanded[id] ?? hasOpen > 0,
+    onExpandedChange: (v: boolean) => setExpanded((m) => ({ ...m, [id]: v })),
+  });
+  /** Collapse every entry in a list and expand only the new one, then scroll to it. */
+  const focusNew = (ids: string[], id: string) => {
+    setExpanded((m) => ({ ...m, ...Object.fromEntries(ids.map((x) => [x, false])), [id]: true }));
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`entry-${id}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.querySelector("input")?.focus({ preventScroll: true });
+    });
+  };
+  const move = <T,>(list: T[], from: number, to: number) => {
+    const [x] = list.splice(from, 1);
+    if (x !== undefined) list.splice(to, 0, x);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -196,7 +215,7 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
           </SectionCard>
 
           <SectionCard id="summary" title="Professional summary" open={openIn("summary")}>
-            <ReviewField path="summary.text" label="Professional summary" hideLabel multiline value={resume.summary.text} set={(d, v) => (d.summary.text = v)} />
+            <ReviewField path="summary.text" label="Professional summary" hideLabel multiline rows={8} value={resume.summary.text} set={(d, v) => (d.summary.text = v)} />
           </SectionCard>
 
           <SectionCard
@@ -205,10 +224,11 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
             open={openIn("workExperience")}
             action={
               <SmallButton
-                onClick={() =>
+                onClick={() => {
+                  const id = alloc.take("work");
                   update((d) =>
                     d.workExperience.push({
-                      id: alloc.take("work"),
+                      id,
                       company: "",
                       designation: "",
                       employmentType: null,
@@ -219,8 +239,9 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
                       bullets: [],
                       skillsUsed: [],
                     }),
-                  )
-                }
+                  );
+                  focusNew(resume.workExperience.map((w) => w.id), id);
+                }}
               >
                 + Add role
               </SmallButton>
@@ -233,6 +254,8 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
               return (
                 <EntryCard
                   key={w.id}
+                  id={`entry-${w.id}`}
+                  {...expandProps(w.id, openIn(at))}
                   title={[w.company, w.designation].filter(Boolean).join(" · ") || "New role"}
                   summary={`${w.startDate.raw || "?"} – ${w.isCurrent ? "Present" : w.endDate.raw || "?"} · ${w.bullets.length} bullet${w.bullets.length === 1 ? "" : "s"}`}
                   open={openIn(at)}
@@ -262,6 +285,8 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
                     I currently work here
                   </label>
                   <BulletList
+                    group={w.id}
+                    onMove={(a, b) => update((d) => move(ix(d).bullets, a, b))}
                     bullets={w.bullets}
                     pathFor={(id) => `${at}.bullets[id=${id}]`}
                     set={(d, id, v) => (ix(d).bullets.find((b) => b.id === id)!.text = v)}
@@ -297,6 +322,8 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
               return (
                 <EntryCard
                   key={e.id}
+                  id={`entry-${e.id}`}
+                  {...expandProps(e.id, openIn(at))}
                   title={[e.degree, e.institution].filter(Boolean).join(" · ") || "Education"}
                   summary={[e.fieldOfStudy, e.endDate.raw].filter(Boolean).join(" · ")}
                   open={openIn(at)}
@@ -315,21 +342,58 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
             })}
           </SectionCard>
 
-          <SectionCard id="projects" title="Projects and certifications" open={openIn("projects") + openIn("certifications")}>
-            {resume.projects.length + resume.certifications.length === 0 ? <p className="m-0 text-sm text-text-2">None found.</p> : null}
+          <SectionCard
+            id="projects"
+            title="Projects and certifications"
+            open={openIn("projects") + openIn("certifications")}
+            action={
+              <div className="flex flex-wrap gap-2">
+                <SmallButton
+                  onClick={() => {
+                    const id = alloc.take("project");
+                    update((d) =>
+                      d.projects.push({ id, name: "", role: "", url: "", startDate: { value: null, raw: "" }, endDate: { value: null, raw: "" }, bullets: [], technologies: [] }),
+                    );
+                    focusNew([...resume.projects, ...resume.certifications].map((x) => x.id), id);
+                  }}
+                >
+                  + Add project
+                </SmallButton>
+                <SmallButton
+                  onClick={() => {
+                    const id = alloc.take("certification");
+                    update((d) =>
+                      d.certifications.push({ id, name: "", issuer: "", issueDate: { value: null, raw: "" }, expiryDate: { value: null, raw: "" }, credentialId: "", credentialUrl: "" }),
+                    );
+                    focusNew([...resume.projects, ...resume.certifications].map((x) => x.id), id);
+                  }}
+                >
+                  + Add certification
+                </SmallButton>
+              </div>
+            }
+          >
+            {resume.projects.length + resume.certifications.length === 0 ? <p className="m-0 text-sm text-text-2">None found. Add a project or certification if you have one.</p> : null}
             {resume.projects.map((pr) => {
               const at = `projects[id=${pr.id}]`;
               const ix = (d: Resume) => d.projects.find((x) => x.id === pr.id)!;
               return (
                 <EntryCard
                   key={pr.id}
+                  id={`entry-${pr.id}`}
+                  {...expandProps(pr.id, openIn(at))}
                   title={pr.name || "Project"}
                   summary={`Project · ${pr.bullets.length} bullet${pr.bullets.length === 1 ? "" : "s"}`}
                   open={openIn(at)}
                   onRemove={() => update((d) => (d.projects = d.projects.filter((x) => x.id !== pr.id)))}
                 >
-                  <ReviewField path={`${at}.name`} label="Name" value={pr.name} set={(d, v) => (ix(d).name = v)} />
+                  <div className="grid gap-3" style={grid(200)}>
+                    <ReviewField path={`${at}.name`} label="Name" value={pr.name} set={(d, v) => (ix(d).name = v)} />
+                    <ReviewField path={`${at}.url`} label="Link" value={pr.url} set={(d, v) => (ix(d).url = v)} />
+                  </div>
                   <BulletList
+                    group={pr.id}
+                    onMove={(a, b) => update((d) => move(ix(d).bullets, a, b))}
                     bullets={pr.bullets}
                     pathFor={(id) => `${at}.bullets[id=${id}]`}
                     set={(d, id, v) => (ix(d).bullets.find((b) => b.id === id)!.text = v)}
@@ -345,6 +409,8 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
               return (
                 <EntryCard
                   key={c.id}
+                  id={`entry-${c.id}`}
+                  {...expandProps(c.id, openIn(at))}
                   title={c.name || "Certification"}
                   summary={["Certification", c.issuer].filter(Boolean).join(" · ")}
                   open={openIn(at)}
@@ -353,6 +419,7 @@ export function ReviewEditor({ resumeId, fileName }: { resumeId: string; fileNam
                   <div className="grid gap-3" style={grid(200)}>
                     <ReviewField path={`${at}.name`} label="Name" value={c.name} set={(d, v) => (ix(d).name = v)} />
                     <ReviewField path={`${at}.issuer`} label="Issuer" value={c.issuer} set={(d, v) => (ix(d).issuer = v)} />
+                    <ReviewField path={`${at}.credentialUrl`} label="Credential link" value={c.credentialUrl} set={(d, v) => (ix(d).credentialUrl = v)} />
                   </div>
                 </EntryCard>
               );

@@ -14,7 +14,7 @@ import { appRoutes, routes } from "@/lib/routes";
 import { trpc, trpcErrorMessage } from "@/lib/trpc-client";
 import { orderedSections, useEditorStore, type BulletSection, type ListSection } from "@/stores/editor-store";
 import { TEMPLATES } from "@/stores/preferences-store";
-import { EyeButton, IconButton, Labeled, ListField, SortableList, inputCls } from "./parts";
+import { AutoTextarea, EyeButton, IconButton, Labeled, ListField, SortableList, inputCls } from "./parts";
 
 /** Autosave delay after the last keystroke. */
 const AUTOSAVE_MS = 800;
@@ -140,7 +140,7 @@ function Editor({ version }: { version: VersionView }) {
   );
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)] flex-col">
+    <div className="flex min-h-[calc(100dvh-64px)] flex-col md:h-[calc(100dvh-64px)] md:overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-surface px-5 py-2.5">
         <Link href={routes.resumes} aria-label="Back to my resumes" className="flex size-9 items-center justify-center rounded-md border border-border text-text hover:bg-surface-2">
@@ -186,9 +186,9 @@ function Editor({ version }: { version: VersionView }) {
         </Callout>
       ) : null}
 
-      <div className="flex flex-1 flex-wrap items-stretch">
+      <div className="flex flex-1 flex-wrap items-stretch md:min-h-0 md:flex-nowrap">
         {/* Sections: drag (or arrow keys on the handle) to reorder; eye to hide. */}
-        <nav aria-label="Sections" className="box-border flex flex-[0_1_230px] flex-col gap-0.5 border-r border-border bg-surface px-2.5 py-4 max-md:flex-[1_1_100%] max-md:border-r-0 max-md:border-b">
+        <nav aria-label="Sections" className="box-border flex flex-[0_1_230px] flex-col gap-0.5 md:overflow-y-auto border-r border-border bg-surface px-2.5 py-4 max-md:flex-[1_1_100%] max-md:border-r-0 max-md:border-b">
           <span className="px-2.5 pb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-text-2">Sections</span>
           <NavRow on={active === "personal"} onClick={() => st.setActive("personal")} label="Personal info" />
           <SortableList
@@ -216,7 +216,7 @@ function Editor({ version }: { version: VersionView }) {
         </nav>
 
         {/* Form */}
-        <section aria-label="Edit section" className="box-border flex min-w-0 flex-[1_1_440px] flex-col gap-4 p-5">
+        <section aria-label="Edit section" className="box-border flex min-w-0 flex-[1_1_440px] flex-col gap-4 p-5 md:overflow-y-auto md:overscroll-contain">
           {isOriginal ? (
             <Callout tone="info">
               This is your original. Edit it on the{" "}
@@ -260,7 +260,7 @@ function Editor({ version }: { version: VersionView }) {
         </section>
 
         {/* Live preview */}
-        <section aria-label="Live preview" className="box-border flex min-w-0 flex-[1_1_560px] flex-col bg-canvas">
+        <section aria-label="Live preview" className="box-border flex min-w-0 flex-[1_1_560px] flex-col bg-canvas md:min-h-0">
           <div className="flex flex-wrap items-center justify-center gap-2 border-b border-border px-4 py-2 text-[13px] text-text-2">
             <IconButton label="Zoom out" onClick={() => st.zoomBy(-0.1)}>
               −
@@ -284,7 +284,7 @@ function Editor({ version }: { version: VersionView }) {
             </IconButton>
             <span className="ml-2">A4</span>
           </div>
-          <div ref={previewBox} className="flex max-h-[calc(100vh-130px)] flex-1 justify-center overflow-auto p-6">
+          <div ref={previewBox} className="flex max-h-[calc(100dvh-130px)] flex-1 justify-center overflow-auto overscroll-contain p-6 md:max-h-none md:min-h-0">
             <ResumeDocument resume={content} template={template} zoom={zoom} onPages={setPages} />
           </div>
         </section>
@@ -459,6 +459,7 @@ function SectionForm({ pane, content, version }: { pane: string; content: Resume
                 <Text section="customSections" customId={cs.id} item={i} field="heading" label="Heading" />
                 <Text section="customSections" customId={cs.id} item={i} field="subheading" label="Subheading" />
                 <Dates section="customSections" customId={cs.id} id={i.id} value={[i.date.raw]} label="Date" />
+                <Text section="customSections" customId={cs.id} item={i} field="url" label="Link" />
               </Grid>
               <Bullets section="customSections" customId={cs.id} itemId={i.id} bullets={i.bullets} version={version} content={content} />
             </>
@@ -593,12 +594,11 @@ function Bullets({ section, itemId, bullets, version, content, customId }: { sec
             <div id={`item-${b.id}`} className={cn("flex scroll-mt-24 flex-col gap-1.5 rounded-lg bg-surface-2 p-3 target:ring-2 target:ring-accent", isHidden && "opacity-60")}>
               <div className="flex items-start gap-1.5">
                 <span className="pt-1.5">{handle}</span>
-                <textarea
-                  rows={2}
+                <AutoTextarea
                   aria-label="Bullet text"
                   value={b.text}
                   onChange={(e) => st.editBullet(section, itemId, b.id, e.target.value.slice(0, 1000), customId)}
-                  className={cn(inputCls, "min-w-0 flex-1 resize-y py-2 leading-normal")}
+                  className={cn(inputCls, "min-w-0 flex-1 py-2 leading-normal")}
                 />
                 <div className="flex flex-col">
                   <EyeButton visible={!isHidden} name="bullet" onClick={() => st.toggleItemHidden(b.id)} />

@@ -9,6 +9,7 @@ export const DEMO_ID = "demo";
 
 export const demoReport: AtsReportView = {
   versionId: DEMO_ID,
+  editorHref: `/versions/${DEMO_ID}`,
   title: "Acme Corp · Frontend Engineer",
   subtitle: "Tailored version vs Acme Corp · Frontend Engineer · scored today, 6:14 pm",
   outdated: true,

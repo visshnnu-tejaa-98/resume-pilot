@@ -1,3 +1,5 @@
+/** @jsxRuntime automatic @jsxImportSource react */
+import { Fragment } from "react";
 import type { Resume } from "@resume-pilot/validators/resume";
 import type { ReactNode } from "react";
 import { resumeToDoc, type DocItem, type DocSection, type ResumeDoc } from "./doc";
@@ -13,7 +15,15 @@ const Header = ({ doc, contactFirst = false }: { doc: ResumeDoc; contactFirst?: 
   const contact = doc.contact.length ? (
     <ul className="rp-contact">
       {doc.contact.map((c) => (
-        <li key={c}>{c}</li>
+        <li key={c.text}>
+          {c.href ? (
+            <a href={c.href} target="_blank" rel="noopener noreferrer">
+              {c.text}
+            </a>
+          ) : (
+            c.text
+          )}
+        </li>
       ))}
     </ul>
   ) : null;
@@ -36,13 +46,21 @@ const Item = ({ it }: { it: DocItem }) => (
       </div>
     ) : null}
     {it.subtitle ? <div className="rp-sub">{it.subtitle}</div> : null}
+    {it.link ? (
+      <div className="rp-link">
+        <a href={it.link.href} target="_blank" rel="noopener noreferrer">
+          {it.link.label}
+        </a>
+      </div>
+    ) : null}
     {it.tags ? (
       <p className="rp-tags">
         {it.tagLabel ? <span className="rp-tag-label">{it.tagLabel}:</span> : null}
         {it.tags.map((t, i) => (
-          <span key={`${t}-${i}`} className="rp-tag">
-            {t}
-          </span>
+          <Fragment key={`${t}-${i}`}>
+            {i ? <span className="rp-sep">, </span> : null}
+            <span className="rp-tag">{t}</span>
+          </Fragment>
         ))}
       </p>
     ) : null}

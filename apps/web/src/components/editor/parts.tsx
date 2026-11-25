@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { GRIP_PATH } from "@/components/review/parts";
 import { cn } from "@/lib/cn";
 
@@ -149,4 +149,36 @@ export function SortableList<T extends { id: string }>({
       })}
     </div>
   );
+}
+
+/**
+ * Textarea that sizes itself to its content: one row for a short bullet,
+ * as many rows as the text needs for a long one (so 3-line bullets show
+ * all 3 lines). Re-measures on input and width changes.
+ */
+export function AutoTextarea({ className, value, minRows = 1, ...rest }: React.ComponentProps<"textarea"> & { minRows?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      const cs = getComputedStyle(el);
+      const line = parseFloat(cs.lineHeight) || 20;
+      const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+      el.style.height = "auto";
+      el.style.height = `${Math.max(el.scrollHeight + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth), line * minRows + pad)}px`;
+    };
+    fit();
+    // Refit only when the width changes (wrapping), not on our own height writes.
+    let width = el.clientWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth !== width) {
+        width = el.clientWidth;
+        fit();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [value, minRows]);
+  return <textarea ref={ref} rows={minRows} value={value} className={cn("resize-none overflow-hidden", className)} {...rest} />;
 }

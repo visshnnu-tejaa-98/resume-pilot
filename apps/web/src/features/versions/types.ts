@@ -44,6 +44,8 @@ export interface AtsDimension {
 
 export interface AtsReportView {
   versionId: string;
+  /** Where "Back to editor" goes: the version editor, or the review screen for an original. */
+  editorHref: string;
   title: string;
   subtitle: string;
   jdId: string;

@@ -22,6 +22,7 @@ export { callStructuredOutput, wrapData } from "./responses";
 export { assembleVersion, type AssembledVersion, type Gap } from "./generation/assemble";
 export { GENERATION_INSTRUCTIONS, GENERATION_PROMPT_VERSION, generateTailoredResume, GroundingFailedError, type GenerationResult } from "./generation/generate";
 export { checkGrounding, resumeText, summarizeViolations, type GroundingRule, type GroundingTerms, type GroundingViolation } from "./generation/grounding";
+export { estimatePages, fitPlanToPages, NONSPACE_CHARS_PER_PAGE, targetPagesFor } from "./generation/fit";
 export { generationPlanResponseFormat, generationPlanSchema, parseGenerationPlan, type GenerationPlan } from "./generation/plan";
 export { fold, mentions, numbersIn, termKey } from "./generation/terms";
 export {

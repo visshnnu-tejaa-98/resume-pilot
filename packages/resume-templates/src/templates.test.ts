@@ -57,3 +57,16 @@ describe("performance", () => {
     expect((performance.now() - t) / TEMPLATE_KEYS.length).toBeLessThan(50);
   });
 });
+
+import { toLink } from "./doc";
+describe("toLink", () => {
+  it("adds https to bare domains and strips the scheme from the label", () => {
+    expect(toLink("github.com/jane/")).toEqual({ href: "https://github.com/jane/", label: "github.com/jane" });
+    expect(toLink("https://www.linkedin.com/in/jane")).toEqual({ href: "https://www.linkedin.com/in/jane", label: "linkedin.com/in/jane" });
+  });
+  it("refuses non-web schemes and plain text", () => {
+    expect(toLink("javascript:alert(1)")).toBeUndefined();
+    expect(toLink("not a link")).toBeUndefined();
+    expect(toLink("")).toBeUndefined();
+  });
+});

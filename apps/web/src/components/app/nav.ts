@@ -16,6 +16,7 @@ export const workspaceNav: AppNavItem[] = [
   { id: "upload", label: "Upload resume", href: routes.upload, d: "M12 16V4M6 10l6-6 6 6M4 16v4h16v-4" },
   { id: "generate", label: "Generate", href: routes.generate, d: "M3 11.5 21 4l-7 17-3-7-8-2.5z" },
   { id: "jobs", label: "Job descriptions", href: routes.jobs, d: "M4 8h16v11H4zM9 8V5h6v3M4 13h16" },
+  { id: "ats", label: "ATS score", href: routes.ats, d: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2" },
 ];
 
 export const accountNav: AppNavItem[] = [

@@ -141,8 +141,16 @@ export function ScoringPending({ versionId, jdId, aiJobId }: { versionId: string
       <strong>Scoring didn’t finish.</strong> {error} You weren’t charged.
     </Callout>
   ) : (
-    <Callout tone="info" role="status">
-      <strong>Scoring…</strong> Checking your resume against the job. This usually takes under a minute.
-    </Callout>
+    <div role="status" aria-live="polite" className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface px-6 py-12 text-center">
+      <svg className="size-12 animate-spin text-link motion-reduce:animate-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.2" strokeWidth="3" />
+        <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+      <div className="flex flex-col gap-1">
+        <strong className="font-display text-lg">Scoring your resume…</strong>
+        <span className="text-sm text-text-2">Checking every job requirement against your resume. This usually takes under a minute.</span>
+      </div>
+      <span className="text-xs text-text-2">You can leave this page; the report will be here when it’s done.</span>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { aiJobs, creditHolds, jobDescriptions, resumeVersions, type Database } from "@resume-pilot/database";
+import { aiJobs, creditHolds, jobDescriptions, resumes, resumeVersions, type Database } from "@resume-pilot/database";
 import type { ActionSettings, JdAnalysis } from "@resume-pilot/validators";
 import { extractionMetaSchema, resumeSchema, unreviewedLowConfidence, type Provenance, type Resume } from "@resume-pilot/validators/resume";
 import type { TokenUsage } from "@resume-pilot/credits";
@@ -124,8 +124,23 @@ export async function startGeneration(
   }
 }
 
+/**
+ * Page count of the original upload, so the tailored version can match it.
+ * PDFs/images record one extraction entry per page; DOCX/TeX record one
+ * entry for the whole file, so estimate from text volume (~3,500 non-space
+ * chars per full page).
+ */
+export async function sourcePageCount(db: Database, resumeId: string): Promise<number | null> {
+  const [r] = await db.select({ format: resumes.fileFormat, meta: resumes.extractionMeta }).from(resumes).where(eq(resumes.id, resumeId));
+  const pages = (r?.meta as { pages?: { chars?: number }[] } | null)?.pages;
+  if (!r || !pages?.length) return null;
+  if (r.format === "pdf" || r.format === "png" || r.format === "jpg" || r.format === "jpeg") return pages.length;
+  const chars = pages.reduce((n, p) => n + (p.chars ?? 0), 0);
+  return chars > 0 ? Math.max(1, Math.ceil(chars / 3500)) : null;
+}
+
 export interface GenerateFn {
-  (input: { source: Resume; analysis: JdAnalysis; model: string; maxOutputTokens: number }): Promise<{
+  (input: { source: Resume; analysis: JdAnalysis; model: string; maxOutputTokens: number; sourcePages?: number | null }): Promise<{
     resume: Resume;
     provenance: Provenance;
     gaps: NonNullable<GenerationMeta["gaps"]>;
@@ -189,7 +204,8 @@ export async function processGeneration(
 
   let result: Awaited<ReturnType<GenerateFn>>;
   try {
-    result = await deps.generate({ source: source.content, analysis, model: aiJob.model ?? setting.model, maxOutputTokens: setting.maxOutputTokens });
+    const sourcePages = await sourcePageCount(db, source.resumeId).catch(() => null);
+    result = await deps.generate({ source: source.content, analysis, model: aiJob.model ?? setting.model, maxOutputTokens: setting.maxOutputTokens, sourcePages });
   } catch (err) {
     const retryable = (err as { retryable?: boolean }).retryable === true;
     if (retryable && !deps.isFinalAttempt) throw err;

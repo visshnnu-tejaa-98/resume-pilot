@@ -2,6 +2,7 @@ import type { JdAnalysis } from "@resume-pilot/validators";
 import type { Resume } from "@resume-pilot/validators/resume";
 import { callStructuredOutput, StructuringError, wrapData, type ResponsesClient, type StructureUsage } from "../responses";
 import { assembleVersion, type AssembledVersion } from "./assemble";
+import { fitPlanToPages, targetPagesFor } from "./fit";
 import { checkGrounding, summarizeViolations, type GroundingViolation } from "./grounding";
 import { generationPlanResponseFormat, parseGenerationPlan, PlanOutputError } from "./plan";
 
@@ -15,7 +16,7 @@ import { generationPlanResponseFormat, parseGenerationPlan, PlanOutputError } fr
  * `GroundingFailedError` so the caller releases the hold (§8.3).
  */
 
-export const GENERATION_PROMPT_VERSION = "generate-v1";
+export const GENERATION_PROMPT_VERSION = "generate-v2";
 
 export const GENERATION_INSTRUCTIONS = `You tailor a candidate's resume to one job. You return a TAILORING PLAN as JSON; the application builds the final resume from it.
 
@@ -42,6 +43,7 @@ Plan rules:
 - workExperience: one entry per source job id. bullets: the bullets to show, in order. Each bullet's sourceBulletIds lists the source bullet ids (from that same job) it is based on. changeType: "unchanged" (same text), "reordered" (same text, new position), "rewritten" (reworded from one bullet), "merged" (combines several).
 - projects: only the projects worth showing for this job, in order, with their bullets (same rules). Omitted projects are hidden.
 - skills: groups in display order; items copied from the source skills.
+- Length: the input states a target page count. Fit the resume to it — prefer the bullets most relevant to this job, keep each bullet to one or two lines, and drop weaker or repetitive bullets rather than exceeding the length. Never pad to fill space.
 - gaps: every job requirement the source does NOT support, with its requirement id, the keyword, and a short note ("Not found in your resume", or "Partial: …"). Never fix a gap by inventing content.`;
 
 export interface GenerationResult extends AssembledVersion {
@@ -86,9 +88,11 @@ function sourceForModel(r: Resume) {
 
 export async function generateTailoredResume(
   client: ResponsesClient,
-  input: { source: Resume; analysis: JdAnalysis; model: string; maxOutputTokens: number },
+  input: { source: Resume; analysis: JdAnalysis; model: string; maxOutputTokens: number; sourcePages?: number | null },
 ): Promise<GenerationResult> {
-  const data = `${wrapData("source_resume", JSON.stringify(sourceForModel(input.source)))}\n\n${wrapData("job_analysis", JSON.stringify(input.analysis))}`;
+  const targetPages = targetPagesFor(input.sourcePages);
+  const length = `Target length: ${targetPages} A4 page${targetPages === 1 ? "" : "s"} (the uploaded resume was ${input.sourcePages ?? "unknown"}). Roughly ${targetPages * 10}–${targetPages * 14} bullets in total across all jobs and projects.`;
+  const data = `${wrapData("source_resume", JSON.stringify(sourceForModel(input.source)))}\n\n${wrapData("job_analysis", JSON.stringify(input.analysis))}\n\n${length}`;
   const terms = { groups: input.analysis.requirements };
   let usage: StructureUsage = { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 };
   let first: GroundingViolation[] = [];
@@ -105,7 +109,8 @@ export async function generateTailoredResume(
 
     let assembled: AssembledVersion;
     try {
-      assembled = assembleVersion(input.source, parseGenerationPlan(call.json));
+      // Enforce the page budget deterministically (only removes source-backed bullets).
+      assembled = assembleVersion(input.source, fitPlanToPages(input.source, parseGenerationPlan(call.json), targetPages));
     } catch (err) {
       if (err instanceof PlanOutputError) {
         if (attempt === 2) throw new StructuringError("invalid_output", err.message, false, { cause: err });

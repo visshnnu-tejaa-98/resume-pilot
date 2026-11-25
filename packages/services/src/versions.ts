@@ -1,6 +1,6 @@
 import { atsReports, jobDescriptions, resumes, resumeTemplates, resumeVersions, type Database } from "@resume-pilot/database";
 import { resumeSchema, type Resume } from "@resume-pilot/validators/resume";
-import { and, desc, eq, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { resumeContentHash } from "./structuring";
 
 /**
@@ -78,7 +78,7 @@ export async function listDeletedVersions(db: Database, userId: string, now = ne
     .from(resumeVersions)
     .innerJoin(resumes, eq(resumes.id, resumeVersions.resumeId))
     .leftJoin(jobDescriptions, eq(jobDescriptions.id, resumeVersions.jdId))
-    .where(and(eq(resumes.userId, userId), isNotNull(resumeVersions.deletedAt), sql`${resumeVersions.deletedAt} > ${new Date(now.getTime() - RESTORE_MS)}`))
+    .where(and(eq(resumes.userId, userId), isNotNull(resumeVersions.deletedAt), gt(resumeVersions.deletedAt, new Date(now.getTime() - RESTORE_MS))))
     .orderBy(desc(resumeVersions.deletedAt));
 }
 
