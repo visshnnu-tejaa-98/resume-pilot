@@ -36,7 +36,8 @@ interface EditorState {
   scoreOutdated: boolean;
   savedAt: Date | null;
 
-  load: (v: VersionView) => void;
+  /** `pane`: section to open first (deep link from the ATS report); Personal info by default. */
+  load: (v: VersionView, pane?: EditorPane) => void;
   setTemplate: (t: TemplateName) => void;
   setActive: (p: EditorPane) => void;
   zoomBy: (delta: number) => void;
@@ -141,7 +142,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
     versionId: null,
     content: null,
     template: "Classic",
-    active: "workExperience",
+    active: "personal",
     userEdited: new Set(),
     zoom: 0.7,
     revision: 0,
@@ -149,7 +150,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
     scoreOutdated: false,
     savedAt: null,
 
-    load: (v) => {
+    load: (v, pane = "personal") => {
       const content = structuredClone(v.content);
       // Every custom section gets a slot in sectionOrder so drag indices line up.
       content.layout.sectionOrder = orderedSections(content) as Resume["layout"]["sectionOrder"];
@@ -157,7 +158,7 @@ export const useEditorStore = create<EditorState>()((set, get) => {
         versionId: v.id,
         content,
         template: v.template,
-        active: "workExperience",
+        active: pane,
         userEdited: new Set(),
         revision: 0,
         savedRevision: 0,

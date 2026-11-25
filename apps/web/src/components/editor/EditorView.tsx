@@ -55,12 +55,19 @@ function locateItem(r: Resume, id: string): { pane: string; anchor: string | nul
  * the same template code as the PDF. Edits autosave; saving changes the
  * content hash, which marks cached ATS reports outdated.
  */
+/** The pane an `#item-<id>` deep link (ATS report evidence) points at; Personal info otherwise. */
+function paneFromHash(r: Resume): string {
+  if (typeof window === "undefined") return "personal";
+  const id = decodeURIComponent(window.location.hash.replace(/^#item-/, ""));
+  return (id && !id.startsWith("#") && locateItem(r, id)?.pane) || "personal";
+}
+
 export function EditorView({ version }: { version: VersionView }) {
   const loaded = useEditorStore((s) => s.versionId === version.id && !!s.content);
   useEffect(() => {
     const s = useEditorStore.getState();
     // Fresh server copy unless this tab still has unsaved edits for it.
-    if (s.versionId !== version.id || s.revision === s.savedRevision) s.load(version);
+    if (s.versionId !== version.id || s.revision === s.savedRevision) s.load(version, paneFromHash(version.content));
   }, [version]);
   if (!loaded) return <div className="p-8 text-sm text-text-2">Loading editor…</div>;
   return <Editor version={version} />;
