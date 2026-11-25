@@ -4,7 +4,7 @@ import postgres from "postgres";
 import * as schema from "./schema/index";
 
 const connectionString =
-  process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:5432/resume_pilot";
+  process.env.DATABASE_URL ?? "postgres://postgres:postgres@localhost:55432/resume_pilot";
 
 /**
  * Local-dev seed data only — config rows match the values the PRD
