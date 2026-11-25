@@ -66,7 +66,7 @@ export function assembleVersion(source: Resume, plan: GenerationPlan): Assembled
   };
 
   // Summary: rewritten from existing facts.
-  out.summary = { text: plan.summary };
+  out.summary = { text: splitLongSummary(plan.summary) };
 
   // Work: every source job stays, in source (chronological) order. Only bullets change.
   const workPlan = new Map(plan.workExperience.map((w) => [w.id, w]));
@@ -122,4 +122,24 @@ export function assembleVersion(source: Resume, plan: GenerationPlan): Assembled
   };
 
   return { resume: out, provenance, gaps: plan.gaps };
+}
+
+/**
+ * ~5 lines of summary on an A4 page at the templates' body size. Longer
+ * summaries are split into two paragraphs at the sentence boundary nearest
+ * the middle. Only whitespace changes, so grounding sees the same text.
+ */
+export const SUMMARY_SPLIT_CHARS = 560;
+
+export function splitLongSummary(text: string): string {
+  const t = text.trim();
+  if (/\n\s*\n/.test(t) || t.length <= SUMMARY_SPLIT_CHARS) return t;
+  // Sentence ends: punctuation, whitespace, then a capital/digit. "Node.js" and
+  // "2.1" have no whitespace after the dot, so they never count.
+  let best: { at: number; end: number } | null = null;
+  for (const m of t.matchAll(/[.!?]["')\]]?(\s+)(?=[A-Z0-9])/g)) {
+    const at = m.index! + m[0].length - m[1]!.length;
+    if (!best || Math.abs(at - t.length / 2) < Math.abs(best.at - t.length / 2)) best = { at, end: m.index! + m[0].length };
+  }
+  return best ? `${t.slice(0, best.at)}\n\n${t.slice(best.end)}` : t;
 }

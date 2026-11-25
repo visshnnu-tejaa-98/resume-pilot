@@ -22,6 +22,34 @@ const AUTOSAVE_MS = 800;
 const label = (r: Resume, key: string) => (key.startsWith("custom:") ? r.customSections.find((c) => `custom:${c.id}` === key)?.title || "Custom section" : (SECTION_LABELS[key] ?? key));
 
 /**
+ * Which editor pane holds a resume item id, and the element to scroll to.
+ * ATS evidence links point at `#item-<id>` where the id can be the summary,
+ * an entry, one of its bullets, or a single skill (shown inside its group).
+ */
+function locateItem(r: Resume, id: string): { pane: string; anchor: string | null } | null {
+  if (id === "summary") return { pane: "summary", anchor: null };
+  const inList = (pane: string, xs: { id: string; bullets?: { id: string }[] }[]) => {
+    for (const x of xs) {
+      if (x.id === id) return { pane, anchor: x.id };
+      if (x.bullets?.some((b) => b.id === id)) return { pane, anchor: id };
+    }
+    return null;
+  };
+  const hit =
+    inList("workExperience", r.workExperience) ??
+    inList("projects", r.projects) ??
+    inList("education", r.education) ??
+    inList("certifications", r.certifications);
+  if (hit) return hit;
+  for (const g of r.skills) if (g.id === id || g.items.some((i) => i.id === id)) return { pane: "skills", anchor: g.id };
+  for (const c of r.customSections) {
+    const h = inList(`custom:${c.id}`, c.items);
+    if (h) return h;
+  }
+  return null;
+}
+
+/**
  * Split-screen editor (prd.md §10.1, design/screens/Editor.dc.html):
  * section list, form for the active section, live A4 preview rendered by
  * the same template code as the PDF. Edits autosave; saving changes the
@@ -93,6 +121,34 @@ function Editor({ version }: { version: VersionView }) {
   const [templateError, setTemplateError] = useState<string | null>(null);
   const [pages, setPages] = useState(1);
   const [page, setPage] = useState(1);
+
+  // Deep links from the ATS report (`#item-<id>`): open the pane holding the
+  // item, then scroll to and flash it once it has rendered.
+  useEffect(() => {
+    function go() {
+      const id = decodeURIComponent(window.location.hash.replace(/^#item-/, ""));
+      if (!id || id === window.location.hash) return;
+      const c = useEditorStore.getState().content;
+      const loc = c ? locateItem(c, id) : null;
+      if (!loc) return;
+      useEditorStore.getState().setActive(loc.pane);
+      let tries = 0;
+      const tick = () => {
+        const el = loc.anchor ? document.getElementById(`item-${loc.anchor}`) : document.querySelector<HTMLElement>('[aria-label="Edit section"]');
+        if (!el) {
+          if (tries++ < 20) requestAnimationFrame(tick);
+          return;
+        }
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-accent");
+        setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2400);
+      };
+      requestAnimationFrame(tick);
+    }
+    go();
+    window.addEventListener("hashchange", go);
+    return () => window.removeEventListener("hashchange", go);
+  }, []);
   const previewBox = useRef<HTMLDivElement>(null);
 
   const sections = orderedSections(content);

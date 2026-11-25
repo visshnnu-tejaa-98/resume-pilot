@@ -13,19 +13,23 @@ import type { TemplateKey } from "./templates";
 
 const Header = ({ doc, contactFirst = false }: { doc: ResumeDoc; contactFirst?: boolean }) => {
   const contact = doc.contact.length ? (
-    <ul className="rp-contact">
-      {doc.contact.map((c) => (
-        <li key={c.text}>
-          {c.href ? (
-            <a href={c.href} target="_blank" rel="noopener noreferrer">
-              {c.text}
-            </a>
-          ) : (
-            c.text
-          )}
-        </li>
+    <div className="rp-contact-rows">
+      {doc.contact.map((row, r) => (
+        <ul key={r} className="rp-contact">
+          {row.map((c) => (
+            <li key={c.text}>
+              {c.href ? (
+                <a href={c.href} target="_blank" rel="noopener noreferrer">
+                  {c.text}
+                </a>
+              ) : (
+                c.text
+              )}
+            </li>
+          ))}
+        </ul>
       ))}
-    </ul>
+    </div>
   ) : null;
   return (
     <header className="rp-head">

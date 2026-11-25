@@ -35,7 +35,8 @@ export interface DocSection {
 export interface ResumeDoc {
   name: string;
   headline: string;
-  contact: { text: string; href?: string }[];
+  /** Header contact rows: personal details first, then links (each row is its own line). */
+  contact: { text: string; href?: string }[][];
   sections: DocSection[];
 }
 
@@ -47,6 +48,13 @@ export const SECTION_LABELS: Record<string, string> = {
   education: "Education",
   certifications: "Certifications",
 };
+
+/** Summary paragraphs: blank lines in the text separate them. */
+const summaryParagraphs = (text: string) =>
+  text
+    .split(/\n\s*\n/)
+    .map((t) => t.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
 
 /** Standard, ATS-recognised headings on the page. */
 const HEADINGS: Record<string, string> = { ...SECTION_LABELS, workExperience: "Experience" };
@@ -73,7 +81,7 @@ export function resumeToDoc(r: Resume): ResumeDoc {
     const heading = HEADINGS[key] ?? "";
     switch (key) {
       case "summary":
-        return r.summary.text.trim() ? { key, heading, items: [{ id: "summary", lines: [{ text: r.summary.text }] }] } : null;
+        return r.summary.text.trim() ? { key, heading, items: [{ id: "summary", lines: summaryParagraphs(r.summary.text).map((text) => ({ text })) }] } : null;
       case "workExperience":
         return {
           key,
@@ -140,14 +148,18 @@ export function resumeToDoc(r: Resume): ResumeDoc {
     name: [p.firstName, p.lastName].filter(Boolean).join(" ") || "Your name",
     headline: p.headline,
     contact: [
-      p.location ? { text: p.location } : null,
-      p.email ? { text: p.email, href: `mailto:${p.email.trim()}` } : null,
-      p.phone ? { text: p.phone, href: `tel:${p.phone.replace(/[^\d+]/g, "")}` } : null,
-      ...p.links.map((l) => {
+      [
+        p.location ? { text: p.location } : null,
+        p.email ? { text: p.email, href: `mailto:${p.email.trim()}` } : null,
+        p.phone ? { text: p.phone, href: `tel:${p.phone.replace(/[^\d+]/g, "")}` } : null,
+      ],
+      p.links.map((l) => {
         const link = toLink(l.url);
         return link ? { text: link.label, href: link.href } : null;
       }),
-    ].filter((c): c is { text: string; href?: string } => !!c),
+    ]
+      .map((row) => row.filter((c): c is { text: string; href?: string } => !!c))
+      .filter((row) => row.length > 0),
     sections,
   };
 }
