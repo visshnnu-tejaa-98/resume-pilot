@@ -62,18 +62,28 @@ export const Input = forwardRef<HTMLInputElement, ComponentProps<"input"> & Size
 });
 
 export const Select = forwardRef<HTMLSelectElement, ComponentProps<"select"> & Sized>(function Select(
-  { fieldSize = "md", invalid, className, ...rest },
+  { fieldSize = "md", invalid, className, style, ...rest },
   ref,
 ) {
   return (
     <select
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(control(fieldSize, invalid), fieldSize === "sm" ? "h-10 px-2.5" : "h-11 px-3", className)}
+      className={cn(
+        control(fieldSize, invalid),
+        // Own chevron instead of the native arrow, which hugs the border and ignores padding.
+        "cursor-pointer appearance-none bg-no-repeat",
+        fieldSize === "sm" ? "h-10 pl-2.5 pr-9 bg-[position:right_12px_center]" : "h-11 pl-3 pr-10 bg-[position:right_14px_center]",
+        className,
+      )}
+      style={{ backgroundImage: CHEVRON, backgroundSize: "14px 14px", ...style }}
       {...rest}
     />
   );
 });
+
+/** Mid-grey down chevron, readable on both light and dark inputs. */
+const CHEVRON = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a94a3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`;
 
 export const Textarea = forwardRef<HTMLTextAreaElement, ComponentProps<"textarea"> & Sized>(function Textarea(
   { fieldSize = "md", invalid, className, ...rest },
