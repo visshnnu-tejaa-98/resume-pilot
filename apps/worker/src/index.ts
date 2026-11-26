@@ -35,7 +35,7 @@ import {
   generateTailoredResume,
   scoreResume,
   SCORING_METHOD_VERSION,
-  createOpenAIClient,
+  resolveAIClient,
   structureResume,
   StructuringError,
   type ResponsesClient,
@@ -237,15 +237,24 @@ function getOcr(): Promise<TesseractOcr> {
   return ocrEngine;
 }
 
-let openai: ResponsesClient | undefined;
-/** Created on first use, so a missing key fails structuring jobs only, not the worker. */
-function getOpenAI(): ResponsesClient {
-  try {
-    openai ??= createOpenAIClient();
-  } catch (err) {
-    // A missing key won't fix itself on retry: fail the job straight away.
-    throw new StructuringError("config_error", (err as Error).message, false, { cause: err });
-  }
+let openai: Promise<ResponsesClient> | undefined;
+/**
+ * Resolved on first use: real OpenAI when OPENAI_API_KEY is set and accepted,
+ * otherwise (local only) the mock AI with sample output — see resolveAIClient.
+ * In production a missing or rejected key fails the job instead.
+ */
+async function getOpenAI(): Promise<ResponsesClient> {
+  openai ??= resolveAIClient().then(
+    ({ client, mode, reason }) => {
+      console.log(mode === "mock" ? `[worker] AI: MOCK (${reason}) — sample data, no OpenAI calls, no cost` : `[worker] AI: OpenAI (${reason})`);
+      return client;
+    },
+    (err: unknown) => {
+      openai = undefined; // a fixed key is picked up by the next job
+      // A missing key won't fix itself on retry: fail the job straight away.
+      throw new StructuringError("config_error", (err as Error).message, false, { cause: err });
+    },
+  );
   return openai;
 }
 
@@ -280,8 +289,8 @@ export function createExtractionWorker(db: Database): Worker {
       if (job.name === "structure") {
         const outcome = await handleStructuringJob(job, {
           db,
-          structure: (rawText) =>
-            structureResume(getOpenAI(), {
+          structure: async (rawText) =>
+            structureResume(await getOpenAI(), {
               rawText,
               model: process.env.OPENAI_EXTRACTION_MODEL || undefined,
             }),
@@ -353,14 +362,14 @@ export async function handleScoringJob(
 
 export function createAiWorker(db: Database): Worker {
   const analyze: JdAnalyzeFn = async (input) => {
-    const r = await analyzeJobDescription(getOpenAI(), input);
+    const r = await analyzeJobDescription(await getOpenAI(), input);
     return { analysis: r.analysis, usage: r.usage };
   };
   // generateTailoredResume runs the deterministic grounding check (prd.md §8.3) and
   // throws GroundingFailedError after its one retry — nothing ungrounded is returned.
-  const generate: GenerateFn = (input) => generateTailoredResume(getOpenAI(), input);
+  const generate: GenerateFn = async (input) => generateTailoredResume(await getOpenAI(), input);
   // AI judges evidence; the score is computed in code (prd.md §9.1).
-  const score: ScoreFn = (input) => scoreResume(getOpenAI(), input);
+  const score: ScoreFn = async (input) => scoreResume(await getOpenAI(), input);
 
   const worker = new Worker<AiQueueJob>(
     QUEUE_NAMES.ai,

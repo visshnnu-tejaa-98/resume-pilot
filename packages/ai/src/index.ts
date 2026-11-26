@@ -45,3 +45,4 @@ export { evaluateResume, SCORING_INSTRUCTIONS, SCORING_PROMPT_VERSION, type Eval
 export { parseScoringEvaluation, scoringEvaluationSchema, type MatchStatus, type ScoringEvaluation } from "./scoring/schema";
 export { strictResponseFormat } from "./strict-schema";
 export { buildReport, scoreResume, type StoredReport } from "./scoring/report";
+export { MockResponsesClient, resolveAIClient, type AIClientMode } from "./mock";
