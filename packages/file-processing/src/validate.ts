@@ -143,7 +143,26 @@ async function validateFile(file: UploadInputFile): Promise<ValidatedFile> {
   if (!detected || detected.ext !== expected) {
     throw new UploadValidationError("content_mismatch", file.name);
   }
+  if ((ext === "png" || ext === "jpg" || ext === "jpeg") && !hasImageStructure(file.data, expected)) {
+    throw new UploadValidationError("unreadable", file.name);
+  }
   return { extension: ext, mimeType: detected.mime, data: file.data };
+}
+
+/**
+ * Magic bytes alone pass a truncated file. Cheap structural check so it's
+ * rejected here, not later in OCR: a PNG needs its IHDR header chunk; a JPEG
+ * needs at least one marker segment after the start-of-image marker.
+ */
+function hasImageStructure(data: Uint8Array, kind: string): boolean {
+  if (kind === "png") return data.byteLength >= 33 && String.fromCharCode(...data.subarray(12, 16)) === "IHDR";
+  return data.byteLength >= 6 && data[3] !== undefined && data[3] >= 0xc0;
+}
+
+/** Display-only name: last path segment, no control characters, capped. */
+function cleanDisplayName(name: string): string {
+  // eslint-disable-next-line no-control-regex
+  return (name.split(/[/\\]/).pop() ?? "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 255);
 }
 
 export async function validateUpload(input: readonly UploadInputFile[]): Promise<ValidatedUpload> {
@@ -180,7 +199,7 @@ export async function validateUpload(input: readonly UploadInputFile[]): Promise
     pageCount,
     totalBytes,
     hash,
-    displayName: input[0]!.name.trim().slice(0, 255) || `resume.${first.extension}`,
+    displayName: (/^\.[a-z]+$/i.test(cleanDisplayName(input[0]!.name)) ? "" : cleanDisplayName(input[0]!.name)) || `resume.${first.extension}`,
   };
 }
 

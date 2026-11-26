@@ -59,11 +59,23 @@ export function termKey(term: string, extra?: Map<string, string>): string {
   return extra?.get(f) ?? ALIAS_TO_CANONICAL.get(f) ?? f;
 }
 
+/**
+ * The terms a JD requirement treats as one thing, or null. Only a
+ * single-keyword requirement's synonyms are alternative names for it: with
+ * several keywords (["TypeScript", "GraphQL"]) the keywords are different
+ * skills and the synonyms can't be attributed, so nothing is merged —
+ * otherwise having TypeScript would "ground" GraphQL.
+ */
+export function equivalents(g: { keywords: string[]; synonyms: string[] }): string[] | null {
+  const kws = g.keywords.filter((k) => k.trim());
+  return kws.length === 1 ? [kws[0]!, ...g.synonyms.filter((s) => s.trim())] : null;
+}
+
 /** Synonym groups from a JD analysis (keyword + its synonyms) → extra alias map. */
 export function synonymMap(groups: { keywords: string[]; synonyms: string[] }[]): Map<string, string> {
   const m = new Map<string, string>();
   for (const g of groups) {
-    const all = [...g.keywords, ...g.synonyms].filter(Boolean);
+    const all = equivalents(g) ?? [];
     if (all.length < 2) continue;
     // Prefer a built-in canonical key so built-in and JD aliases agree.
     const canonical = all.map((t) => ALIAS_TO_CANONICAL.get(fold(t))).find(Boolean) ?? fold(all[0]!);

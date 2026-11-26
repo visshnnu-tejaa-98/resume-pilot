@@ -1,5 +1,5 @@
 import type { Provenance, Resume } from "@resume-pilot/validators/resume";
-import { mentions, numbersIn, synonymMap, termKey } from "./terms";
+import { equivalents, mentions, numbersIn, synonymMap, termKey } from "./terms";
 
 /**
  * Grounding check — prd.md §8.3. Deterministic code, run on every
@@ -112,7 +112,7 @@ function groundedIn(source: Resume, terms?: GroundingTerms): (name: string) => b
     // A synonym of something the source mentions (e.g. "React.js" when the source says "React").
     const k = key(name);
     for (const g of terms?.groups ?? []) {
-      const all = [...g.keywords, ...g.synonyms];
+      const all = equivalents(g) ?? [];
       if (all.some((t) => key(t) === k) && all.some((t) => mentions(srcText, t) || srcVocab.has(key(t)))) return true;
     }
     return false;
@@ -122,9 +122,9 @@ function groundedIn(source: Resume, terms?: GroundingTerms): (name: string) => b
 /** JD terms the generated text must never use: checked requirements the source doesn't support. */
 export function ungroundedJdTerms(source: Resume, terms: GroundingTerms): string[] {
   const grounded = groundedIn(source, terms);
-  const out = new Set<string>();
-  for (const g of terms.groups) if (g.type !== "responsibility") for (const t of [...g.keywords, ...g.synonyms]) if (!grounded(t)) out.add(t);
-  return [...out];
+  const out = new Map<string, string>(); // case-insensitive de-dupe, first spelling wins
+  for (const g of terms.groups) if (g.type !== "responsibility") for (const t of [...g.keywords, ...g.synonyms]) if (!grounded(t) && !out.has(t.toLowerCase())) out.set(t.toLowerCase(), t);
+  return [...out.values()];
 }
 
 export function checkGrounding(input: { source: Resume; output: Resume; provenance: Provenance; terms?: GroundingTerms }): GroundingViolation[] {
