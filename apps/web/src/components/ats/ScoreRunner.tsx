@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { AdminHint } from "@/components/app/AdminHint";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
+import { describeAiFailure } from "@/lib/ai-errors";
 import { appRoutes } from "@/lib/routes";
 import { trpc, trpcErrorMessage } from "@/lib/trpc-client";
 
@@ -103,7 +105,7 @@ export function ScoreButton({ versionId, jdId, label, className, variant }: { ve
 }
 
 /** Polls a running scoring job, then reloads the page onto its report. */
-export function ScoringPending({ versionId, jdId, aiJobId }: { versionId: string; jdId: string; aiJobId: string }) {
+export function ScoringPending({ versionId, jdId, aiJobId, isAdmin = false }: { versionId: string; jdId: string; aiJobId: string; isAdmin?: boolean }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
@@ -120,7 +122,7 @@ export function ScoringPending({ versionId, jdId, aiJobId }: { versionId: string
           return;
         }
         if (s.status === "failed") {
-          setError(s.error ?? "Scoring failed. Your credits were released.");
+          setError(s.error ?? "");
           return;
         }
       } catch (err) {
@@ -136,9 +138,13 @@ export function ScoringPending({ versionId, jdId, aiJobId }: { versionId: string
     };
   }, [aiJobId, jdId, router, versionId]);
 
-  return error ? (
+  const failure = error === null ? null : describeAiFailure(error, "ats_scoring");
+  return failure ? (
     <Callout tone="warn" role="alert">
-      <strong>Scoring didn’t finish.</strong> {error} You weren’t charged.
+      <span>
+        <strong>{failure.kind === "token_limit" ? "Scoring hit the AI output limit." : "Scoring didn’t finish."}</strong> {failure.kind === "unknown" && error ? error : failure.message} You weren’t charged.
+        {isAdmin && failure.adminHint ? <AdminHint hint={failure.adminHint} /> : null}
+      </span>
     </Callout>
   ) : (
     <div role="status" aria-live="polite" className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface px-6 py-12 text-center">

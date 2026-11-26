@@ -16,7 +16,7 @@ export default async function AtsReportPage({ params, searchParams }: { params: 
   const sp = await searchParams;
   const page = await loadAtsReport(user.id, (await params).versionId, { jd: sp.jd });
   if (!page) notFound();
-  const pending = sp.job && page.jdId ? <ScoringPending versionId={page.versionId} jdId={page.jdId} aiJobId={sp.job} /> : null;
+  const pending = sp.job && page.jdId ? <ScoringPending versionId={page.versionId} jdId={page.jdId} aiJobId={sp.job} isAdmin={user.role === "admin"} /> : null;
   return (
     <AppMain className="gap-6">
       {page.report && !(pending && page.report.outdated) ? (

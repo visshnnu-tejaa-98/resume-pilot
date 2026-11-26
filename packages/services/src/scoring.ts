@@ -199,7 +199,7 @@ export async function processScoring(
     await processJdAnalysis(db, { aiJobId: input.analysisAiJobId, jdId: input.jdId }, { analyze: deps.analyze, isFinalAttempt: true });
     analysis = await getJdAnalysis(db, { userId: aiJob.userId, jdId: input.jdId }).catch(() => null);
   }
-  if (!analysis) return fail("The job analysis didn't finish, so the resume wasn't scored");
+  if (!analysis) return fail(`The job analysis didn't finish, so the resume wasn't scored${await analysisFailure(db, input.analysisAiJobId)}`);
 
   const v = await ownedVersion(db, aiJob.userId, input.versionId).catch(() => null);
   if (!v) return fail("The resume version was deleted");
@@ -349,4 +349,11 @@ export async function startCompare(
   const a = await run("a", input.aVersionId);
   const b = await run("b", input.bVersionId);
   return { a, b };
+}
+
+/** Why the JD-analysis job behind this run failed, so the user sees the real reason. */
+async function analysisFailure(db: Database, analysisAiJobId: string | null | undefined): Promise<string> {
+  if (!analysisAiJobId) return "";
+  const [row] = await db.select({ error: aiJobs.error }).from(aiJobs).where(eq(aiJobs.id, analysisAiJobId)).limit(1).catch(() => []);
+  return row?.error ? `: ${row.error}` : "";
 }

@@ -20,7 +20,7 @@ export default async function GenerationPage({
   return (
     <AppMain width="full" className="py-14">
       {gen.status === "running" ? <meta httpEquiv="refresh" content="4" /> : null}
-      <GenerationProgress g={gen} />
+      <GenerationProgress g={gen} isAdmin={user.role === "admin"} />
     </AppMain>
   );
 }

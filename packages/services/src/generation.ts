@@ -190,7 +190,7 @@ export async function processGeneration(
     await processJdAnalysis(db, { aiJobId: analysisAiJobId, jdId }, { analyze: deps.analyze, isFinalAttempt: true });
     analysis = await getJdAnalysis(db, { userId: aiJob.userId, jdId }).catch(() => null);
   }
-  if (!analysis) return fail("The job analysis didn't finish, so the resume wasn't generated");
+  if (!analysis) return fail(`The job analysis didn't finish, so the resume wasn't generated${await analysisFailure(db, analysisAiJobId)}`);
 
   await db.update(aiJobs).set({ status: "running", updatedAt: new Date() }).where(and(eq(aiJobs.id, aiJob.id), eq(aiJobs.status, "pending")));
 
@@ -280,4 +280,11 @@ export async function getGenerationStatus(db: Database, input: { userId: string;
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };
+}
+
+/** Why the JD-analysis job behind this run failed, so the user sees the real reason. */
+async function analysisFailure(db: Database, analysisAiJobId: string | null | undefined): Promise<string> {
+  if (!analysisAiJobId) return "";
+  const [row] = await db.select({ error: aiJobs.error }).from(aiJobs).where(eq(aiJobs.id, analysisAiJobId)).limit(1).catch(() => []);
+  return row?.error ? `: ${row.error}` : "";
 }

@@ -2,6 +2,8 @@ import { ButtonLink, TextLink } from "@/components/ui/Button";
 import type { GenerationView } from "@/features/versions/types";
 import { cn } from "@/lib/cn";
 import { fmtCredits } from "@/lib/format";
+import { AdminHint } from "@/components/app/AdminHint";
+import { describeAiFailure } from "@/lib/ai-errors";
 import { appRoutes, routes } from "@/lib/routes";
 
 const STEPS = [
@@ -14,18 +16,10 @@ const STEPS = [
 
 const ICON = { done: "M5 12l5 5 9-10", fail: "M7 7l10 10M17 7 7 17", now: "M12 7v5l3 2", todo: "M12 12h.01" };
 
-/** User-facing reason; grounding rule counts stay in ai_jobs.error for admins. */
-function failureReason(error: string | null | undefined): string {
-  if (!error) return "";
-  if (/grounding/i.test(error)) return "Our fact check couldn't confirm every detail against your resume, so nothing was saved.";
-  if (/analysis/i.test(error)) return "We couldn't analyse the job description.";
-  if (/deleted/i.test(error)) return "The resume you started from was deleted.";
-  return "Something went wrong on our side.";
-}
-
 /** design/screens/GenProgress.dc.html — running / done / failed. */
-export function GenerationProgress({ g }: { g: GenerationView }) {
+export function GenerationProgress({ g, isAdmin = false }: { g: GenerationView; isAdmin?: boolean }) {
   const { status } = g;
+  const failure = status === "failed" ? describeAiFailure(g.error, "generation") : null;
   const eyebrow =
     status === "done" ? `COMPLETE · ${g.elapsed}` : status === "failed" ? "STOPPED · NO CHARGE" : "IN PROGRESS · USUALLY UNDER A MINUTE";
   const title = status === "done" ? "Your tailored resume is ready" : status === "failed" ? "Something went wrong" : "Tailoring your resume";
@@ -126,7 +120,8 @@ export function GenerationProgress({ g }: { g: GenerationView }) {
               <path d="M9 9l6 6M15 9l-6 6" />
             </svg>
             <span className="text-sm leading-normal">
-              <strong>Generation didn&apos;t finish.</strong> {failureReason(g.error)} All {fmtCredits(g.heldCredits)} held credits were released, so you weren&apos;t charged.
+              <strong>{failure?.kind === "token_limit" ? "Generation hit the AI output limit." : "Generation didn't finish."}</strong> {failure?.message} All {fmtCredits(g.heldCredits)} held credits were released, so you weren&apos;t charged.
+              {isAdmin && failure?.adminHint ? <AdminHint hint={failure.adminHint} /> : null}
             </span>
           </div>
           <div className="flex justify-center gap-2.5">
