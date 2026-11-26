@@ -11,13 +11,14 @@
     "build": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "eval:generation": "tsx eval/generation.ts"
+    "eval": "vitest run -c vitest.eval.config.ts"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "@resume-pilot/credits": "workspace:*"
   },
   "dependencies": {
     "@resume-pilot/validators": "workspace:*",

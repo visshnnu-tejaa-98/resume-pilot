@@ -34,6 +34,20 @@ export interface StructureUsage {
  * (config vs transient, refusal, truncation) and returns the parsed JSON
  * plus token usage. Validating the JSON is the caller's job.
  */
+/**
+ * Reasoning effort for models that think before answering. gpt-5 /
+ * gpt-5-mini / gpt-5-nano default to "medium", and reasoning tokens count
+ * against max_output_tokens — on extraction-style tasks that budget ran out
+ * before the JSON was written (eval 2026-11-25). "low" is plenty here and
+ * cheaper. Other models (e.g. gpt-5.1, which defaults to no reasoning) are
+ * left at their default.
+ */
+export type ReasoningEffort = "low" | "medium";
+
+export function reasoningFor(model: string, effort: ReasoningEffort = "low"): { reasoning?: { effort: ReasoningEffort } } {
+  return /^gpt-5(-mini|-nano)?(-\d{4}-\d{2}-\d{2})?$/.test(model) ? { reasoning: { effort } } : {};
+}
+
 export async function callStructuredOutput(
   client: ResponsesClient,
   params: {
@@ -42,6 +56,8 @@ export async function callStructuredOutput(
     input: string;
     format: OpenAI.Responses.ResponseFormatTextConfig;
     maxOutputTokens: number;
+    /** Reasoning models only; see reasoningFor. */
+    reasoningEffort?: ReasoningEffort;
   },
 ): Promise<{ json: unknown; usage: StructureUsage }> {
   let response: OpenAI.Responses.Response;
@@ -52,6 +68,7 @@ export async function callStructuredOutput(
       input: [{ role: "user", content: params.input }],
       text: { format: params.format },
       max_output_tokens: params.maxOutputTokens,
+      ...reasoningFor(params.model, params.reasoningEffort),
       store: false,
     });
   } catch (err) {

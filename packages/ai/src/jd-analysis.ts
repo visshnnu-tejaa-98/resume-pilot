@@ -14,7 +14,7 @@ import { callStructuredOutput, StructuringError, wrapData, type ResponsesClient,
  * guards generation regardless of what lands here.
  */
 
-export const JD_ANALYSIS_PROMPT_VERSION = "jd-analysis-v1";
+export const JD_ANALYSIS_PROMPT_VERSION = "jd-analysis-v2";
 
 export const JD_ANALYSIS_INSTRUCTIONS = `You analyse a job description and return structured JSON describing what the employer is asking for.
 
@@ -28,7 +28,7 @@ Rules:
   - text: a short paraphrase (one line) of the requirement.
   - type: skill (a technique or area of knowledge), tool (a named product, framework, language or platform), qualification (a certification or licence), experience (years or kind of prior work), education (degree or field of study), responsibility (something the person will do).
   - priority: "required" when the posting says must/required/minimum or lists it under requirements; "preferred" for nice-to-have/bonus/plus/preferred. When unclear, use "required".
-  - keywords: the exact terms an ATS would match, as written in the posting (e.g. "React", "TypeScript", "CI/CD"). 1–5 per requirement.
+  - keywords: the exact terms an ATS would match, as written in the posting (e.g. "React", "TypeScript", "CI/CD", "technical documentation"). 1–5 per requirement. Only specific skills, tools, technologies, methods, qualifications or domain nouns — never everyday words or verbs on their own ("support", "features", "review", "quickly", "devices", "make decisions"). Fewer, more specific keywords are better than generic ones.
   - synonyms: common alternative spellings or names of the same thing (e.g. "React" → "React.js", "ReactJS"). Only true equivalents; never broader or related skills. May be empty.
 - educationRequirements: degree or field-of-study requirements as short phrases.
 - domainTerms: industry or domain words that matter for this role (e.g. "fintech", "payments", "accessibility"), not generic words.`;

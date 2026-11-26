@@ -3,7 +3,7 @@ import type { Resume } from "@resume-pilot/validators/resume";
 import { callStructuredOutput, StructuringError, wrapData, type ResponsesClient, type StructureUsage } from "../responses";
 import { assembleVersion, type AssembledVersion } from "./assemble";
 import { fitPlanToPages, targetPagesFor } from "./fit";
-import { checkGrounding, summarizeViolations, type GroundingViolation } from "./grounding";
+import { checkGrounding, summarizeViolations, ungroundedJdTerms, type GroundingViolation } from "./grounding";
 import { generationPlanResponseFormat, parseGenerationPlan, PlanOutputError } from "./plan";
 
 /**
@@ -16,7 +16,7 @@ import { generationPlanResponseFormat, parseGenerationPlan, PlanOutputError } fr
  * `GroundingFailedError` so the caller releases the hold (§8.3).
  */
 
-export const GENERATION_PROMPT_VERSION = "generate-v2";
+export const GENERATION_PROMPT_VERSION = "generate-v3";
 
 export const GENERATION_INSTRUCTIONS = `You tailor a candidate's resume to one job. You return a TAILORING PLAN as JSON; the application builds the final resume from it.
 
@@ -71,7 +71,9 @@ export class GroundingFailedError extends StructuringError {
 
 function feedback(violations: GroundingViolation[]): string {
   const lines = violations.slice(0, 30).map((x) => `- ${x.rule} at ${x.path}: ${x.message}${x.value ? ` (${x.value})` : ""}`);
-  return `Your previous plan was rejected by the fact check. Fix every item below and return a corrected plan. Do not add anything new to work around them; drop the offending text instead.\n${lines.join("\n")}`;
+  const words = [...new Set(violations.filter((x) => x.rule === "term_not_in_source" || x.rule === "number_not_in_source").map((x) => x.value))];
+  const ban = words.length ? `\nRemove these exact words/numbers everywhere they appear: ${words.map((w) => JSON.stringify(w)).join(", ")}.` : "";
+  return `Your previous plan was rejected by the fact check. Fix every item below and return a corrected plan. Do not add anything new to work around them; drop the offending text instead.\n${lines.join("\n")}${ban}`;
 }
 
 const addUsage = (a: StructureUsage, b: StructureUsage): StructureUsage => ({
@@ -94,6 +96,10 @@ export async function generateTailoredResume(
   const length = `Target length: ${targetPages} A4 page${targetPages === 1 ? "" : "s"} (the uploaded resume was ${input.sourcePages ?? "unknown"}). Roughly ${targetPages * 10}–${targetPages * 14} bullets in total across all jobs and projects.`;
   const data = `${wrapData("source_resume", JSON.stringify(sourceForModel(input.source)))}\n\n${wrapData("job_analysis", JSON.stringify(input.analysis))}\n\n${length}`;
   const terms = { groups: input.analysis.requirements };
+  // Tell the model up front which job terms the source can't support, so it doesn't use them
+  // (the grounding check rejects them anyway; this just avoids wasted attempts).
+  const banned = ungroundedJdTerms(input.source, terms);
+  const avoid = banned.length ? `\n\nThe source resume does not support these job terms. Do not use any of them, or close variants, anywhere in the plan (they belong in gaps): ${banned.map((t) => JSON.stringify(t)).join(", ")}.` : "";
   let usage: StructureUsage = { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0 };
   let first: GroundingViolation[] = [];
 
@@ -101,9 +107,11 @@ export async function generateTailoredResume(
     const call = await callStructuredOutput(client, {
       model: input.model,
       instructions: GENERATION_INSTRUCTIONS,
-      input: attempt === 1 ? data : `${data}\n\n${feedback(first)}`,
+      input: attempt === 1 ? data + avoid : `${data}${avoid}\n\n${feedback(first)}`,
       format: generationPlanResponseFormat(),
       maxOutputTokens: input.maxOutputTokens,
+      // Rewriting under the grounding rules needs more care than extraction (eval 2026-11-25).
+      reasoningEffort: "low",
     });
     usage = addUsage(usage, call.usage);
 

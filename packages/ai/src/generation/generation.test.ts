@@ -80,6 +80,22 @@ describe("checkGrounding rejects", () => {
     expect(v.map((x) => x.path)).toEqual(["summary.text", "workExperience[id=we_1].bullets[id=b_1]"]);
   });
 
+  it("ignores duty words from responsibility requirements, but still blocks JD skills", () => {
+    const withDuties = {
+      ...fe,
+      requirements: [
+        ...fe.requirements,
+        { id: "r9", text: "Support customers and ship features", type: "responsibility" as const, priority: "required" as const, keywords: ["support", "features"], synonyms: [] },
+        { id: "r10", text: "Strong written communication", type: "skill" as const, priority: "required" as const, keywords: ["written communication"], synonyms: [] },
+      ],
+    };
+    const plan = goodPlan();
+    plan.summary = "Frontend engineer who builds features in React and TypeScript and supports product teams.";
+    expect(ground(plan, withDuties).violations).toEqual([]);
+    plan.summary = "Frontend engineer with strong written communication.";
+    expect(ground(plan, withDuties).violations.map((x) => [x.rule, x.value])).toEqual([["term_not_in_source", "written communication"]]);
+  });
+
   it("numbers that aren't in the source (invented metrics or years)", () => {
     const plan = goodPlan();
     plan.summary = "Frontend engineer with 10 years of experience.";

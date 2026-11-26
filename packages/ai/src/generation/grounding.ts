@@ -14,7 +14,8 @@ import { mentions, numbersIn, synonymMap, termKey } from "./terms";
  *    (for jobs/education/certifications) removed.
  * 2. Every skill/technology in the output exists in the source
  *    (case- and synonym-normalised), and no JD term the source doesn't
- *    contain appears anywhere in the output text.
+ *    contain appears anywhere in the output text (terms from
+ *    `responsibility` requirements excluded — they describe the job).
  * 3. Every number in the output text appears in the source text.
  * 4. Every output bullet has provenance pointing to existing source
  *    bullets of the same job/project/entry.
@@ -41,7 +42,8 @@ export interface GroundingViolation {
 
 /** JD vocabulary to watch for (analysis keywords + synonyms). */
 export interface GroundingTerms {
-  groups: { keywords: string[]; synonyms: string[] }[];
+  /** JD requirements. `responsibility` groups describe the job's duties, not candidate facts, and aren't checked. */
+  groups: { keywords: string[]; synonyms: string[]; type?: string }[];
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -93,6 +95,38 @@ function generatedTexts(r: Resume): { path: string; text: string }[] {
   return out;
 }
 
+/** True when a skill/term traces back to the source (directly, normalised, or as a JD synonym of something it has). */
+function groundedIn(source: Resume, terms?: GroundingTerms): (name: string) => boolean {
+  const extra = synonymMap(terms?.groups ?? []);
+  const key = (t: string) => termKey(t, extra);
+  const srcText = resumeText(source);
+  const srcVocab = new Set(
+    [
+      ...source.skills.flatMap((g) => g.items.map((i) => i.name)),
+      ...source.workExperience.flatMap((w) => w.skillsUsed),
+      ...source.projects.flatMap((p) => p.technologies),
+    ].map(key),
+  );
+  return (name: string) => {
+    if (srcVocab.has(key(name)) || mentions(srcText, name)) return true;
+    // A synonym of something the source mentions (e.g. "React.js" when the source says "React").
+    const k = key(name);
+    for (const g of terms?.groups ?? []) {
+      const all = [...g.keywords, ...g.synonyms];
+      if (all.some((t) => key(t) === k) && all.some((t) => mentions(srcText, t) || srcVocab.has(key(t)))) return true;
+    }
+    return false;
+  };
+}
+
+/** JD terms the generated text must never use: checked requirements the source doesn't support. */
+export function ungroundedJdTerms(source: Resume, terms: GroundingTerms): string[] {
+  const grounded = groundedIn(source, terms);
+  const out = new Set<string>();
+  for (const g of terms.groups) if (g.type !== "responsibility") for (const t of [...g.keywords, ...g.synonyms]) if (!grounded(t)) out.add(t);
+  return [...out];
+}
+
 export function checkGrounding(input: { source: Resume; output: Resume; provenance: Provenance; terms?: GroundingTerms }): GroundingViolation[] {
   const { source, output, provenance } = input;
   const v: GroundingViolation[] = [];
@@ -125,26 +159,7 @@ export function checkGrounding(input: { source: Resume; output: Resume; provenan
   checkSet("customSections", source.customSections, output.customSections, ["title", "items"], false);
 
   // 2. Skills and JD terms.
-  const extra = synonymMap(input.terms?.groups ?? []);
-  const key = (t: string) => termKey(t, extra);
-  const srcText = resumeText(source);
-  const srcVocab = new Set(
-    [
-      ...source.skills.flatMap((g) => g.items.map((i) => i.name)),
-      ...source.workExperience.flatMap((w) => w.skillsUsed),
-      ...source.projects.flatMap((p) => p.technologies),
-    ].map(key),
-  );
-  const grounded = (name: string) => {
-    if (srcVocab.has(key(name)) || mentions(srcText, name)) return true;
-    // A synonym of something the source mentions (e.g. "React.js" when the source says "React").
-    const k = key(name);
-    for (const g of input.terms?.groups ?? []) {
-      const all = [...g.keywords, ...g.synonyms];
-      if (all.some((t) => key(t) === k) && all.some((t) => mentions(srcText, t) || srcVocab.has(key(t)))) return true;
-    }
-    return false;
-  };
+  const grounded = groundedIn(source, input.terms);
   for (const g of output.skills) for (const i of g.items) if (!grounded(i.name)) add("skill_not_in_source", `skills[id=${g.id}].items[id=${i.id}]`, i.name, `Skill "${i.name}" is not in the source resume`);
   for (const w of output.workExperience) for (const s of w.skillsUsed) if (!grounded(s)) add("skill_not_in_source", `workExperience[id=${w.id}].skillsUsed`, s, `Skill "${s}" is not in the source resume`);
   for (const p of output.projects) for (const t of p.technologies) if (!grounded(t)) add("skill_not_in_source", `projects[id=${p.id}].technologies`, t, `Technology "${t}" is not in the source resume`);
@@ -153,7 +168,9 @@ export function checkGrounding(input: { source: Resume; output: Resume; provenan
   // only text the AI actually wrote (or changed) is checked for numbers and JD terms.
   const sourceTexts = new Set([source.summary.text, ...rawBulletTexts(source)].map((t) => t.trim()));
   const texts = generatedTexts(output).filter((t) => !sourceTexts.has(t.text.trim()));
-  const jdTerms = (input.terms?.groups ?? []).flatMap((g) => [...g.keywords, ...g.synonyms]);
+  // Duties ("support customers", "features", "code review") aren't claims about the candidate;
+  // skills, tools, qualifications, experience and education are.
+  const jdTerms = (input.terms?.groups ?? []).filter((g) => g.type !== "responsibility").flatMap((g) => [...g.keywords, ...g.synonyms]);
   for (const { path, text } of texts) {
     for (const term of jdTerms) {
       if (mentions(text, term) && !grounded(term)) add("term_not_in_source", path, term, `"${term}" is a job requirement the source resume doesn't contain`);
@@ -161,7 +178,7 @@ export function checkGrounding(input: { source: Resume; output: Resume; provenan
   }
 
   // 3. Numbers.
-  const srcNumbers = new Set(numbersIn(srcText));
+  const srcNumbers = new Set(numbersIn(resumeText(source)));
   for (const { path, text } of texts) {
     for (const n of numbersIn(text)) if (!srcNumbers.has(n)) add("number_not_in_source", path, n, `Number "${n}" does not appear in the source resume`);
   }

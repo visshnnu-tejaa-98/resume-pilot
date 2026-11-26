@@ -42,7 +42,9 @@ Rules:
 export function createOpenAIClient(env: NodeJS.ProcessEnv = process.env): OpenAI {
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
-  return new OpenAI({ apiKey, timeout: 120_000, maxRetries: 2 });
+  // Generation on a long resume with a reasoning model can run past 2 minutes (eval 2026-11-25).
+  // A timed-out call is still billed, so retry once at most.
+  return new OpenAI({ apiKey, timeout: 180_000, maxRetries: 1 });
 }
 
 export interface StructureResult {

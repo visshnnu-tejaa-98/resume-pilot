@@ -4,5 +4,5 @@
     "composite": false,
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "eval", "vitest.eval.config.ts"]
 }
