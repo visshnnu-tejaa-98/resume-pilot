@@ -43,7 +43,11 @@ export const aiJobs = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("ai_jobs_idempotency_key_key").on(table.idempotencyKey)],
+  (table) => [
+    uniqueIndex("ai_jobs_idempotency_key_key").on(table.idempotencyKey),
+    // Per-user rate limit (AI actions per minute) and per-user job history.
+    index("ai_jobs_user_created_idx").on(table.userId, table.createdAt),
+  ],
 );
 
 /**

@@ -1,0 +1,45 @@
+# PDF-vs-preview visual regression (prd.md §16.2.12) for every change that
+# can affect how a resume renders: templates, fonts, the PDF renderer, or the
+# web preview component.
+name: Visual regression
+
+on:
+  pull_request:
+    paths:
+      - packages/resume-templates/**
+      - apps/worker/src/pdf.ts
+      - apps/worker/e2e/**
+      - apps/web/src/components/resume/ResumeDocument.tsx
+      - pnpm-lock.yaml
+  push:
+    branches: [main]
+    paths:
+      - packages/resume-templates/**
+      - apps/worker/src/pdf.ts
+      - apps/worker/e2e/**
+      - apps/web/src/components/resume/ResumeDocument.tsx
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Browsers (Playwright for the preview, Puppeteer's Chrome for the PDF)
+        run: |
+          pnpm --filter @resume-pilot/worker exec playwright install --with-deps chromium
+          pnpm --filter @resume-pilot/worker exec puppeteer browsers install chrome
+      - run: pnpm --filter @resume-pilot/worker test:visual
+        env:
+          PUPPETEER_NO_SANDBOX: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diffs
+          path: apps/worker/test-results/

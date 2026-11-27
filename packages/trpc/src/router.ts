@@ -99,6 +99,7 @@ import {
   VersionError,
   estimateJdAnalysis,
   getJdAnalysisStatus,
+  AiRateLimitError,
   InsufficientCreditsError,
   JdAnalysisEstimateChangedError,
   releaseHold,
@@ -133,6 +134,9 @@ function toTRPCError(err: unknown): never {
     err instanceof RetryExtractionError
   ) {
     throw new TRPCError({ code: "BAD_REQUEST", message: err.message, cause: err });
+  }
+  if (err instanceof AiRateLimitError) {
+    throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: `You're going a bit fast — at most ${err.limit} AI actions a minute. Wait a moment and try again.`, cause: err });
   }
   if (err instanceof InsufficientCreditsError) {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Not enough credits. Add money to your wallet to continue.", cause: err });

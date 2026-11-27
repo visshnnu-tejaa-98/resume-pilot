@@ -30,6 +30,8 @@ export {
   HOLD_TTL_MS,
   HoldNotActiveError,
   IdempotencyConflictError,
+  AiRateLimitError,
+  AI_ACTIONS_PER_MINUTE,
   InsufficientCreditsError,
   placeHold,
   releaseHold,

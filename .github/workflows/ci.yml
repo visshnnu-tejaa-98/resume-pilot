@@ -1,0 +1,60 @@
+# Lint, typecheck and every test suite (unit + real-DB integration, security,
+# isolation, load) on each push and PR. The AI eval costs money and runs only
+# from its own workflow (eval.yml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: resume_pilot_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/resume_pilot_test
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/resume_pilot_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Migrate + seed the test database
+        run: |
+          pnpm --filter @resume-pilot/database db:migrate
+          pnpm --filter @resume-pilot/database db:seed
+      - run: pnpm lint
+      - name: Typecheck (build)
+        run: pnpm build
+        env:
+          # Next.js needs these at build time; test values only.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+          CLERK_SECRET_KEY: sk_test_ci_placeholder_not_a_real_key_000000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+      - name: Tests (incl. security, isolation, load)
+        run: pnpm exec turbo run test --concurrency=1

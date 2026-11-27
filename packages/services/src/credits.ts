@@ -28,6 +28,16 @@ import { getActivePricingConfig, getPricingConfigByVersion } from "./pricing";
 
 export const HOLD_TTL_MS = 15 * 60 * 1000;
 
+/** prd.md §15: paid AI actions (JD analysis, generation, ATS scoring) per user per minute. */
+export const AI_ACTIONS_PER_MINUTE = 10;
+
+export class AiRateLimitError extends Error {
+  constructor(readonly limit = AI_ACTIONS_PER_MINUTE) {
+    super(`Too many AI actions: at most ${limit} a minute`);
+    this.name = "AiRateLimitError";
+  }
+}
+
 export class InsufficientCreditsError extends Error {
   constructor(
     readonly required: number,
@@ -177,6 +187,14 @@ export async function placeHold(
         created: false,
       };
     }
+
+    // Under the account lock, so parallel requests can't all slip under the limit.
+    // A retried request with the same key returned above and isn't counted twice.
+    const [recent] = await tx
+      .select({ n: sql<number>`count(*)::int` })
+      .from(aiJobs)
+      .where(and(eq(aiJobs.userId, userId), gt(aiJobs.createdAt, new Date(now.getTime() - 60_000))));
+    if ((recent?.n ?? 0) >= AI_ACTIONS_PER_MINUTE) throw new AiRateLimitError();
 
     const available = account.balance - (await heldCredits(tx, userId, now));
     if (available < estimate.credits) {

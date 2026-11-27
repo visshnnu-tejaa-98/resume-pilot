@@ -1,4 +1,5 @@
 import { applyUnsubscribe, setEmailPreferences, verifyUnsubscribeToken } from "@resume-pilot/services";
+import { limitByIp } from "@/server/rate-limit";
 import { getDb } from "@/server/db";
 
 /**
@@ -11,6 +12,8 @@ import { getDb } from "@/server/db";
  * The token is HMAC-signed for one user, so it can't touch anyone else.
  */
 export async function POST(req: Request) {
+  const limited = await limitByIp(req, "unsubscribe");
+  if (limited) return limited;
   const url = new URL(req.url);
   const type = req.headers.get("content-type") ?? "";
 
