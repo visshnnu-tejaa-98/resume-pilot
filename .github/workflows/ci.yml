@@ -56,5 +56,9 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
           CLERK_SECRET_KEY: sk_test_ci_placeholder_not_a_real_key_000000
           NEXT_PUBLIC_APP_URL: http://localhost:3000
+      - name: Chrome for the worker's Puppeteer PDF test
+        run: pnpm --filter @resume-pilot/worker exec puppeteer browsers install chrome
       - name: Tests (incl. security, isolation, load)
         run: pnpm exec turbo run test --concurrency=1
+        env:
+          PUPPETEER_NO_SANDBOX: "1"

@@ -33,6 +33,9 @@
         "DATABASE_URL",
         "REDIS_URL"
       ],
+      "passThroughEnv": [
+        "PUPPETEER_NO_SANDBOX"
+      ],
       "cache": false
     }
   }
