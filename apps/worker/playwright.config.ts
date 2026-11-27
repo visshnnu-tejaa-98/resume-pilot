@@ -7,5 +7,11 @@ export default defineConfig({
   fullyParallel: false,
   reporter: [["list"]],
   outputDir: "./test-results",
-  use: { browserName: "chromium", headless: true },
+  use: {
+    browserName: "chromium",
+    headless: true,
+    // Same flag the PDF renderer launches Chrome with (src/pdf.ts): without it Linux
+    // hints screen glyphs, changing their widths, so lines wrap differently than in print.
+    launchOptions: { args: ["--font-render-hinting=none"] },
+  },
 });

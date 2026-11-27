@@ -101,7 +101,7 @@ describe("content checks", () => {
   });
 
   it(".tex with a UTF-8 BOM and Windows line endings is accepted", async () => {
-    await expectReason([{ name: "cv.tex", data: Buffer.from(`﻿${SAMPLE_TEX.replace(/\n/g, "\r\n")}`) }], "ok");
+    await expectReason([{ name: "cv.tex", data: Buffer.from(`\uFEFF${SAMPLE_TEX.replace(/\n/g, "\r\n")}`) }], "ok");
   });
 
   it("a truncated PNG / JPG (header only) is rejected, not crashed on", async () => {
